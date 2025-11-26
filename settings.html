@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="si">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PostKinaa - සැකසුම්</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+
+    <style>
+        @keyframes fadeIn { from { opacity:0; transform:translateY(20px);} to {opacity:1; transform:translateY(0);} }
+        .fade-in { animation: fadeIn 0.5s ease-out; }
+    </style>
+</head>
+
+<body class="min-h-screen">
+
+    <header id="appHeader" class="bg-white/80 backdrop-blur-lg border-b border-purple-100 sticky top-0 z-50 shadow-sm">
+        <div class="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
+            
+            <div class="flex items-center space-x-3">
+                <button onclick="window.location.href='Home.html'" title="පසුපසට"
+                    class="p-2 text-xl text-gray-600 hover:text-purple-600 hover:bg-purple-100 rounded-full transition-colors">
+                    ⬅️
+                </button>
+                <h1 class="text-3xl font-bold bg-clip-text text-transparent" id="headerTitle">⚙️ සැකසුම්</h1>
+            </div>
+
+            <button onclick="signOutUser()"  
+                class="px-3 py-1 bg-red-100 text-red-600 rounded-full text-sm font-semibold hover:bg-red-200 transition-colors">
+                Logout
+            </button>
+        </div>
+    </header>
+
+    <div class="max-w-4xl mx-auto px-4 py-8">
+
+        <div class="bg-white/90 backdrop-blur-lg rounded-3xl shadow-xl border border-blue-100 p-6 mb-8 fade-in">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4 border-b pb-2">👋 නම වෙනස් කිරීම</h2>
+            <p class="text-sm text-gray-500 mb-3">Posts වලදී පෙන්වන ඔබගේ නම මෙතනින් වෙනස් කරන්න.</p>
+            <input id="newNameInput" type="text" placeholder="නව නම..." 
+                class="w-full px-4 py-3 mb-4 bg-gray-50 rounded-xl border-2 border-transparent focus:border-blue-400 outline-none transition text-lg">
+            
+            <button onclick="updateUserName()"
+                class="px-6 py-2 bg-blue-500 text-white rounded-full font-semibold hover:bg-blue-600 transition shadow-md">
+                නම යාවත්කාලීන කරන්න
+            </button>
+        </div>
+
+        <div class="bg-white/90 backdrop-blur-lg rounded-3xl shadow-xl border border-pink-100 p-6 mb-8 fade-in">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4 border-b pb-2">🎨 Theme තෝරන්න (Theme 10)</h2>
+            <div id="themeContainer" class="grid grid-cols-2 md:grid-cols-5 gap-4">
+                </div>
+        </div>
+
+        <div class="bg-white/90 backdrop-blur-lg rounded-3xl shadow-xl border border-purple-100 p-6 mb-8 fade-in">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4 border-b pb-2">👀 ඔබගේ Posts</h2>
+            <div id="myPostsFeed" class="space-y-4">
+                <p id="loadingMyPosts" class="text-gray-500 text-center">ඔබගේ Posts Loading වෙමින්...</p>
+                </div>
+        </div>
+
+        <div id="notificationBox" class="fixed bottom-5 left-1/2 -translate-x-1/2 bg-black text-white px-4 py-2 rounded-full shadow-xl text-sm z-50 hidden"></div>
+    </div>
+
+    <script>
+    /* ============================================================
+        🔥 Firebase Config + Init
+    ============================================================ */
+    const firebaseConfig = {
+        apiKey: "AIzaSyAzNJ-P8aAMvTuNWKcQYCjIIHiaL0BpdZ0",
+        authDomain: "game-f1c21.firebaseapp.com",
+        databaseURL: "https://game-f1c21-default-rtdb.firebaseio.com",
+        projectId: "game-f1c21",
+        storageBucket: "game-f1c21.firebasestorage.app",
+        messagingSenderId: "656338565711",
+        appId: "1:656338565711:web:395f9c7f846588b065883a"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const database = firebase.database();
+    const postsRef = database.ref("posts");
+    const usersRef = database.ref("users");
+
+    let currentUser = null;
+
+    /* ============================================================
+        🔥 Theme Definitions (Copied from Home.html)
+    ============================================================ */
+    const THEMES = {
+        default: {
+            name: '🔮 පෙරනිමි',
+            bg: 'bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50',
+            header: 'bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600',
+            preview: 'bg-gradient-to-br from-purple-500 to-pink-500'
+        },
+        blue: {
+            name: '🔹 නිල්',
+            bg: 'bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50',
+            header: 'bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600',
+            preview: 'bg-gradient-to-br from-blue-500 to-indigo-500'
+        },
+        green: {
+            name: '✅ කොළ',
+            bg: 'bg-gradient-to-br from-green-50 via-teal-50 to-cyan-50',
+            header: 'bg-gradient-to-r from-green-600 via-teal-600 to-cyan-600',
+            preview: 'bg-gradient-to-br from-green-500 to-teal-500'
+        },
+        red: {
+            name: '🔴 රතු',
+            bg: 'bg-gradient-to-br from-red-50 via-pink-50 to-orange-50',
+            header: 'bg-gradient-to-r from-red-600 via-pink-600 to-orange-600',
+            preview: 'bg-gradient-to-br from-red-500 to-orange-500'
+        },
+        yellow: {
+            name: '🌟 රන්වන්',
+            bg: 'bg-gradient-to-br from-yellow-50 via-amber-50 to-orange-50',
+            header: 'bg-gradient-to-r from-yellow-600 via-amber-600 to-orange-600',
+            preview: 'bg-gradient-to-br from-yellow-500 to-amber-500'
+        },
+        dark: {
+            name: '⚫ අඳුරු',
+            bg: 'bg-gray-800', 
+            header: 'bg-white', 
+            preview: 'bg-gray-700 text-white' // Dark preview needs white text
+        },
+        teal: {
+            name: '💧 තේල්',
+            bg: 'bg-gradient-to-br from-teal-50 via-cyan-50 to-blue-50',
+            header: 'bg-gradient-to-r from-teal-600 via-cyan-600 to-blue-600',
+            preview: 'bg-gradient-to-br from-teal-500 to-cyan-500'
+        },
+        pink: {
+            name: '💖 රෝස',
+            bg: 'bg-gradient-to-br from-pink-50 via-red-50 to-purple-50',
+            header: 'bg-gradient-to-r from-pink-600 via-red-600 to-purple-600',
+            preview: 'bg-gradient-to-br from-pink-500 to-red-500'
+        },
+        indigo: {
+            name: '💜 ඉන්ඩිගෝ',
+            bg: 'bg-gradient-to-br from-indigo-50 via-blue-50 to-cyan-50',
+            header: 'bg-gradient-to-r from-indigo-600 via-blue-600 to-cyan-600',
+            preview: 'bg-gradient-to-br from-indigo-500 to-blue-500'
+        },
+        gold: {
+            name: '👑 රත්තරන්',
+            bg: 'bg-gradient-to-br from-yellow-50 via-amber-50 to-orange-50',
+            header: 'bg-gradient-to-r from-yellow-500 via-yellow-300 to-yellow-500',
+            preview: 'bg-gradient-to-br from-yellow-500 to-orange-500'
+        }
+    };
+
+    function applyTheme() {
+        const themeName = localStorage.getItem("appTheme") || "default";
+        const theme = THEMES[themeName] || THEMES.default;
+
+        document.body.className = "min-h-screen " + theme.bg;
+        
+        // Header Title Styling
+        if (themeName === 'dark') {
+            document.getElementById("headerTitle").className =
+                "text-3xl font-bold bg-clip-text text-white";
+        } else {
+            document.getElementById("headerTitle").className =
+                "text-3xl font-bold bg-clip-text text-transparent " + theme.header;
+        }
+
+        // Highlight selected theme
+        document.querySelectorAll('.theme-card').forEach(card => {
+            card.classList.remove('ring-4', 'ring-offset-2', 'ring-pink-500');
+            if (card.dataset.theme === themeName) {
+                card.classList.add('ring-4', 'ring-offset-2', 'ring-pink-500');
+            }
+        });
+    }
+
+    /* ============================================================
+        🔥 Auth Check
+    ============================================================ */
+    auth.onAuthStateChanged(user => {
+        if (!user) {
+            window.location.href = "index.html"; // Redirect to login
+            return;
+        }
+        currentUser = user;
+        loadUserSettings();
+        loadThemeSelectors();
+        loadMyPosts();
+        applyTheme();
+    });
+
+    function signOutUser() {
+        auth.signOut().then(() => {
+            showNotification("Logout සාර්ථකයි.");
+            window.location.href = "index.html";
+        });
+    }
+
+    /* ============================================================
+        1. Name Change Functionality
+    ============================================================ */
+    function loadUserSettings() {
+        usersRef.child(currentUser.uid).child('name').once('value', snap => {
+            const userName = snap.val();
+            document.getElementById('newNameInput').value = userName || currentUser.email.split("@")[0];
+        });
+    }
+
+    function updateUserName() {
+        const newName = document.getElementById("newNameInput").value.trim();
+        if (!newName) {
+            return showNotification("නමක් ඇතුළත් කරන්න.");
+        }
+
+        usersRef.child(currentUser.uid).update({ name: newName })
+        .then(() => {
+            // Update the author name for new posts immediately
+            // And show notification
+            showNotification(`නම වෙනස් කළා: ${newName} ✅`);
+        })
+        .catch(error => {
+            showNotification("නම වෙනස් කිරීමේ Error. ❌");
+            console.error("Name update error:", error);
+        });
+    }
+
+    /* ============================================================
+        2. Theme Selection Functionality
+    ============================================================ */
+    function loadThemeSelectors() {
+        const container = document.getElementById('themeContainer');
+        container.innerHTML = '';
+        const currentTheme = localStorage.getItem("appTheme") || "default";
+
+        Object.keys(THEMES).forEach(key => {
+            const theme = THEMES[key];
+            const isSelected = key === currentTheme;
+
+            const button = document.createElement('button');
+            button.className = `theme-card p-3 rounded-xl shadow-lg text-white text-sm font-semibold transition-all hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] ${theme.preview} ${isSelected ? 'ring-4 ring-offset-2 ring-pink-500' : ''}`;
+            button.dataset.theme = key;
+            button.textContent = theme.name;
+            button.onclick = () => selectTheme(key);
+            
+            container.appendChild(button);
+        });
+    }
+
+    function selectTheme(themeName) {
+        localStorage.setItem("appTheme", themeName);
+        applyTheme();
+        showNotification(`${THEMES[themeName].name} Theme එක තෝරාගත්තා!`);
+    }
+
+    /* ============================================================
+        3. My Posts View (Show Post Count and Reactions)
+    ============================================================ */
+    function loadMyPosts() {
+        const myPostsFeed = document.getElementById("myPostsFeed");
+        const loading = document.getElementById("loadingMyPosts");
+        loading.style.display = 'block';
+        myPostsFeed.innerHTML = '';
+
+        postsRef.orderByChild("authorId").equalTo(currentUser.uid).once("value", snap => {
+            loading.style.display = 'none';
+            if (!snap.exists()) {
+                myPostsFeed.innerHTML = '<p class="text-gray-500 text-center">ඔබ විසින් Posts පළ කර නැත.</p>';
+                return;
+            }
+
+            const posts = [];
+            snap.forEach(s => posts.push({ id: s.key, ...s.val() }));
+            
+            // Show newest posts first
+            posts.reverse();
+
+            posts.forEach(post => {
+                renderMyPost(post);
+            });
+        });
+    }
+
+    function renderMyPost(post) {
+        const myPostsFeed = document.getElementById("myPostsFeed");
+        const div = document.createElement("div");
+        div.className = "bg-gray-50 rounded-xl p-4 border border-gray-200 shadow-sm";
+
+        const likeCount = post.reactionCounts?.like || 0;
+        const laughCount = post.reactionCounts?.laugh || 0;
+        const fireCount = post.reactionCounts?.fire || 0;
+
+        div.innerHTML = `
+            <p class="text-sm text-gray-700 font-semibold mb-2 line-clamp-2">${post.content}</p>
+            <div class="flex items-center text-sm space-x-4 border-t pt-2 mt-2 text-gray-600">
+                <span title="Likes ගණන">❤️ ${likeCount}</span>
+                <span title="Laughs ගණන">😂 ${laughCount}</span>
+                <span title="Fire ගණන">🔥 ${fireCount}</span>
+                <span title="Comments ගණන">💬 ${post.commentsCount || 0}</span>
+                <button onclick="deletePost('${post.id}')"
+                    class="ml-auto text-red-500 hover:text-red-700 transition">
+                    🗑️ මකන්න
+                </button>
+            </div>
+        `;
+        myPostsFeed.appendChild(div);
+    }
+    
+    function deletePost(id) {
+        if (!confirm("මෙම පෝස්ට් එක මකන්නද?")) return;
+
+        postsRef.child(id).once("value").then(s => {
+            if (s.val().authorId !== currentUser.uid) {
+                showNotification("ඔබට මෙක මැකුමට අවසර නැහැ");
+                return;
+            }
+            postsRef.child(id).remove().then(() => {
+                showNotification("පෝස්ට් එක මකන ලදී 🗑️");
+                loadMyPosts(); // Refresh the list
+            });
+        });
+    }
+
+    /* ============================================================
+        🔥 Helpers
+    ============================================================ */
+    function showNotification(text) {
+        const box = document.getElementById("notificationBox");
+        box.textContent = text;
+        box.classList.remove('hidden');
+        box.classList.add('fade-in');
+        
+        setTimeout(() => {
+            box.classList.remove('fade-in');
+            box.classList.add('hidden');
+        }, 3000);
+    }
+
+    </script>
+</body>
+</html>
