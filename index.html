@@ -346,14 +346,26 @@
             const snapshot = await database.ref('usernames/' + user.uid).once('value');
             
             if (!snapshot.exists() || !snapshot.val()) {
-                // Need to set username
+                // User doesn't have username in database - need to set one
                 try {
                     const username = await showUsernameModal(user);
                     showMessage(`✅ ආයුබෝවන් ${username}! 🎉`, 'success');
+                    return username;
                 } catch (error) {
                     console.error('Username setup failed:', error);
                     showMessage('❌ නම සකසන්නේ දෝෂයක්!', 'error');
+                    throw error;
                 }
+            } else {
+                // Username already exists in database
+                const existingUsername = snapshot.val();
+                
+                // Update user profile if it doesn't match database
+                if (user.displayName !== existingUsername) {
+                    await user.updateProfile({ displayName: existingUsername });
+                }
+                
+                return existingUsername;
             }
         }
 
@@ -422,12 +434,41 @@
             disableButtons(true);
             try {
                 const userCredential = await auth.signInWithEmailAndPassword(email, password);
-                await ensureDisplayName(userCredential.user);
+                const user = userCredential.user;
                 
-                showMessage('✅ පිවිසුම සාර්ථකයි! යොමු කරමින්...');
-                setTimeout(() => {
-                    window.location.href = 'Home.html';
-                }, 1500);
+                // Check if user has username in database
+                const usernameSnapshot = await database.ref('usernames/' + user.uid).once('value');
+                
+                if (!usernameSnapshot.exists() || !usernameSnapshot.val()) {
+                    // No username in database - ask for one
+                    showMessage('🎉 ස්වාගතම! කරුණාකර username එකක් තෝරන්න...', 'info');
+                    
+                    try {
+                        const username = await showUsernameModal(user);
+                        showMessage(`✅ ආයුබෝවන් ${username}! 🎉`, 'success');
+                        
+                        setTimeout(() => {
+                            window.location.href = 'Home.html';
+                        }, 1500);
+                    } catch (error) {
+                        disableButtons(false);
+                        showMessage('❌ Username සකසන්නේ දෝෂයක්!', 'error');
+                    }
+                } else {
+                    // Username exists - proceed to home
+                    const existingUsername = usernameSnapshot.val();
+                    
+                    // Update user profile if needed
+                    if (user.displayName !== existingUsername) {
+                        await user.updateProfile({ displayName: existingUsername });
+                    }
+                    
+                    showMessage(`✅ පිවිසුම සාර්ථකයි! ආයුබෝවන් ${existingUsername}! 🎉`);
+                    
+                    setTimeout(() => {
+                        window.location.href = 'Home.html';
+                    }, 1500);
+                }
             } catch (error) {
                 disableButtons(false);
                 let errorMsg = 'දෝෂයක් සිදු විය!';
@@ -449,14 +490,43 @@
             
             try {
                 const userCredential = await auth.signInWithPopup(provider);
-                await ensureDisplayName(userCredential.user);
+                const user = userCredential.user;
                 
-                const displayName = userCredential.user.displayName || 'User';
-                showMessage(`✅ Google හරහා සාර්ථකයි! ආයුබෝවන් ${displayName}! 🎉`);
+                // Check if this is a new user or existing user
+                const usernameSnapshot = await database.ref('usernames/' + user.uid).once('value');
                 
-                setTimeout(() => {
-                    window.location.href = 'Home.html';
-                }, 1500);
+                if (!usernameSnapshot.exists() || !usernameSnapshot.val()) {
+                    // New user - need to set username
+                    showMessage('🎉 ස්වාගතම! කරුණාකර username එකක් තෝරන්න...', 'info');
+                    
+                    try {
+                        const username = await showUsernameModal(user);
+                        showMessage(`✅ ආයුබෝවන් ${username}! 🎉`, 'success');
+                        
+                        setTimeout(() => {
+                            window.location.href = 'Home.html';
+                        }, 1500);
+                    } catch (error) {
+                        // If username setup fails, sign out the user
+                        await auth.signOut();
+                        disableButtons(false);
+                        showMessage('❌ Username සකසන්නේ දෝෂයක්! නැවත උත්සාහ කරන්න.', 'error');
+                    }
+                } else {
+                    // Existing user - just login
+                    const existingUsername = usernameSnapshot.val();
+                    
+                    // Update user profile if needed
+                    if (user.displayName !== existingUsername) {
+                        await user.updateProfile({ displayName: existingUsername });
+                    }
+                    
+                    showMessage(`✅ ආයුබෝවන් ${existingUsername}! 🎉`, 'success');
+                    
+                    setTimeout(() => {
+                        window.location.href = 'Home.html';
+                    }, 1500);
+                }
             } catch (error) {
                 disableButtons(false);
                 let errorMsg = 'Google පිවිසුමේ දෝෂයක්!';
