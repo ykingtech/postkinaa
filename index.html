@@ -346,26 +346,14 @@
             const snapshot = await database.ref('usernames/' + user.uid).once('value');
             
             if (!snapshot.exists() || !snapshot.val()) {
-                // User doesn't have username in database - need to set one
+                // Need to set username
                 try {
                     const username = await showUsernameModal(user);
                     showMessage(`✅ ආයුබෝවන් ${username}! 🎉`, 'success');
-                    return username;
                 } catch (error) {
                     console.error('Username setup failed:', error);
                     showMessage('❌ නම සකසන්නේ දෝෂයක්!', 'error');
-                    throw error;
                 }
-            } else {
-                // Username already exists in database
-                const existingUsername = snapshot.val();
-                
-                // Update user profile if it doesn't match database
-                if (user.displayName !== existingUsername) {
-                    await user.updateProfile({ displayName: existingUsername });
-                }
-                
-                return existingUsername;
             }
         }
 
@@ -391,7 +379,20 @@
             }
 
             // Check if username already exists
-            const usernameExists = await checkUsernameExists(displayName);
+            // Step 1 — Create User first
+const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+
+// Step 2 — Now check username (user is authenticated)
+const usernameExists = await checkUsernameExists(displayName);
+if (usernameExists) {
+   showMessage('❌ මෙම නම දැනටමත් භාවිතා වේ!', 'error');
+   return;
+}
+
+// Step 3 — Save username
+await userCredential.user.updateProfile({ displayName: displayName });
+await saveUsername(userCredential.user.uid, displayName);
+
             if (usernameExists) {
                 showMessage('❌ මෙම නම දැනටමත් භාවිතා වේ! වෙනත් නමක් තෝරන්න.', 'error');
                 return;
@@ -434,41 +435,12 @@
             disableButtons(true);
             try {
                 const userCredential = await auth.signInWithEmailAndPassword(email, password);
-                const user = userCredential.user;
+                await ensureDisplayName(userCredential.user);
                 
-                // Check if user has username in database
-                const usernameSnapshot = await database.ref('usernames/' + user.uid).once('value');
-                
-                if (!usernameSnapshot.exists() || !usernameSnapshot.val()) {
-                    // No username in database - ask for one
-                    showMessage('🎉 ස්වාගතම! කරුණාකර username එකක් තෝරන්න...', 'info');
-                    
-                    try {
-                        const username = await showUsernameModal(user);
-                        showMessage(`✅ ආයුබෝවන් ${username}! 🎉`, 'success');
-                        
-                        setTimeout(() => {
-                            window.location.href = 'Home.html';
-                        }, 1500);
-                    } catch (error) {
-                        disableButtons(false);
-                        showMessage('❌ Username සකසන්නේ දෝෂයක්!', 'error');
-                    }
-                } else {
-                    // Username exists - proceed to home
-                    const existingUsername = usernameSnapshot.val();
-                    
-                    // Update user profile if needed
-                    if (user.displayName !== existingUsername) {
-                        await user.updateProfile({ displayName: existingUsername });
-                    }
-                    
-                    showMessage(`✅ පිවිසුම සාර්ථකයි! ආයුබෝවන් ${existingUsername}! 🎉`);
-                    
-                    setTimeout(() => {
-                        window.location.href = 'Home.html';
-                    }, 1500);
-                }
+                showMessage('✅ පිවිසුම සාර්ථකයි! යොමු කරමින්...');
+                setTimeout(() => {
+                    window.location.href = 'Home.html';
+                }, 1500);
             } catch (error) {
                 disableButtons(false);
                 let errorMsg = 'දෝෂයක් සිදු විය!';
@@ -490,43 +462,14 @@
             
             try {
                 const userCredential = await auth.signInWithPopup(provider);
-                const user = userCredential.user;
+                await ensureDisplayName(userCredential.user);
                 
-                // Check if this is a new user or existing user
-                const usernameSnapshot = await database.ref('usernames/' + user.uid).once('value');
+                const displayName = userCredential.user.displayName || 'User';
+                showMessage(`✅ Google හරහා සාර්ථකයි! ආයුබෝවන් ${displayName}! 🎉`);
                 
-                if (!usernameSnapshot.exists() || !usernameSnapshot.val()) {
-                    // New user - need to set username
-                    showMessage('🎉 ස්වාගතම! කරුණාකර username එකක් තෝරන්න...', 'info');
-                    
-                    try {
-                        const username = await showUsernameModal(user);
-                        showMessage(`✅ ආයුබෝවන් ${username}! 🎉`, 'success');
-                        
-                        setTimeout(() => {
-                            window.location.href = 'Home.html';
-                        }, 1500);
-                    } catch (error) {
-                        // If username setup fails, sign out the user
-                        await auth.signOut();
-                        disableButtons(false);
-                        showMessage('❌ Username සකසන්නේ දෝෂයක්! නැවත උත්සාහ කරන්න.', 'error');
-                    }
-                } else {
-                    // Existing user - just login
-                    const existingUsername = usernameSnapshot.val();
-                    
-                    // Update user profile if needed
-                    if (user.displayName !== existingUsername) {
-                        await user.updateProfile({ displayName: existingUsername });
-                    }
-                    
-                    showMessage(`✅ ආයුබෝවන් ${existingUsername}! 🎉`, 'success');
-                    
-                    setTimeout(() => {
-                        window.location.href = 'Home.html';
-                    }, 1500);
-                }
+                setTimeout(() => {
+                    window.location.href = 'Home.html';
+                }, 1500);
             } catch (error) {
                 disableButtons(false);
                 let errorMsg = 'Google පිවිසුමේ දෝෂයක්!';
