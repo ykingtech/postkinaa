@@ -3,141 +3,217 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>පිවිසෙන්න / ලියාපදිංචි වන්න</title>
+    <title>PostKinaa - ප්‍රවේශය</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <style>
         .fade-in { animation: fadeIn 0.5s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        .pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+        .auth-button { transition: all 0.3s; }
+        .auth-button:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); }
+        #notification { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); padding: 10px 20px; border-radius: 10px; color: white; font-weight: bold; z-index: 1000; opacity: 0; visibility: hidden; transition: all 0.25s; box-shadow: 0 4px 12px rgba(0,0,0,0.12); }
+        #notification.show { opacity: 1; visibility: visible; }
+        .disabled { opacity: 0.6; pointer-events: none; }
     </style>
 </head>
 <body class="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 flex items-center justify-center p-4">
 
-    <div class="w-full max-w-md bg-white/90 backdrop-blur-lg rounded-3xl shadow-2xl border border-purple-100 p-8 fade-in">
-        <h2 class="text-4xl font-bold text-center mb-6 bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-pink-600">
-            👋 පිවිසෙන්න
-        </h2>
+    <div class="w-full max-w-md bg-white/90 backdrop-blur-lg rounded-3xl p-8 shadow-2xl border border-gray-100 fade-in">
+        <h1 class="text-4xl font-extrabold text-center mb-6 bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-pink-600">PostKinaa</h1>
+        <p class="text-center text-gray-500 mb-8">යාලුවෝ එක්ක සම්බන්ධ වෙන්න!</p>
 
-        <div id="themeSelector" class="flex justify-center space-x-3 mb-6">
-            <button onclick="setTheme('default')" class="p-2 w-10 h-10 rounded-full shadow-md bg-gradient-to-r from-purple-500 to-pink-500 hover:scale-110 transition-transform duration-200" title="Theme 1"></button>
-            <button onclick="setTheme('green')" class="p-2 w-10 h-10 rounded-full shadow-md bg-gradient-to-r from-green-500 to-teal-500 hover:scale-110 transition-transform duration-200" title="Theme 2"></button>
-            <button onclick="setTheme('blue')" class="p-2 w-10 h-10 rounded-full shadow-md bg-gradient-to-r from-blue-500 to-indigo-500 hover:scale-110 transition-transform duration-200" title="Theme 3"></button>
+        <div id="notification" class=""></div>
+
+        <div id="authContainer">
+            <div id="signInSection">
+                <h2 class="text-2xl font-bold mb-6 text-gray-800">පිවිසෙන්න</h2>
+                
+                <button id="googleSignInBtn" class="auth-button w-full flex items-center justify-center space-x-2 bg-white text-gray-700 border border-gray-300 p-3 rounded-xl font-bold text-lg hover:bg-gray-100 focus:outline-none focus:ring-4 focus:ring-gray-300 transition duration-300 mb-4">
+                    <svg class="w-5 h-5" viewBox="0 0 533.5 544.3" xmlns="http://www.w3.org/2000/svg"><path d="M533.5 244.3c0-14.7-1.2-29.2-3.4-43.2H267.5v82.7h149.3c-6.4 39.8-29.7 73.5-62.8 96.1l-2.6 1.8 69.4 53.7 3.8.3c42.8-39.7 67.5-97 67.5-164.8z" fill="#4285F4"/><path d="M267.5 544.3c71.2 0 131-23.7 174.7-64.4l-73.4-56.9c-20.4 13.6-46.7 22-77.2 22-59 0-109.8-39.9-127.7-93.5l-2.5.3-71.1 55.4-1.7.9c41 81.3 124.9 138.2 229.7 138.2z" fill="#34A853"/><path d="M140.2 329.8c-3.1-9.4-5.2-19.4-5.2-29.8 0-10.4 2.1-20.4 5.1-29.8l-1.9-1.5-73.6-57.2-1.4.7c-21.7 43.1-34.4 92.5-34.4 147.2 0 54.7 12.7 104.1 34.4 147.2l75-58.4z" fill="#FBBC05"/><path d="M267.5 108.3c38.7 0 73.1 13.3 99.9 38.6L437 78.4c-43.7-41-103.5-66.7-169.5-66.7-104.8 0-188.7 56.9-229.7 138.2l75 58.4c17.9-53.6 68.7-93.5 127.7-93.5z" fill="#EA4335"/></svg>
+                    <span>ගූගල් හරහා පිවිසෙන්න</span>
+                </button>
+                
+                <div class="flex items-center my-4">
+                    <hr class="flex-grow border-gray-300">
+                    <span class="px-3 text-gray-500 text-sm">නැතහොත්</span>
+                    <hr class="flex-grow border-gray-300">
+                </div>
+                
+                <input type="email" id="authEmail" placeholder="ඊමේල් ලිපිනය" class="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 transition duration-300">
+                <input type="password" id="authPassword" placeholder="මුරපදය" class="w-full p-3 mb-6 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 transition duration-300">
+                
+                <button id="signInBtn" class="auth-button w-full bg-purple-600 text-white p-3 rounded-xl font-bold text-lg hover:bg-purple-700 focus:outline-none focus:ring-4 focus:ring-purple-300 transition duration-300">
+                    ඊමේල්/මුරපදයෙන් පිවිසෙන්න
+                </button>
+                
+                <p class="text-center text-gray-500 mt-6">
+                    ගිණුමක් නැද්ද? 
+                    <button id="toggleAuthBtn" class="text-purple-600 font-semibold hover:underline">ලියාපදිංචි වෙන්න</button>
+                </p>
+            </div>
+
+            <div id="signUpSection" class="hidden">
+                <h2 class="text-2xl font-bold mb-6 text-gray-800">ලියාපදිංචි වන්න</h2>
+                <input type="email" id="signUpEmail" placeholder="ඊමේල් ලිපිනය" class="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 transition duration-300">
+                
+                <input type="text" id="displayName" placeholder="පරිශීලක නාමය (Display Name)" class="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 transition duration-300">
+                
+                <input type="password" id="signUpPassword" placeholder="මුරපදය (අවම වශයෙන් 6ක්)" class="w-full p-3 mb-6 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 transition duration-300">
+                
+                <button id="signUpBtn" class="auth-button w-full bg-pink-600 text-white p-3 rounded-xl font-bold text-lg hover:bg-pink-700 focus:outline-none focus:ring-4 focus:ring-pink-300 transition duration-300">
+                    ලියාපදිංචි වන්න
+                </button>
+
+                <p class="text-center text-gray-500 mt-6">
+                    ගිණුමක් දැනටමත් තිබෙනවද? 
+                    <button id="backToSignIn" class="text-pink-600 font-semibold hover:underline">පිවිසෙන්න</button>
+                </p>
+            </div>
         </div>
-
-        <input
-            type="email"
-            id="authEmail"
-            placeholder="විද්‍යුත් තැපෑල (Email)"
-            class="w-full px-5 py-3 mb-4 bg-gray-50 rounded-xl border-2 border-gray-200 focus:border-purple-400 focus:bg-white outline-none transition-all duration-200"
-        />
-        <input
-            type="password"
-            id="authPassword"
-            placeholder="මුරපදය (Password)"
-            class="w-full px-5 py-3 mb-6 bg-gray-50 rounded-xl border-2 border-gray-200 focus:border-purple-400 focus:bg-white outline-none transition-all duration-200"
-        />
-
-        <button
-            onclick="signIn()"
-            id="signInButton"
-            class="w-full px-6 py-3 bg-purple-500 text-white rounded-xl font-semibold hover:bg-purple-600 shadow-lg hover:shadow-xl transition-all duration-200 mb-3"
-        >
-            ➡️ පිවිසෙන්න (Sign In)
-        </button>
-
-        <button
-            onclick="signUp()"
-            id="signUpButton"
-            class="w-full px-6 py-3 bg-pink-500 text-white rounded-xl font-semibold hover:bg-pink-600 shadow-lg hover:shadow-xl transition-all duration-200"
-        >
-            ➕ ලියාපදිංචි වන්න (Sign Up)
-        </button>
-
-        <p id="authMessage" class="text-center mt-4 text-sm text-gray-600"></p>
     </div>
 
     <script>
-        // Firebase Configuration (ඔබේම config එක යොදන්න)
+        // --- 1) Copy the working firebaseConfig values from Home.html/comment.html into index (they exist in your other files) ---
         const firebaseConfig = {
-            apiKey: "AIzaSyAzNJ-P8aAMvTuNWKcQYCjIIHiaL0BpdZ0",
-            authDomain: "game-f1c21.firebaseapp.com",
-            databaseURL: "https://game-f1c21-default-rtdb.firebaseio.com",
-            projectId: "game-f1c21",
-            storageBucket: "game-f1c21.firebasestorage.app",
-            messagingSenderId: "656338565711",
-            appId: "1:656338565711:web:395f9c7f846588b065883a",
-            measurementId: "G-2M7BJXBB7W"
+          apiKey: "AIzaSyAzNJ-P8aAMvTuNWKcQYCjIIHiaL0BpdZ0",
+          authDomain: "game-f1c21.firebaseapp.com",
+          databaseURL: "https://game-f1c21-default-rtdb.firebaseio.com",
+          projectId: "game-f1c21",
+          storageBucket: "game-f1c21.firebasestorage.app",
+          messagingSenderId: "656338565711",
+          appId: "1:656338565711:web:395f9c7f846588b065883a",
+          measurementId: "G-2M7BJXBB7W"
         };
 
-        firebase.initializeApp(firebaseConfig);
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
         const auth = firebase.auth();
-        const authMessage = document.getElementById('authMessage');
-        const authEmail = document.getElementById('authEmail');
-        const authPassword = document.getElementById('authPassword');
 
-        // Theme Setting Function
-        function setTheme(theme) {
-            localStorage.setItem('appTheme', theme);
-            document.body.className = 'min-h-screen p-4 flex items-center justify-center ' + getThemeClass(theme).bg;
+        // --- Helper: unified notification ---
+        function showMessage(message, type = 'success') {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.classList.remove('bg-purple-500','bg-red-500','bg-pink-500','bg-blue-500');
+            if (type === 'error') notification.classList.add('bg-red-500');
+            else notification.classList.add('bg-purple-500');
+            notification.classList.add('show');
+
+            clearTimeout(window._notifTimeout);
+            window._notifTimeout = setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
         }
 
-        function getThemeClass(themeName) {
-            switch (themeName) {
-                case 'green':
-                    return { bg: 'bg-gradient-to-br from-green-50 via-teal-50 to-cyan-50', header: 'bg-gradient-to-r from-green-600 via-teal-600 to-cyan-600' };
-                case 'blue':
-                    return { bg: 'bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50', header: 'bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600' };
-                default:
-                    return { bg: 'bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50', header: 'bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600' };
-            }
+        // --- Enable/Disable all inputs & buttons while network calls happen ---
+        function disableButtons(disable = true) {
+            const elements = document.querySelectorAll('#authContainer input, #authContainer button');
+            elements.forEach(el => {
+                if (disable) {
+                    el.classList.add('disabled');
+                    el.disabled = true;
+                } else {
+                    el.classList.remove('disabled');
+                    el.disabled = false;
+                }
+            });
         }
 
-        // Check for existing theme on load
-        const storedTheme = localStorage.getItem('appTheme') || 'default';
-        setTheme(storedTheme);
+        // --- Toggle between sign-in and sign-up sections ---
+        document.getElementById('toggleAuthBtn').addEventListener('click', () => {
+            document.getElementById('signInSection').classList.add('hidden');
+            document.getElementById('signUpSection').classList.remove('hidden');
+        });
+        document.getElementById('backToSignIn').addEventListener('click', () => {
+            document.getElementById('signUpSection').classList.add('hidden');
+            document.getElementById('signInSection').classList.remove('hidden');
+        });
 
-        // Check if user is already logged in
+        // --- Keep user on Home if already signed in ---
         auth.onAuthStateChanged(user => {
             if (user) {
-                // If logged in, redirect to the new main page name
+                // NOTE: your file is named "Home.html" (capital H) in the project — redirect to exact name
                 window.location.href = 'Home.html';
             }
         });
 
-        // Sign Up function (Added .trim() for invalid email fix)
-        function signUp() {
-            const email = authEmail.value.trim();
-            const password = authPassword.value;
-            
-            auth.createUserWithEmailAndPassword(email, password)
-                .then((userCredential) => {
-                    authMessage.textContent = '✅ සාර්ථකව ලියාපදිංචි විය! ඔබව යොමු කරනු ලැබේ...';
-                    setTimeout(() => {
-                        window.location.href = 'Home.html'; // Redirect to Home.html
-                    }, 1500);
-                })
-                .catch((error) => {
-                    authMessage.textContent = `ලියාපදිංචි වීමේ දෝෂය: ${error.message}`;
-                });
+        // --- Safe prompt for displayName (if missing) ---
+        async function ensureDisplayName(user) {
+            if (!user) return;
+            if (!user.displayName || user.displayName.trim() === '') {
+                let newDisplayName = prompt("⚠️ ඔබගේ පරිශීලක නාමය (Display Name) හිස්! කරුණාකර ඇතුළත් කරන්න:");
+                if (!newDisplayName || newDisplayName.trim() === "") {
+                    newDisplayName = user.email ? user.email.split('@')[0] : 'User';
+                }
+                try {
+                    await user.updateProfile({ displayName: newDisplayName });
+                } catch (err) {
+                    console.warn('DisplayName update failed:', err);
+                }
+            }
         }
 
-        // Sign In function (Added .trim() for invalid email fix)
-        function signIn() {
-            const email = authEmail.value.trim();
-            const password = authPassword.value;
-            
-            auth.signInWithEmailAndPassword(email, password)
-                .then((userCredential) => {
-                    authMessage.textContent = '✅ සාර්ථකව ඇතුල් විය! ඔබව යොමු කරනු ලැබේ...';
-                    setTimeout(() => {
-                        window.location.href = 'Home.html'; // Redirect to Home.html
-                    }, 1500);
-                })
-                .catch((error) => {
-                    authMessage.textContent = `ඇතුල් වීමේ දෝෂය: ${error.message}`;
-                });
-        }
+        // --- Sign Up ---
+        document.getElementById('signUpBtn').addEventListener('click', async () => {
+            const email = document.getElementById('signUpEmail').value.trim();
+            const password = document.getElementById('signUpPassword').value;
+            const displayName = document.getElementById('displayName').value.trim();
+
+            if (!email || !password || !displayName) {
+                showMessage('❌ කරුණාකර සියලු තොරතුරු පුරවන්න!', 'error'); return;
+            }
+            if (password.length < 6) {
+                showMessage('❌ මුරපදය අවම වශයෙන් 6 ක් විය යුතුය', 'error'); return;
+            }
+
+            disableButtons(true);
+            try {
+                const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+                await userCredential.user.updateProfile({ displayName: displayName });
+                showMessage('✅ ලියාපදිංචි වීම සාර්ථකයි! යොමු කරමින්...');
+                // Immediately redirect to Home
+                window.location.href = 'Home.html';
+            } catch (error) {
+                disableButtons(false);
+                showMessage(`❌ දෝෂය: ${error.message}`, 'error');
+            }
+        });
+
+        // --- Sign In (email/password) ---
+        document.getElementById('signInBtn').addEventListener('click', async () => {
+            const email = document.getElementById('authEmail').value.trim();
+            const password = document.getElementById('authPassword').value;
+            if (!email || !password) { showMessage('❌ කරුණාකර සියලු තොරතුරු පුරවන්න!', 'error'); return; }
+
+            disableButtons(true);
+            try {
+                const userCredential = await auth.signInWithEmailAndPassword(email, password);
+                await ensureDisplayName(userCredential.user);
+                showMessage('✅ පිවිසීම සාර්ථකයි! යොමු කරමින්...');
+                window.location.href = 'Home.html';
+            } catch (error) {
+                disableButtons(false);
+                showMessage(`❌ දෝෂය: ${error.message}`, 'error');
+            }
+        });
+
+        // --- Google Sign-in (popup) ---
+        document.getElementById('googleSignInBtn').addEventListener('click', async () => {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            disableButtons(true);
+            try {
+                const userCredential = await auth.signInWithPopup(provider);
+                await ensureDisplayName(userCredential.user);
+                showMessage('✅ Google හරහා සාර්ථකයි! යොමු කරමින්...');
+                window.location.href = 'Home.html';
+            } catch (error) {
+                disableButtons(false);
+                showMessage(`❌ Google පිවිසීමේ දෝෂයක්! ${error.message}`, 'error');
+            }
+        });
     </script>
 </body>
 </html>
