@@ -266,7 +266,7 @@
     }
 
     /* ============================================================
-        🔥 NEW: Real-time Connection Status (UPDATED NOTIFICATION)
+        🔥 NEW: Real-time Connection Status (UPDATED NOTIFICATION - POPUPS REMOVED)
     ============================================================ */
     const statusEl = document.getElementById("connectionStatus");
 
@@ -278,18 +278,16 @@
             statusEl.textContent = '🔴 Offline';
             // R-G-B: Replace green/emerald with red for offline status
             statusEl.className = statusEl.className.replace(/green|emerald|blue/g, 'red').replace(/glow/, 'pulse-animation');
-            showNotification("සම්බන්ධතාවය නැති විය! 🔴");
+            // Notification removed
         } else {
             // 🔥 NEW: Check if we were previously offline before showing connected notification
-            const wasOffline = statusEl.textContent.includes('Offline');
+            // const wasOffline = statusEl.textContent.includes('Offline'); // Variable kept but not used for notification
             
             statusEl.textContent = '✨ Connected';
             // R-G-B: Restore green/emerald/blue classes for connected status
             statusEl.className = statusEl.className.replace(/red/g, 'green').replace(/pulse-animation/, 'glow');
 
-            if (wasOffline) {
-                showNotification("සම්බන්ධතාවය නැවත ඇති විය! ✨");
-            }
+            // Notification removed
         }
     });
 
