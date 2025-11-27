@@ -47,8 +47,9 @@
     <div class="max-w-4xl mx-auto px-4 py-6">
 
         <div id="profileCard" class="glass-effect rounded-3xl shadow-2xl border-2 border-white/40 p-5 sm:p-8 mb-8 fade-in">
-            <div class="flex items-start justify-between">
-                <div class="flex items-center space-x-4 sm:space-x-6">
+            <div class="flex flex-col sm:flex-row items-start justify-between">
+                
+                <div class="flex items-center space-x-4 sm:space-x-6 w-full sm:w-auto order-2 sm:order-1 mt-4 sm:mt-0">
                     <div id="profileAvatarContainer" class="w-20 h-20 sm:w-28 sm:h-28 bg-gradient-to-br from-purple-400 to-pink-400 rounded-xl sm:rounded-2xl flex items-center justify-center text-4xl sm:text-6xl shadow-xl shrink-0">
                         <span id="profileAvatar">👤</span>
                     </div>
@@ -56,22 +57,28 @@
                         <div class="flex items-center">
                             <h2 id="profileName" class="text-2xl sm:text-4xl font-black text-gray-800 mb-1">...Loading Profile...</h2>
                             <button id="editProfileButton" style="display:none;" onclick="window.location.href='settings.html'"
-                                class="ml-3 p-1.5 text-xl text-gray-600 hover:text-purple-600 hover:bg-purple-100 rounded-full transition-colors" title="Profile Edit">
+                                class="ml-3 p-1.5 text-xl text-gray-600 hover:text-purple-600 hover:bg-purple-100 rounded-full transition-colors hidden sm:inline-block" title="Profile Edit">
                                 ✏️
                             </button>
                         </div>
                         <p id="profileUID" class="text-sm sm:text-base text-gray-500 font-semibold mb-2">UID: </p>
-                        <div class="text-center font-bold text-base sm:text-xl text-gray-600 mt-2">
+                        <div class="font-bold text-base sm:text-xl text-gray-600 mt-2">
                             <span id="followerCount">0</span> Followers | <span id="followingCount">0</span> Following
                         </div>
                     </div>
                 </div>
                 
-                <button id="followButton" 
-                    onclick="toggleFollow(targetUid)"
-                    class="px-6 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-full font-bold shadow-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-300 hover:scale-105 shrink-0 mt-2 sm:mt-4">
-                    ...
-                </button>
+                <div class="w-full sm:w-auto flex justify-start sm:justify-end order-1 sm:order-2">
+                    <button id="followButton" 
+                        onclick="toggleFollow(targetUid)"
+                        class="px-6 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-full font-bold shadow-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-300 hover:scale-105 shrink-0 w-full sm:w-auto mt-0 sm:mt-4">
+                        ...
+                    </button>
+                    <button id="editProfileButtonMobile" style="display:none;" onclick="window.location.href='settings.html'"
+                            class="px-6 py-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-full font-bold shadow-lg hover:from-blue-600 hover:to-cyan-600 transition-all duration-300 hover:scale-105 shrink-0 w-full sm:w-auto mt-0 sm:mt-4">
+                            ✏️ Edit Profile
+                    </button>
+                </div>
             </div>
             
             <p id="profileBio" class="mt-4 sm:mt-6 text-gray-700 text-sm sm:text-base italic pl-2 border-l-4 border-purple-300">Bio loading...</p>
@@ -144,7 +151,7 @@
     });
 
     /* ============================================================
-        🔥 Load Profile Data (UPDATED FOR COUNTS AND BIO FIX)
+        🔥 Load Profile Data (UPDATED FOR COUNTS, BIO FIX, and Responsive Edit Button)
     ============================================================ */
     async function loadProfileData(uid) {
         document.getElementById('profileName').textContent = '...Loading Profile...';
@@ -169,25 +176,29 @@
         document.getElementById('followingCount').textContent = followingCount;
         
         // Update Bio
-        // 🔥 FIX 1: Change "කිසිවක් ලියා නැත" to be specific to "Bio"
+        // FIX: Bio message changed for accuracy
         const profileBio = userData ? userData.bio || 'මෙම පරිශීලකයා තවම තම Bio එකක් එකතු කර නැත.' : 'Profile data not available.';
         document.getElementById('profileBio').textContent = profileBio;
         
         // Update Post Header
         document.getElementById('postsHeader').textContent = `Posts by ${profileName}`;
 
-        // Update UID display & Edit Button
+        // Update UID display & Edit Buttons
         const followButton = document.getElementById('followButton');
         const editButton = document.getElementById('editProfileButton');
+        const editButtonMobile = document.getElementById('editProfileButtonMobile');
+
 
         if (uid !== myUid) {
              document.getElementById('profileUID').textContent = `UID: ${uid}`;
              followButton.style.display = 'block';
-             editButton.style.display = 'none';
+             editButton.style.display = 'none'; // Desktop hidden
+             editButtonMobile.style.display = 'none'; // Mobile hidden
         } else {
              document.getElementById('profileUID').textContent = `UID: ${uid} (Your Profile)`;
              followButton.style.display = 'none';
-             editButton.style.display = 'block'; // Show edit button for self
+             editButton.style.display = 'block'; // Desktop visible
+             editButtonMobile.style.display = 'block'; // Mobile visible
         }
         
         // Update Follow Button State
@@ -209,10 +220,10 @@
         
         if (isFollowing) {
             btn.innerHTML = `<span class="mr-1">✔️</span> Following`;
-            btn.className = "px-6 py-2 bg-purple-200 text-purple-700 rounded-full font-bold shadow-lg transition-all duration-300 hover:bg-purple-300 hover:scale-105";
+            btn.className = "px-6 py-2 bg-purple-200 text-purple-700 rounded-full font-bold shadow-lg transition-all duration-300 hover:bg-purple-300 hover:scale-105 shrink-0 w-full sm:w-auto mt-0 sm:mt-4";
         } else {
             btn.innerHTML = `<span class="mr-1">➕</span> Follow`;
-            btn.className = "px-6 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-full font-bold shadow-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-300 hover:scale-105";
+            btn.className = "px-6 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-full font-bold shadow-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-300 hover:scale-105 shrink-0 w-full sm:w-auto mt-0 sm:mt-4";
         }
     }
     
@@ -252,7 +263,7 @@
             isFollowing = true;
         }
         
-        // FIX 2: Re-load profile data to update counts and button state immediately
+        // FIX: Re-load profile data to update counts and button state immediately
         await loadProfileData(targetUid); 
         btn.disabled = false;
     }
@@ -410,4 +421,3 @@
     </script>
 </body>
 </html>
-
