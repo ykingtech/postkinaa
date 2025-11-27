@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="si">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="pageTitle">PostKinaa - User Profile</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+
+    <style>
+        /* Shared styles (copied from Home.html for consistency) */
+        @keyframes fadeIn { from { opacity:0; transform:translateY(20px);} to {opacity:1; transform:translateY(0);} }
+        .fade-in { animation: fadeIn 0.5s ease-out; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .spinner { animation: spin 1s linear infinite; }
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .post-card {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .post-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.2);
+        }
+    </style>
+</head>
+
+<body class="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50">
+
+    <header id="appHeader" class="glass-effect sticky top-0 z-50 shadow-2xl border-b-2 border-white/50">
+        <div class="max-w-4xl mx-auto px-4 py-3 sm:py-5 flex items-center justify-between">
+            <a href="home.html" title="මුල් පිටුවට"
+                class="p-2 sm:p-3 text-xl sm:text-2xl text-gray-600 hover:text-purple-600 hover:bg-purple-100 rounded-xl sm:rounded-2xl transition-all duration-300 hover:scale-110">
+                🏠
+            </a>
+            <h1 class="text-2xl sm:text-3xl font-black bg-clip-text text-transparent bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600">සොයාගැනීම</h1>
+        </div>
+    </header>
+
+    <div class="max-w-4xl mx-auto px-4 py-6">
+
+        <div id="profileCard" class="glass-effect rounded-3xl shadow-2xl border-2 border-white/40 p-5 sm:p-8 mb-8 fade-in">
+            <div class="flex items-start justify-between">
+                <div class="flex items-center space-x-4 sm:space-x-6">
+                    <div id="profileAvatarContainer" class="w-20 h-20 sm:w-28 sm:h-28 bg-gradient-to-br from-purple-400 to-pink-400 rounded-xl sm:rounded-2xl flex items-center justify-center text-4xl sm:text-6xl shadow-xl shrink-0">
+                        <span id="profileAvatar">👤</span>
+                    </div>
+                    <div>
+                        <h2 id="profileName" class="text-2xl sm:text-4xl font-black text-gray-800 mb-1">...Loading Profile...</h2>
+                        <p id="profileUID" class="text-sm sm:text-base text-gray-500 font-semibold mb-2">UID: </p>
+                        <div class="text-center font-bold text-base sm:text-xl text-gray-600 mt-2">
+                            <span id="followerCount">0</span> Followers | <span id="followingCount">0</span> Following
+                        </div>
+                    </div>
+                </div>
+                
+                <button id="followButton" 
+                    onclick="toggleFollow(targetUid)"
+                    class="px-6 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-full font-bold shadow-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-300 hover:scale-105 shrink-0 mt-2 sm:mt-4">
+                    ...
+                </button>
+            </div>
+            
+            <p id="profileBio" class="mt-4 sm:mt-6 text-gray-700 text-sm sm:text-base italic pl-2 border-l-4 border-purple-300">Bio loading...</p>
+        </div>
+
+        <h2 id="postsHeader" class="text-xl sm:text-2xl font-bold text-gray-700 mb-6 border-b-2 pb-2">Posts by Profile</h2>
+        <div id="profilePostsFeed" class="space-y-6">
+            <div id="loadingPosts" class="text-center py-8">
+                <div class="inline-block w-10 h-10 border-4 border-purple-200 border-t-purple-600 rounded-full spinner"></div>
+                <p class="mt-4 text-gray-700 font-medium">Posts Loading...</p>
+            </div>
+        </div>
+        
+        <div id="noPostsMessage" class="text-center py-16 glass-effect rounded-3xl border-2 border-white/40 shadow-2xl mt-8" style="display:none;">
+            <div class="text-8xl mb-6">🚫</div>
+            <p class="text-2xl text-gray-700 font-bold mb-3" id="noPostsText">මෙම පරිශීලකයාගෙන් පෝස්ට් නොමැත.</p>
+        </div>
+    </div>
+
+    <script>
+    /* ============================================================
+        🔥 Firebase Config + Init
+    ============================================================ */
+    const firebaseConfig = {
+        apiKey: "AIzaSyAzNJ-P8aAMvTuNWKcQYCjIIHiaL0BpdZ0",
+        authDomain: "game-f1c21.firebaseapp.com",
+        databaseURL: "https://game-f1c21-default-rtdb.firebaseio.com",
+        projectId: "game-f1c21",
+        storageBucket: "game-f1c21.firebasestorage.app",
+        messagingSenderId: "656338565711",
+        appId: "1:656338565711:web:395f9c7f846588b065883a"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const database = firebase.database();
+    const postsRef = database.ref("posts");
+    const usersRef = database.ref("users");
+
+    let myUid = null;
+    let targetUid = null;
+    let isFollowing = false; // State variable for follow status
+
+    /* ============================================================
+        🔥 Auth Check and Initialization
+    ============================================================ */
+    auth.onAuthStateChanged(user => {
+        if (!user) {
+            window.location.href = "index.html";
+            return;
+        }
+        myUid = user.uid;
+        
+        // Get UID from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        targetUid = urlParams.get('uid');
+
+        if (!targetUid) {
+            // If no UID is provided, default to the currently logged-in user
+            targetUid = myUid;
+            document.getElementById('profileUID').textContent = `UID: ${targetUid} (Your Profile)`;
+            document.getElementById('followButton').style.display = 'none'; // Hide follow button for self
+        } else if (targetUid === myUid) {
+            document.getElementById('profileUID').textContent = `UID: ${targetUid} (Your Profile)`;
+            document.getElementById('followButton').style.display = 'none'; // Hide follow button for self
+        }
+
+        loadProfileData(targetUid);
+        loadPostsByAuthor(targetUid);
+    });
+
+    /* ============================================================
+        🔥 Load Profile Data (UPDATED FOR COUNTS)
+    ============================================================ */
+    async function loadProfileData(uid) {
+        document.getElementById('profileName').textContent = '...Loading Profile...';
+        document.getElementById('postsHeader').textContent = 'Posts Loading...';
+        
+        const snap = await usersRef.child(uid).once('value');
+        const userData = snap.val();
+        
+        const profileName = userData ? userData.name || 'Unknown User' : 'Profile Not Found'; 
+        const profileAvatar = userData ? userData.avatar || '👤' : '❌'; 
+        
+        // 🔥 FIX: Get Follower/Following Counts Safely
+        const followerCount = userData ? userData.followerCount || 0 : 0;
+        const followingCount = userData ? userData.followingCount || 0 : 0;
+
+        document.getElementById('profileName').textContent = profileName;
+        document.getElementById('pageTitle').textContent = `PostKinaa - ${profileName}`;
+        document.getElementById('profileAvatar').textContent = profileAvatar;
+        
+        // Update counts
+        document.getElementById('followerCount').textContent = followerCount; 
+        document.getElementById('followingCount').textContent = followingCount;
+        
+        // Update Bio
+        const profileBio = userData ? userData.bio || 'මෙම පරිශීලකයා තවම කිසිවක් ලියා නැත.' : 'Profile data not available.';
+        document.getElementById('profileBio').textContent = profileBio;
+        
+        // Update Post Header
+        document.getElementById('postsHeader').textContent = `Posts by ${profileName}`;
+
+        // Update UID display
+        if (uid !== myUid) {
+             document.getElementById('profileUID').textContent = `UID: ${uid}`;
+        }
+        
+        // Update Follow Button State
+        if (uid !== myUid) {
+            const myFollowRef = usersRef.child(myUid).child('following').child(uid);
+            await myFollowRef.once('value').then(snap => {
+                isFollowing = snap.exists();
+                updateFollowButton(isFollowing);
+            });
+        }
+    }
+
+    /* ============================================================
+        🔥 Follow/Unfollow Logic (NEW)
+    ============================================================ */
+    function updateFollowButton(isFollowing) {
+        const btn = document.getElementById('followButton');
+        if (!btn) return;
+        
+        if (isFollowing) {
+            btn.innerHTML = `<span class="mr-1">✔️</span> Following`;
+            btn.className = "px-6 py-2 bg-purple-200 text-purple-700 rounded-full font-bold shadow-lg transition-all duration-300 hover:bg-purple-300 hover:scale-105";
+        } else {
+            btn.innerHTML = `<span class="mr-1">➕</span> Follow`;
+            btn.className = "px-6 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-full font-bold shadow-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-300 hover:scale-105";
+        }
+    }
+    
+    async function toggleFollow(targetUid) {
+        if (!myUid || myUid === targetUid) return;
+        
+        const btn = document.getElementById('followButton');
+        btn.disabled = true;
+
+        // References
+        const myFollowingRef = usersRef.child(myUid).child('following').child(targetUid);
+        const targetFollowerRef = usersRef.child(targetUid).child('followers').child(myUid);
+        const myFollowingCountRef = usersRef.child(myUid).child('followingCount');
+        const targetFollowerCountRef = usersRef.child(targetUid).child('followerCount');
+
+        if (isFollowing) {
+            // Unfollow
+            await myFollowingRef.remove();
+            await targetFollowerRef.remove();
+            
+            // Decrement counts using transactions (safe concurrent update)
+            myFollowingCountRef.transaction(count => (count || 1) - 1);
+            targetFollowerCountRef.transaction(count => (count || 1) - 1);
+            
+            showNotification("Unfollowed 😥");
+            isFollowing = false;
+        } else {
+            // Follow
+            await myFollowingRef.set(true); 
+            await targetFollowerRef.set(true);
+            
+            // Increment counts using transactions
+            myFollowingCountRef.transaction(count => (count || 0) + 1);
+            targetFollowerCountRef.transaction(count => (count || 0) + 1);
+            
+            showNotification("Followed! 🎉");
+            isFollowing = true;
+        }
+        
+        // Re-load profile data to update counts and button state immediately
+        await loadProfileData(targetUid); 
+        btn.disabled = false;
+    }
+
+    /* ============================================================
+        🔥 Load Posts By Author
+    ============================================================ */
+    function loadPostsByAuthor(authorId) {
+        const feed = document.getElementById("profilePostsFeed");
+        const loading = document.getElementById("loadingPosts");
+        const noPosts = document.getElementById("noPostsMessage");
+
+        feed.innerHTML = "";
+        loading.style.display = "block";
+        noPosts.style.display = "none";
+
+        postsRef.orderByChild("authorId").equalTo(authorId).once("value").then(snap => {
+            loading.style.display = "none";
+            
+            if (!snap.exists()) {
+                noPosts.style.display = "block";
+                return;
+            }
+
+            const posts = [];
+            snap.forEach(s => {
+                posts.push({ id: s.key, ...s.val() });
+            });
+            
+            // Show latest posts first
+            posts.reverse(); 
+
+            posts.forEach(p => feed.appendChild(createPostElement(p)));
+
+        }).catch(err => {
+            console.error("Error loading author posts:", err);
+            loading.style.display = "none";
+            showNotification("පෝස්ට් ලෝඩ් කිරීමේ දෝෂයක් ❌");
+        });
+    }
+
+    /* ============================================================
+        🔥 Create Post Element (Simplified for Profile)
+    ============================================================ */
+    function createPostElement(post) {
+        const timeAgo = getTimeAgo(post.timestamp);
+        const me = myUid;
+        const isAuthor = post.authorId === me;
+
+        const myReaction = post.reactions && post.reactions[me] ? post.reactions[me] : null;
+
+        const likeCount = post.reactionCounts?.like || 0;
+        const laughCount = post.reactionCounts?.laugh || 0;
+        const fireCount = post.reactionCounts?.fire || 0;
+
+        const div = document.createElement("div");
+        div.id = `post-${post.id}`;
+        div.className =
+            "post-card glass-effect rounded-3xl shadow-2xl border-2 border-white/40 p-5 sm:p-7 hover:shadow-[0_30px_70px_rgba(168,85,247,0.3)] transition-all duration-500 fade-in mb-8";
+        
+        div.innerHTML = `
+            <div class="flex items-start justify-between mb-4 sm:mb-5 flex-wrap">
+                <div class="flex items-center space-x-3 sm:space-x-4">
+                    <div class="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-blue-400 to-purple-400 rounded-xl sm:rounded-2xl flex items-center justify-center text-2xl sm:text-3xl shadow-xl shrink-0">
+                        ${post.avatar || '❓'}
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-gray-800 text-lg sm:text-xl">${post.author || 'නමක් නැත'}</h3>
+                        <p class="text-xs sm:text-sm text-gray-500 font-semibold">⏰ ${timeAgo}</p>
+                    </div>
+                </div>
+
+                ${
+                    isAuthor
+                        ? `
+                    <div class="flex space-x-1 mt-3 sm:mt-0 ml-auto sm:ml-0">
+                        <button onclick="deletePost('${post.id}')"
+                            class="text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded-xl text-lg sm:text-xl transition-all duration-300 hover:scale-110 hover:-rotate-12" title="මකන්න">
+                            🗑️
+                        </button>
+                    </div>`
+                        : ""
+                }
+            </div>
+
+            <p class="text-gray-800 mb-5 sm:mb-6 leading-relaxed text-base sm:text-lg whitespace-pre-line font-medium bg-gradient-to-r from-gray-700 to-gray-900 bg-clip-text">${post.content || 'Content not found'}</p>
+
+            <div class="flex items-center justify-start pt-4 sm:pt-5 border-t-2 border-gray-100 flex-wrap space-x-4 sm:space-x-6">
+                <div class="flex items-center space-x-1">
+                    <span class="text-xl sm:text-2xl">❤️</span>
+                    <span class="font-bold text-base sm:text-lg text-gray-700">${likeCount}</span>
+                </div>
+                <div class="flex items-center space-x-1">
+                    <span class="text-xl sm:text-2xl">😂</span>
+                    <span class="font-bold text-base sm:text-lg text-gray-700">${laughCount}</span>
+                </div>
+                <div class="flex items-center space-x-1">
+                    <span class="text-xl sm:text-2xl">🔥</span>
+                    <span class="font-bold text-base sm:text-lg text-gray-700">${fireCount}</span>
+                </div>
+                <div class="flex items-center space-x-1">
+                    <span class="text-xl sm:text-2xl">💬</span>
+                    <span class="font-bold text-base sm:text-lg text-gray-700">${post.commentsCount || 0}</span>
+                </div>
+            </div>
+        `;
+
+        return div;
+    }
+
+    /* ============================================================
+        🔥 Post Actions (Delete only available for author)
+    ============================================================ */
+    function deletePost(id) {
+        if (!confirm("මෙම පෝස්ට් එක මකන්නද?")) return;
+
+        postsRef.child(id).once("value").then(s => {
+            if (s.val().authorId !== myUid) {
+                showNotification("ඔබට මෙක මැකීමට අවසර නැහැ");
+                return;
+            }
+            postsRef.child(id).remove().then(() => {
+                document.getElementById(`post-${id}`).remove();
+                showNotification("පෝස්ට් එක මකන ලදී 🗑️");
+            });
+        });
+    }
+
+    /* ============================================================
+        🔥 Helpers
+    ============================================================ */
+    function getTimeAgo(ts) {
+        if (!ts) return "මෙම මොහොතේ";
+        const diff = Date.now() - ts;
+        const s = diff/1000;
+        if (s<60) return `${Math.floor(s)}s පෙර`;
+        const m=s/60;
+        if (m<60) return `${Math.floor(m)}min පෙර`;
+        const h=m/60;
+        if (h<24) return `${Math.floor(h)}h පෙර`;
+        return `${Math.floor(h/24)}d පෙර`;
+    }
+
+    function showNotification(text) {
+        const box = document.createElement("div");
+        box.className = "fixed top-5 left-1/2 -translate-x-1/2 bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 text-white px-6 py-3 rounded-full shadow-2xl text-sm z-50 fade-in font-bold";
+        box.textContent = text;
+        document.body.appendChild(box);
+        setTimeout(() => {
+            box.style.opacity = "0";
+            box.style.transform = "translateX(-50%) translateY(-20px)";
+            setTimeout(()=>box.remove(),300);
+        },2500);
+    }
+    </script>
+</body>
+</html>
