@@ -51,6 +51,28 @@
             </button>
         </div>
 
+        <div class="bg-white/90 backdrop-blur-lg rounded-3xl shadow-xl border border-yellow-100 p-6 mb-8 fade-in">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4 border-b pb-2">🖼️ Avatar (Emoji) වෙනස් කිරීම</h2>
+            <p class="text-sm text-gray-500 mb-3">ඔබගේ Posts සහ Profile වලට පෙන්වන Emoji එක මෙතනින් වෙනස් කරන්න.</p>
+            <input id="newAvatarInput" type="text" maxlength="2" placeholder="නව Emoji (උදා: ✨)" 
+                class="w-full px-4 py-3 mb-4 bg-gray-50 rounded-xl border-2 border-transparent focus:border-yellow-400 outline-none transition text-3xl text-center">
+            
+            <button onclick="updateUserAvatar()"
+                class="px-6 py-2 bg-yellow-500 text-white rounded-full font-semibold hover:bg-yellow-600 transition shadow-md">
+                Avatar යාවත්කාලීන කරන්න
+            </button>
+        </div>
+        <div class="bg-white/90 backdrop-blur-lg rounded-3xl shadow-xl border border-green-100 p-6 mb-8 fade-in">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4 border-b pb-2">📝 Bio වෙනස් කිරීම</h2>
+            <p class="text-sm text-gray-500 mb-3">ඔබ ගැන කෙටි විස්තරයක් මෙහි ලියන්න (Profile එකේ පෙන්වයි).</p>
+            <textarea id="newBioInput" rows="3" placeholder="ඔබ ගැන ලියන්න..." 
+                class="w-full px-4 py-3 mb-4 bg-gray-50 rounded-xl border-2 border-transparent focus:border-green-400 outline-none transition text-base resize-none"></textarea>
+            
+            <button onclick="updateUserBio()"
+                class="px-6 py-2 bg-green-500 text-white rounded-full font-semibold hover:bg-green-600 transition shadow-md">
+                Bio යාවත්කාලීන කරන්න
+            </button>
+        </div>
         <div class="bg-white/90 backdrop-blur-lg rounded-3xl shadow-xl border border-pink-100 p-6 mb-8 fade-in">
             <h2 class="text-2xl font-bold text-gray-800 mb-4 border-b pb-2">🎨 Theme තෝරන්න (Theme 10)</h2>
             <div id="themeContainer" class="grid grid-cols-2 md:grid-cols-5 gap-4">
@@ -202,12 +224,19 @@
     }
 
     /* ============================================================
-        1. Name Change Functionality
+        1. Name/Avatar/Bio Change Functionality (UPDATED)
     ============================================================ */
     function loadUserSettings() {
-        usersRef.child(currentUser.uid).child('name').once('value', snap => {
-            const userName = snap.val();
-            document.getElementById('newNameInput').value = userName || currentUser.email.split("@")[0];
+        // 🔥 UPDATED: Fetch all user data
+        usersRef.child(currentUser.uid).once('value', snap => {
+            const userData = snap.val();
+            const defaultName = currentUser.email.split("@")[0];
+
+            document.getElementById('newNameInput').value = userData?.name || defaultName;
+            
+            // 🔥 NEW: Load Avatar and Bio
+            document.getElementById('newAvatarInput').value = userData?.avatar || '👤'; 
+            document.getElementById('newBioInput').value = userData?.bio || '';
         });
     }
 
@@ -219,8 +248,6 @@
 
         usersRef.child(currentUser.uid).update({ name: newName })
         .then(() => {
-            // Update the author name for new posts immediately
-            // And show notification
             showNotification(`නම වෙනස් කළා: ${newName} ✅`);
         })
         .catch(error => {
@@ -228,6 +255,39 @@
             console.error("Name update error:", error);
         });
     }
+
+    // 🔥 NEW: updateUserAvatar()
+    function updateUserAvatar() {
+        const newAvatar = document.getElementById("newAvatarInput").value.trim().slice(0, 2); // Limit to 2 characters to safely handle single emoji
+        if (!newAvatar) { 
+            return showNotification("කරුණාකර Emoji එකක් හෝ අකුරක් ඇතුළත් කරන්න.");
+        }
+
+        usersRef.child(currentUser.uid).update({ avatar: newAvatar })
+        .then(() => {
+            showNotification(`Avatar වෙනස් කළා: ${newAvatar} ✅`);
+            document.getElementById("newAvatarInput").value = newAvatar; // Keep the single char/emoji in the box
+        })
+        .catch(error => {
+            showNotification("Avatar වෙනස් කිරීමේ Error. ❌");
+            console.error("Avatar update error:", error);
+        });
+    }
+
+    // 🔥 NEW: updateUserBio()
+    function updateUserBio() {
+        const newBio = document.getElementById("newBioInput").value.trim();
+        
+        usersRef.child(currentUser.uid).update({ bio: newBio })
+        .then(() => {
+            showNotification(`Bio යාවත්කාලීන කළා. ✅`);
+        })
+        .catch(error => {
+            showNotification("Bio යාවත්කාලීන කිරීමේ Error. ❌");
+            console.error("Bio update error:", error);
+        });
+    }
+
 
     /* ============================================================
         2. Theme Selection Functionality
@@ -273,7 +333,9 @@
             summaryDiv.id = 'myPostsSummary';
             summaryDiv.className = 'bg-blue-50 border-2 border-blue-200 rounded-xl p-5 mb-6 shadow-md fade-in';
             // Insert summary *before* the myPostsFeed
-            parentDiv.insertBefore(summaryDiv, myPostsFeed);
+            // Note: Due to new sections, the nth-child index might change, using closest parent logic
+            const targetParent = document.querySelector('.max-w-4xl.mx-auto.px-4.py-8').children[4]; // Targeting the My Posts section container
+            targetParent.insertBefore(summaryDiv, myPostsFeed.parentNode.querySelector('h2').nextElementSibling); // Insert after the H2
         }
         summaryDiv.innerHTML = ''; // Clear existing summary
 
