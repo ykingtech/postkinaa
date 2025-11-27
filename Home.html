@@ -92,6 +92,13 @@
         .hover-lift:hover {
             transform: translateY(-3px);
         }
+        
+        /* NEW CSS: for UI/UX Enhancement */
+        .blur-background {
+            transition: filter 0.4s ease-out; 
+            filter: blur(5px);
+            pointer-events: none;
+        }
     </style>
 </head>
 
@@ -113,7 +120,7 @@
                     class="px-3 py-1.5 sm:px-5 sm:py-2 bg-gradient-to-r from-red-400 to-pink-500 text-white rounded-full text-xs sm:text-sm font-bold hover:from-red-500 hover:to-pink-600 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105">
                     🚪 Logout
                 </button>
-                <span id="connectionStatus" style="display:none;" 
+                <span id="connectionStatus" 
                     class="hidden sm:inline-block px-3 py-1.5 bg-gradient-to-r from-green-400 to-emerald-500 text-white rounded-full text-xs font-bold shadow-lg glow">
                     ✨ Connected
                 </span>
@@ -123,7 +130,7 @@
 
     <div class="max-w-4xl mx-auto px-4 py-6">
 
-        <div class="glass-effect rounded-3xl shadow-2xl border-2 border-white/40 p-5 sm:p-8 mb-8 hover:shadow-[0_30px_70px_rgba(168,85,247,0.3)] transition-all duration-500 hover:scale-[1.02]">
+        <div id="createPostContainer" class="glass-effect rounded-3xl shadow-2xl border-2 border-white/40 p-5 sm:p-8 mb-8 hover:shadow-[0_30px_70px_rgba(168,85,247,0.3)] transition-all duration-500 hover:scale-[1.02] relative z-20">
             <div class="flex items-start space-x-3 sm:space-x-5">
 
                 <div class="w-10 h-10 sm:w-14 sm:h-14 bg-gradient-to-br from-purple-500 via-pink-500 to-blue-500 rounded-xl sm:rounded-2xl flex items-center justify-center text-2xl sm:text-3xl shadow-2xl shrink-0 float">😊</div>
@@ -142,7 +149,7 @@
                             <button onclick="clearFeeling()" class="ml-2 text-red-500 hover:text-red-700 text-base leading-none">x</button>
                         </span>
                         
-                        <div id="feelingSelector" class="hidden absolute top-full left-0 mt-2 p-4 w-full glass-effect rounded-xl shadow-2xl border border-white/50 fade-in z-20">
+                        <div id="feelingSelector" class="hidden absolute top-full left-0 mt-2 p-4 w-full glass-effect rounded-xl shadow-2xl border border-white/50 fade-in z-30"> 
                             <h4 class="font-bold text-gray-700 mb-3 text-lg">අද ඔබේ හැඟීම කුමක්ද?</h4>
                             
                             <div class="flex flex-nowrap overflow-x-auto pb-2 -mx-4 px-4 gap-2 mb-4" id="defaultFeelingsContainer">
@@ -220,6 +227,35 @@
     let selectedFeeling = null; 
 
     /* ============================================================
+        🔥 NEW: Connection Status Handler
+    ============================================================ */
+    function updateConnectionStatus(isConnected) {
+        const statusEl = document.getElementById("connectionStatus");
+        
+        // Base classes for styling
+        const baseClasses = "sm:inline-block px-3 py-1.5 text-white rounded-full text-xs font-bold shadow-lg transition-all duration-300";
+
+        if (isConnected) {
+            // Connected (Green, Glowing)
+            statusEl.className = baseClasses + " bg-gradient-to-r from-green-400 to-emerald-500 glow";
+            statusEl.innerHTML = "✨ Connected";
+            statusEl.style.display = "inline-block";
+        } else {
+            // Offline (Red)
+            statusEl.className = baseClasses + " bg-gradient-to-r from-red-500 to-pink-500";
+            statusEl.innerHTML = "❌ Offline";
+            statusEl.style.display = "inline-block";
+        }
+    }
+
+    // Firebase සේවාදායකයට සම්බන්ධතාවය නිරීක්ෂණය කිරීම
+    database.ref('.info/connected').on('value', (snapshot) => {
+        if (currentUser) { // User login වී සිටී නම් පමණක් පෙන්වන්න
+            updateConnectionStatus(snapshot.val() === true);
+        }
+    });
+
+    /* ============================================================
         🔥 Theme System
     ============================================================ */
     const THEMES = {
@@ -272,8 +308,9 @@
             return;
         }
         
-        statusEl.style.display = "inline-block";
-        
+        // 🔥 MODIFIED: Connection status is now handled by the separate listener.
+        // statusEl.style.display = "inline-block"; // REMOVED
+
         currentUser = user;
         database.ref('users/' + user.uid + '/name').once('value', snap => {
             const userName = snap.val();
@@ -517,12 +554,19 @@
         });
     }
 
+    // MODIFIED: Added togglePostFocus(true) call
     function openFeelingSelector() {
         const selector = document.getElementById('feelingSelector');
         selector.classList.toggle('hidden');
+        
         // Render buttons the first time it opens
         if (selector.querySelector('#defaultFeelingsContainer').children.length === 0) {
             renderFeelingButtons();
+        }
+
+        // Selector එක open වන විට Post Focus කරන්න
+        if (!selector.classList.contains('hidden')) {
+            togglePostFocus(true);
         }
     }
 
@@ -536,6 +580,9 @@
         document.getElementById('feelingSelector').classList.add('hidden'); // Hide selector after selection
         
         showNotification(`Feeling added: ${emoji} ${text} 🎉`);
+
+        // Feeling select කළ පසු focus ඉවත් කරන්න
+        togglePostFocus(false); 
     }
 
     function clearFeeling() {
@@ -544,9 +591,10 @@
         document.getElementById('customFeelingInput').value = '';
         document.getElementById('recommendedEmojiDisplay').textContent = "💭"; // Reset recommended emoji
         showNotification("Feeling removed.");
+        togglePostFocus(false); // Feeling clear කළ පසු focus ඉවත් කරන්න
     }
     
-    // 🔥 NEW FUNCTION: Logic to recommend emoji based on text
+    // NEW FUNCTION: Logic to recommend emoji based on text
     function recommendEmoji(text) {
         if (!text) return "💭";
         
@@ -570,7 +618,7 @@
         return "💭"; // Default when no match
     }
 
-    // 🔥 NEW FUNCTION: Updates the visible emoji next to the input
+    // NEW FUNCTION: Updates the visible emoji next to the input
     function updateRecommendedEmoji(text) {
         const display = document.getElementById('recommendedEmojiDisplay');
         if (display) {
@@ -578,7 +626,7 @@
         }
     }
 
-    // 🔥 UPDATED FUNCTION: Uses the recommended emoji
+    // UPDATED FUNCTION: Uses the recommended emoji
     function handleCustomFeeling() {
         const input = document.getElementById('customFeelingInput');
         const display = document.getElementById('recommendedEmojiDisplay');
@@ -597,7 +645,7 @@
         🔥 Create Post 
     ============================================================ */
     function createPost() {
-        const name = document.getElementById("authorName").value.trim() || currentUser.email.split("@")[0];
+        const name = document.getElementById("authorName").value.trim() || currentUser.displayName.split("@")[0];
         const content = document.getElementById("newPostInput").value.trim();
 
         if (!content && !selectedFeeling) return showNotification("කරුණාකර පෝස්ට් එක ලියන්න, නැත්නම් හැඟීමක් එක් කරන්න!");
@@ -640,6 +688,7 @@
             showNotification("පෝස්ට් එක සාර්ථකව පළ කළා! 🎉");
             // Also save the name to the user's profile
             database.ref('users/' + currentUser.uid).update({ name: name }); 
+            togglePostFocus(false); // Post කළ පසු focus ඉවත් කරන්න
         })
         .catch(error => {
             console.error("Post Creation Error:", error);
@@ -850,6 +899,58 @@
             });
         });
     }
+
+    /* ============================================================
+        🔥 NEW: Post Focus UI/UX Enhancement Logic
+    ============================================================ */
+    const createPostContainer = document.getElementById('createPostContainer');
+    const newPostInput = document.getElementById('newPostInput');
+    const postsFeed = document.getElementById("postsFeed");
+
+    function togglePostFocus(isFocused) {
+        if (isFocused) {
+            // ඉස්සරහට ගෙන ඒම
+            createPostContainer.style.zIndex = 40; 
+            
+            // අනෙකුත් Post Feed එක බ්ලර් කිරීම
+            postsFeed.classList.add('blur-background');
+        } else {
+            // සාමාන්‍ය තත්ත්වයට ගෙන ඒම
+            createPostContainer.style.zIndex = 20; 
+            
+            // බ්ලර් ඉවත් කිරීම
+            postsFeed.classList.remove('blur-background');
+        }
+    }
+
+    // 1. Post Input එක Focus කරන විට (ඔබගේ අවශ්‍යතාවය අනුව MouseEnter/Leave භාවිතා කරන්නෙමු)
+    createPostContainer.addEventListener('mouseenter', () => togglePostFocus(true));
+    createPostContainer.addEventListener('mouseleave', () => {
+        // හැඟීම් selector එක open කර ඇත්නම් focus/blur නොකරන්න
+        if (document.getElementById('feelingSelector').classList.contains('hidden')) {
+            togglePostFocus(false);
+        }
+    });
+
+    /* ============================================================
+        🔥 NEW: Feeling Selector Outside Click Logic
+    ============================================================ */
+    document.addEventListener('click', function(event) {
+        const selector = document.getElementById('feelingSelector');
+        const feelingButton = document.querySelector('[onclick="openFeelingSelector()"]');
+        const isSelectorOpen = !selector.classList.contains('hidden');
+
+        if (isSelectorOpen) {
+            // ක්ලික් කළේ selector එක ඇතුළත හෝ feeling බොත්තම මත නොවේ නම් වසා දමන්න.
+            if (!selector.contains(event.target) && !feelingButton.contains(event.target)) {
+                selector.classList.add('hidden');
+                
+                // හැඟීම් selector එක වැසූ පසු Post Focus ඉවත් කරන්න
+                togglePostFocus(false); 
+            }
+        }
+    });
+
 
     /* ============================================================
         🔥 Helpers
