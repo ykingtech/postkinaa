@@ -98,23 +98,23 @@
 <body class="min-h-screen">
 
     <header id="appHeader" class="glass-effect sticky top-0 z-50 shadow-2xl border-b-2 border-white/50">
-        <div class="max-w-4xl mx-auto px-4 py-5 flex items-center justify-between">
+        <div class="max-w-4xl mx-auto px-4 py-3 sm:py-5 flex items-center justify-between">
             
-            <div class="flex items-center space-x-4">
+            <div class="flex items-center space-x-2 sm:space-x-4">
                 <button onclick="goToSettings()" title="සැකසීම්"
-                    class="p-3 text-2xl text-gray-600 hover:text-purple-600 hover:bg-purple-100 rounded-2xl transition-all duration-300 hover:rotate-90 hover:scale-110">
+                    class="p-2 sm:p-3 text-xl sm:text-2xl text-gray-600 hover:text-purple-600 hover:bg-purple-100 rounded-xl sm:rounded-2xl transition-all duration-300 hover:rotate-90 hover:scale-110">
                     ⚙️
                 </button>
-                <h1 class="text-4xl font-black bg-clip-text text-transparent float pulse-animation" id="headerTitle">🌟 PostKinaa</h1>
+                <h1 class="text-3xl sm:text-4xl font-black bg-clip-text text-transparent float pulse-animation" id="headerTitle">🌟 PostKinaa</h1>
             </div>
 
-            <div class="flex items-center space-x-3">
+            <div class="flex items-center space-x-2 sm:space-x-3">
                 <button onclick="signOutUser()"  
-                    class="px-5 py-2 bg-gradient-to-r from-red-400 to-pink-500 text-white rounded-full text-sm font-bold hover:from-red-500 hover:to-pink-600 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105">
+                    class="px-3 py-1.5 sm:px-5 sm:py-2 bg-gradient-to-r from-red-400 to-pink-500 text-white rounded-full text-xs sm:text-sm font-bold hover:from-red-500 hover:to-pink-600 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105">
                     🚪 Logout
                 </button>
                 <span id="connectionStatus" style="display:none;" 
-                    class="px-4 py-2 bg-gradient-to-r from-green-400 to-emerald-500 text-white rounded-full text-sm font-bold shadow-lg glow">
+                    class="hidden sm:inline-block px-3 py-1.5 bg-gradient-to-r from-green-400 to-emerald-500 text-white rounded-full text-xs font-bold shadow-lg glow">
                     ✨ Connected
                 </span>
             </div>
@@ -123,29 +123,29 @@
 
     <div class="max-w-4xl mx-auto px-4 py-6">
 
-        <div class="glass-effect rounded-3xl shadow-2xl border-2 border-white/40 p-8 mb-8 hover:shadow-[0_30px_70px_rgba(168,85,247,0.3)] transition-all duration-500 hover:scale-[1.02]">
-            <div class="flex items-start space-x-5">
+        <div class="glass-effect rounded-3xl shadow-2xl border-2 border-white/40 p-5 sm:p-8 mb-8 hover:shadow-[0_30px_70px_rgba(168,85,247,0.3)] transition-all duration-500 hover:scale-[1.02]">
+            <div class="flex items-start space-x-3 sm:space-x-5">
 
-                <div class="w-14 h-14 bg-gradient-to-br from-purple-500 via-pink-500 to-blue-500 rounded-2xl flex items-center justify-center text-3xl shadow-2xl shrink-0 float">😊</div>
+                <div class="w-10 h-10 sm:w-14 sm:h-14 bg-gradient-to-br from-purple-500 via-pink-500 to-blue-500 rounded-xl sm:rounded-2xl flex items-center justify-center text-2xl sm:text-3xl shadow-2xl shrink-0 float">😊</div>
 
                 <div class="flex-1">
                     <input id="authorName" type="text" placeholder="✨ ඔබේ නම..." 
-                        class="w-full px-5 py-3 mb-3 bg-white/60 backdrop-blur-sm rounded-2xl border-2 border-purple-200 focus:border-purple-500 outline-none transition-all duration-300 font-semibold text-gray-800 hover:bg-white/80 shadow-sm">
+                        class="w-full px-4 py-2 sm:px-5 sm:py-3 mb-3 bg-white/60 backdrop-blur-sm rounded-xl sm:rounded-2xl border-2 border-purple-200 focus:border-purple-500 outline-none transition-all duration-300 font-semibold text-gray-800 hover:bg-white/80 shadow-sm text-sm sm:text-base">
 
                     <textarea id="newPostInput" placeholder="💭 ඔබේ අදහස් මෙතන ලියන්න... අද මොකද සිතන්නේ?"
-                        class="w-full px-5 py-4 bg-white/60 backdrop-blur-sm rounded-2xl border-2 border-purple-200 focus:border-purple-500 outline-none resize-none transition-all duration-300 font-medium text-gray-700 hover:bg-white/80 shadow-sm"
+                        class="w-full px-4 py-3 sm:px-5 sm:py-4 bg-white/60 backdrop-blur-sm rounded-xl sm:rounded-2xl border-2 border-purple-200 focus:border-purple-500 outline-none resize-none transition-all duration-300 font-medium text-gray-700 hover:bg-white/80 shadow-sm text-sm sm:text-base"
                         rows="4"></textarea>
                     
                     <div class="mb-4 relative">
-                        <span id="selectedFeelingDisplay" class="hidden px-4 py-2 bg-purple-100 text-purple-700 rounded-full text-sm font-semibold shadow-inner transition-all duration-300 inline-flex items-center">
+                        <span id="selectedFeelingDisplay" class="hidden px-3 py-1.5 bg-purple-100 text-purple-700 rounded-full text-sm font-semibold shadow-inner transition-all duration-300 inline-flex items-center">
                             <span class="mr-1">Feeling:</span> <span id="currentFeelingEmoji"></span> <span id="currentFeelingText" class="ml-1"></span>
-                            <button onclick="clearFeeling()" class="ml-3 text-red-500 hover:text-red-700 text-lg leading-none">x</button>
+                            <button onclick="clearFeeling()" class="ml-2 text-red-500 hover:text-red-700 text-base leading-none">x</button>
                         </span>
                         
-                        <div id="feelingSelector" class="hidden absolute top-full left-0 mt-2 p-4 w-full glass-effect rounded-xl shadow-2xl border border-white/50 fade-in z-10">
+                        <div id="feelingSelector" class="hidden absolute top-full left-0 mt-2 p-4 w-full glass-effect rounded-xl shadow-2xl border border-white/50 fade-in z-20">
                             <h4 class="font-bold text-gray-700 mb-3 text-lg">අද ඔබේ හැඟීම කුමක්ද?</h4>
                             
-                            <div class="flex flex-wrap gap-2 mb-4" id="defaultFeelingsContainer">
+                            <div class="flex flex-nowrap overflow-x-auto pb-2 -mx-4 px-4 gap-2 mb-4" id="defaultFeelingsContainer">
                                 </div>
 
                             <div class="flex items-center space-x-2">
@@ -165,14 +165,14 @@
                             </div>
                         </div>
                     </div>
-                    <div class="flex items-center justify-between mt-5">
-                        <div class="flex space-x-2">
+                    <div class="flex items-center justify-between mt-3 sm:mt-5">
+                        <div class="flex space-x-1 sm:space-x-2">
                             <button onclick="openFeelingSelector()" title="හැඟීමක් එක් කරන්න"
-                                class="p-3 hover:bg-gradient-to-br hover:from-pink-100 hover:to-yellow-100 rounded-2xl text-2xl transition-all duration-300 hover:scale-110 hover:-rotate-6">😀</button>
+                                class="p-2 sm:p-3 hover:bg-gradient-to-br hover:from-pink-100 hover:to-yellow-100 rounded-xl sm:rounded-2xl text-xl sm:text-2xl transition-all duration-300 hover:scale-110 hover:-rotate-6">😀</button>
                         </div>
 
                         <button onclick="createPost()" id="postButton"
-                            class="px-8 py-3.5 bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 text-white rounded-full font-bold hover:from-purple-700 hover:via-pink-700 hover:to-blue-700 shadow-2xl transition-all duration-300 flex items-center space-x-2 hover:scale-105 hover:shadow-[0_15px_40px_rgba(168,85,247,0.5)]">
+                            class="px-5 py-2.5 sm:px-8 sm:py-3.5 bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 text-white rounded-full font-bold hover:from-purple-700 hover:via-pink-700 hover:to-blue-700 shadow-2xl transition-all duration-300 flex items-center space-x-2 hover:scale-105 hover:shadow-[0_15px_40px_rgba(168,85,247,0.5)] text-sm sm:text-base">
                             <span>🚀 පෝස්ට් කරන්න</span>
                         </button>
                     </div>
@@ -254,10 +254,10 @@
         
         if (themeName === 'dark') {
             headerTitle.className =
-                "text-3xl font-bold bg-clip-text text-white";
+                "text-3xl sm:text-4xl font-bold bg-clip-text text-white";
         } else {
             headerTitle.className =
-                "text-3xl font-bold bg-clip-text text-transparent " + theme.header;
+                "text-3xl sm:text-4xl font-bold bg-clip-text text-transparent " + theme.header;
         }
     }
 
@@ -381,7 +381,7 @@
     }
 
     /* ============================================================
-        🔥 Create Post Element
+        🔥 Create Post Element (UPDATED FOR RESPONSIVENESS)
     ============================================================ */
     function createPostElement(post) {
         const timeAgo = getTimeAgo(post.timestamp);
@@ -398,41 +398,41 @@
         const div = document.createElement("div");
         div.id = `post-${post.id}`;
         div.className =
-            "post-card glass-effect rounded-3xl shadow-2xl border-2 border-white/40 p-7 hover:shadow-[0_30px_70px_rgba(168,85,247,0.3)] transition-all duration-500 fade-in mb-8";
+            "post-card glass-effect rounded-3xl shadow-2xl border-2 border-white/40 p-5 sm:p-7 hover:shadow-[0_30px_70px_rgba(168,85,247,0.3)] transition-all duration-500 fade-in mb-8";
         
         div.style.position = 'relative'; 
 
         const feelingDisplayHTML = postFeeling ? 
-            `<span class="ml-2 px-2 py-0.5 bg-gradient-to-r from-yellow-50 to-pink-50 text-gray-700 rounded-full text-xs font-bold shadow-sm inline-flex items-center">
+            `<span class="ml-2 px-2 py-0.5 bg-gradient-to-r from-yellow-50 to-pink-50 text-gray-700 rounded-full text-xs font-bold shadow-sm inline-flex items-center mt-1 sm:mt-0">
                 <span class="mr-1 text-base">${postFeeling.emoji}</span> is feeling ${postFeeling.text}
             </span>`
             : '';
 
         div.innerHTML = `
-            <div class="flex items-center justify-between mb-5">
-                <div class="flex items-center space-x-4">
-                    <div class="w-16 h-16 bg-gradient-to-br ${post.gradient} rounded-2xl flex items-center justify-center text-3xl shadow-xl hover:scale-110 transition-transform duration-300">
+            <div class="flex items-start justify-between mb-4 sm:mb-5 flex-wrap">
+                <div class="flex items-center space-x-3 sm:space-x-4">
+                    <div class="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br ${post.gradient} rounded-xl sm:rounded-2xl flex items-center justify-center text-2xl sm:text-3xl shadow-xl hover:scale-110 transition-transform duration-300 shrink-0">
                         ${post.avatar || '❓'}
                     </div>
                     <div>
-                        <div class="flex items-center">
-                            <h3 class="font-bold text-gray-800 text-xl">${post.author || 'නමක් නැත'}</h3>
+                        <div class="flex items-start flex-wrap">
+                            <h3 class="font-bold text-gray-800 text-lg sm:text-xl">${post.author || 'නමක් නැත'}</h3>
                             ${feelingDisplayHTML} 
                         </div>
-                        <p class="text-sm text-gray-500 font-semibold">⏰ ${timeAgo}</p>
+                        <p class="text-xs sm:text-sm text-gray-500 font-semibold">⏰ ${timeAgo}</p>
                     </div>
                 </div>
 
                 ${
                     isAuthor
                         ? `
-                    <div class="flex space-x-2">
+                    <div class="flex space-x-1 mt-3 sm:mt-0 ml-auto sm:ml-0">
                         <button onclick="editPost('${post.id}', '${escapeText(post.content)}')"
-                            class="text-blue-500 hover:text-blue-700 hover:bg-blue-50 p-3 rounded-2xl text-xl transition-all duration-300 hover:scale-110 hover:rotate-12">
+                            class="text-blue-500 hover:text-blue-700 hover:bg-blue-50 p-2 rounded-xl text-lg sm:text-xl transition-all duration-300 hover:scale-110 hover:rotate-12" title="සංස්කරණය">
                             ✏️
                         </button>
                         <button onclick="deletePost('${post.id}')"
-                            class="text-red-500 hover:text-red-700 hover:bg-red-50 p-3 rounded-2xl text-xl transition-all duration-300 hover:scale-110 hover:-rotate-12">
+                            class="text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded-xl text-lg sm:text-xl transition-all duration-300 hover:scale-110 hover:-rotate-12" title="මකන්න">
                             🗑️
                         </button>
                     </div>`
@@ -440,39 +440,39 @@
                 }
             </div>
 
-            <p class="text-gray-800 mb-6 leading-relaxed text-lg whitespace-pre-line font-medium bg-gradient-to-r from-gray-700 to-gray-900 bg-clip-text">${post.content || 'Content not found'}</p>
+            <p class="text-gray-800 mb-5 sm:mb-6 leading-relaxed text-base sm:text-lg whitespace-pre-line font-medium bg-gradient-to-r from-gray-700 to-gray-900 bg-clip-text">${post.content || 'Content not found'}</p>
 
-            <div class="flex items-center justify-between pt-5 border-t-2 border-gray-100">
+            <div class="flex items-center justify-between pt-4 sm:pt-5 border-t-2 border-gray-100 flex-wrap space-y-2 sm:space-y-0 -mx-1 sm:-mx-2">
                 <button onclick="toggleSingleReaction('${post.id}', 'like')"
-                    class="reaction-btn flex items-center space-x-2 px-5 py-3 rounded-2xl hover:bg-gradient-to-r hover:from-pink-50 hover:to-red-50 text-gray-700 transition-all duration-300 hover:scale-110
+                    class="reaction-btn flex items-center space-x-1 sm:space-x-2 px-3 py-1.5 sm:px-5 sm:py-3 rounded-xl sm:rounded-2xl hover:bg-gradient-to-r hover:from-pink-50 hover:to-red-50 text-gray-700 transition-all duration-300 hover:scale-110 text-sm sm:text-base
                     ${myReaction === 'like' ? 'bg-gradient-to-r from-pink-100 to-red-100 text-pink-600 shadow-lg scale-105' : ''}">
-                    <span class="text-2xl">❤️</span>
-                    <span class="reaction-count font-bold text-lg">${likeCount}</span>
+                    <span class="text-xl sm:text-2xl">❤️</span>
+                    <span class="reaction-count font-bold text-base sm:text-lg">${likeCount}</span>
                 </button>
 
                 <button onclick="toggleSingleReaction('${post.id}', 'laugh')"
-                    class="reaction-btn flex items-center space-x-2 px-5 py-3 rounded-2xl hover:bg-gradient-to-r hover:from-yellow-50 hover:to-orange-50 text-gray-700 transition-all duration-300 hover:scale-110
+                    class="reaction-btn flex items-center space-x-1 sm:space-x-2 px-3 py-1.5 sm:px-5 sm:py-3 rounded-xl sm:rounded-2xl hover:bg-gradient-to-r hover:from-yellow-50 hover:to-orange-50 text-gray-700 transition-all duration-300 hover:scale-110 text-sm sm:text-base
                     ${myReaction === 'laugh' ? 'bg-gradient-to-r from-yellow-100 to-orange-100 text-yellow-600 shadow-lg scale-105' : ''}">
-                    <span class="text-2xl">😂</span>
-                    <span class="reaction-count font-bold text-lg">${laughCount}</span>
+                    <span class="text-xl sm:text-2xl">😂</span>
+                    <span class="reaction-count font-bold text-base sm:text-lg">${laughCount}</span>
                 </button>
 
                 <button onclick="toggleSingleReaction('${post.id}', 'fire')"
-                    class="reaction-btn flex items-center space-x-2 px-5 py-3 rounded-2xl hover:bg-gradient-to-r hover:from-orange-50 hover:to-red-50 text-gray-700 transition-all duration-300 hover:scale-110
+                    class="reaction-btn flex items-center space-x-1 sm:space-x-2 px-3 py-1.5 sm:px-5 sm:py-3 rounded-xl sm:rounded-2xl hover:bg-gradient-to-r hover:from-orange-50 hover:to-red-50 text-gray-700 transition-all duration-300 hover:scale-110 text-sm sm:text-base
                     ${myReaction === 'fire' ? 'bg-gradient-to-r from-orange-100 to-red-100 text-red-600 shadow-lg scale-105' : ''}">
-                    <span class="text-2xl">🔥</span>
-                    <span class="reaction-count font-bold text-lg">${fireCount}</span>
+                    <span class="text-xl sm:text-2xl">🔥</span>
+                    <span class="reaction-count font-bold text-base sm:text-lg">${fireCount}</span>
                 </button>
 
                 <button onclick="commentPost('${post.id}')"
-                    class="px-5 py-3 rounded-2xl hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 text-gray-700 transition-all duration-300 flex items-center space-x-2 hover:scale-110">
-                    <span class="text-2xl">💬</span>
-                    <span class="font-bold text-lg">${post.commentsCount || 0}</span>
+                    class="flex items-center space-x-1 sm:space-x-2 px-3 py-1.5 sm:px-5 sm:py-3 rounded-xl sm:rounded-2xl hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 text-gray-700 transition-all duration-300 hover:scale-110 text-sm sm:text-base">
+                    <span class="text-xl sm:text-2xl">💬</span>
+                    <span class="font-bold text-base sm:text-lg">${post.commentsCount || 0}</span>
                 </button>
 
                 <button onclick="downloadPost('${post.id}')"
-                    class="px-5 py-3 rounded-2xl hover:bg-gradient-to-r hover:from-green-50 hover:to-teal-50 text-gray-700 transition-all duration-300 flex items-center space-x-2 hover:scale-110 hover:rotate-12">
-                    <span class="text-2xl">⬇️</span>
+                    class="flex items-center space-x-1 sm:space-x-2 px-3 py-1.5 sm:px-5 sm:py-3 rounded-xl sm:rounded-2xl hover:bg-gradient-to-r hover:from-green-50 hover:to-teal-50 text-gray-700 transition-all duration-300 hover:scale-110 hover:rotate-12 text-sm sm:text-base">
+                    <span class="text-xl sm:text-2xl">⬇️</span>
                 </button>
             </div>
         `;
@@ -509,7 +509,8 @@
         
         FEELINGS_MAP.forEach(f => {
             const button = document.createElement('button');
-            button.className = 'px-4 py-2 bg-white/80 rounded-full shadow-md text-sm font-medium hover:bg-purple-100 transition-colors duration-200 flex items-center space-x-1';
+            // Added shrink-0 to prevent shrinking when overflow-x-auto is active
+            button.className = 'px-4 py-2 bg-white/80 rounded-full shadow-md text-sm font-medium hover:bg-purple-100 transition-colors duration-200 flex items-center space-x-1 shrink-0';
             button.innerHTML = `<span>${f.emoji}</span> <span class="ml-1">${f.text}</span>`;
             button.onclick = () => selectFeeling(f.text, f.emoji);
             container.appendChild(button);
