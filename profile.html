@@ -53,7 +53,13 @@
                         <span id="profileAvatar">👤</span>
                     </div>
                     <div>
-                        <h2 id="profileName" class="text-2xl sm:text-4xl font-black text-gray-800 mb-1">...Loading Profile...</h2>
+                        <div class="flex items-center">
+                            <h2 id="profileName" class="text-2xl sm:text-4xl font-black text-gray-800 mb-1">...Loading Profile...</h2>
+                            <button id="editProfileButton" style="display:none;" onclick="window.location.href='settings.html'"
+                                class="ml-3 p-1.5 text-xl text-gray-600 hover:text-purple-600 hover:bg-purple-100 rounded-full transition-colors" title="Profile Edit">
+                                ✏️
+                            </button>
+                        </div>
                         <p id="profileUID" class="text-sm sm:text-base text-gray-500 font-semibold mb-2">UID: </p>
                         <div class="text-center font-bold text-base sm:text-xl text-gray-600 mt-2">
                             <span id="followerCount">0</span> Followers | <span id="followingCount">0</span> Following
@@ -138,7 +144,7 @@
     });
 
     /* ============================================================
-        🔥 Load Profile Data (UPDATED FOR COUNTS)
+        🔥 Load Profile Data (UPDATED FOR COUNTS AND BIO FIX)
     ============================================================ */
     async function loadProfileData(uid) {
         document.getElementById('profileName').textContent = '...Loading Profile...';
@@ -150,7 +156,7 @@
         const profileName = userData ? userData.name || 'Unknown User' : 'Profile Not Found'; 
         const profileAvatar = userData ? userData.avatar || '👤' : '❌'; 
         
-        // 🔥 FIX: Get Follower/Following Counts Safely
+        // 🔥 Get Follower/Following Counts Safely
         const followerCount = userData ? userData.followerCount || 0 : 0;
         const followingCount = userData ? userData.followingCount || 0 : 0;
 
@@ -163,15 +169,25 @@
         document.getElementById('followingCount').textContent = followingCount;
         
         // Update Bio
-        const profileBio = userData ? userData.bio || 'මෙම පරිශීලකයා තවම කිසිවක් ලියා නැත.' : 'Profile data not available.';
+        // 🔥 FIX 1: Change "කිසිවක් ලියා නැත" to be specific to "Bio"
+        const profileBio = userData ? userData.bio || 'මෙම පරිශීලකයා තවම තම Bio එකක් එකතු කර නැත.' : 'Profile data not available.';
         document.getElementById('profileBio').textContent = profileBio;
         
         // Update Post Header
         document.getElementById('postsHeader').textContent = `Posts by ${profileName}`;
 
-        // Update UID display
+        // Update UID display & Edit Button
+        const followButton = document.getElementById('followButton');
+        const editButton = document.getElementById('editProfileButton');
+
         if (uid !== myUid) {
              document.getElementById('profileUID').textContent = `UID: ${uid}`;
+             followButton.style.display = 'block';
+             editButton.style.display = 'none';
+        } else {
+             document.getElementById('profileUID').textContent = `UID: ${uid} (Your Profile)`;
+             followButton.style.display = 'none';
+             editButton.style.display = 'block'; // Show edit button for self
         }
         
         // Update Follow Button State
@@ -236,7 +252,7 @@
             isFollowing = true;
         }
         
-        // Re-load profile data to update counts and button state immediately
+        // FIX 2: Re-load profile data to update counts and button state immediately
         await loadProfileData(targetUid); 
         btn.disabled = false;
     }
