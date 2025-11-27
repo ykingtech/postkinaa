@@ -56,108 +56,100 @@
         }
     </style>
 </head>
-<body class="min-h-screen bg-gradient-to-br from-purple-100 via-pink-100 to-blue-100 flex items-center justify-center p-4 relative overflow-hidden">
+<body class="min-h-screen bg-gradient-to-br from-purple-100 via-pink-100 to-blue-100 relative pt-10 pb-10 overflow-y-auto">
 
-    <!-- Animated Background Elements -->
     <div class="absolute inset-0 overflow-hidden pointer-events-none">
         <div class="absolute top-10 left-10 w-72 h-72 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-pulse"></div>
         <div class="absolute top-40 right-10 w-96 h-96 bg-pink-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-pulse" style="animation-delay: 1s;"></div>
         <div class="absolute -bottom-20 left-1/3 w-80 h-80 bg-blue-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-pulse" style="animation-delay: 2s;"></div>
     </div>
 
-    <!-- Main Container -->
-    <div class="w-full max-w-md glass-effect rounded-3xl p-10 shadow-2xl fade-in relative z-10">
-        <!-- Logo & Title -->
-        <div class="text-center mb-8">
-            <div class="text-6xl mb-4 float">🌟</div>
-            <h1 class="text-5xl font-black mb-3 bg-clip-text text-transparent bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 pulse-animation">PostKinaa</h1>
-            <p class="text-gray-600 font-semibold text-lg">✨ යාළුවෝ එක්ක සම්බන්ධ වෙන්න!</p>
-        </div>
-
-        <!-- Notification Area -->
-        <div id="notification" class="mb-4 hidden"></div>
-
-        <!-- Auth Container -->
-        <div id="authContainer">
-            <!-- Sign In Section -->
-            <div id="signInSection">
-                <h2 class="text-3xl font-bold mb-6 text-gray-800 text-center">🔐 පිවිසෙන්න</h2>
-                
-                <!-- Google Sign In Button -->
-                <button id="googleSignInBtn" class="auth-button w-full flex items-center justify-center space-x-3 bg-white text-gray-700 border-2 border-gray-300 p-4 rounded-2xl font-bold text-lg hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 hover:border-purple-400 focus:outline-none focus:ring-4 focus:ring-purple-300 transition duration-300 mb-6 shadow-lg hover:shadow-xl">
-                    <svg class="w-6 h-6" viewBox="0 0 533.5 544.3" xmlns="http://www.w3.org/2000/svg"><path d="M533.5 244.3c0-14.7-1.2-29.2-3.4-43.2H267.5v82.7h149.3c-6.4 39.8-29.7 73.5-62.8 96.1l-2.6 1.8 69.4 53.7 3.8.3c42.8-39.7 67.5-97 67.5-164.8z" fill="#4285F4"/><path d="M267.5 544.3c71.2 0 131-23.7 174.7-64.4l-73.4-56.9c-20.4 13.6-46.7 22-77.2 22-59 0-109.8-39.9-127.7-93.5l-2.5.3-71.1 55.4-1.7.9c41 81.3 124.9 138.2 229.7 138.2z" fill="#34A853"/><path d="M140.2 329.8c-3.1-9.4-5.2-19.4-5.2-29.8 0-10.4 2.1-20.4 5.1-29.8l-1.9-1.5-73.6-57.2-1.4.7c-21.7 43.1-34.4 92.5-34.4 147.2 0 54.7 12.7 104.1 34.4 147.2l75-58.4z" fill="#FBBC05"/><path d="M267.5 108.3c38.7 0 73.1 13.3 99.9 38.6L437 78.4c-43.7-41-103.5-66.7-169.5-66.7-104.8 0-188.7 56.9-229.7 138.2l75 58.4c17.9-53.6 68.7-93.5 127.7-93.5z" fill="#EA4335"/></svg>
-                    <span>🚀 ගූගල් හරහා පිවිසෙන්න</span>
-                </button>
-                
-                <div class="flex items-center my-6">
-                    <hr class="flex-grow border-gray-300">
-                    <span class="px-4 text-gray-500 text-sm font-semibold">නැතහොත්</span>
-                    <hr class="flex-grow border-gray-300">
-                </div>
-                
-                <!-- Email/Password Login -->
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-bold text-gray-700 mb-2">📧 ඊමේල් ලිපිනය</label>
-                        <input type="email" id="authEmail" placeholder="your@email.com" 
-                            class="w-full p-4 border-2 border-gray-300 rounded-2xl focus:outline-none focus:ring-4 focus:ring-purple-300 focus:border-purple-500 transition duration-300 font-medium bg-white/60 backdrop-blur-sm">
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-bold text-gray-700 mb-2">🔒 මුරපදය</label>
-                        <input type="password" id="authPassword" placeholder="••••••••" 
-                            class="w-full p-4 border-2 border-gray-300 rounded-2xl focus:outline-none focus:ring-4 focus:ring-purple-300 focus:border-purple-500 transition duration-300 font-medium bg-white/60 backdrop-blur-sm">
-                    </div>
-                </div>
-                
-                <button id="signInBtn" class="auth-button w-full bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 text-white p-4 rounded-2xl font-bold text-lg hover:from-purple-700 hover:via-pink-700 hover:to-blue-700 focus:outline-none focus:ring-4 focus:ring-purple-300 transition duration-300 mt-6 shadow-xl hover:shadow-2xl">
-                    🎯 ඊමේල්/මුරපදයෙන් පිවිසෙන්න
-                </button>
-                
-                <p class="text-center text-gray-600 mt-6 font-medium">
-                    ගිණුමක් නොද්ද? 
-                    <button id="toggleAuthBtn" class="text-purple-600 font-bold hover:text-pink-600 transition-colors duration-300 hover:underline">✨ ලියාපදිංචි වෙන්න</button>
-                </p>
+    <div class="flex flex-col items-center justify-center">
+        <div class="w-full max-w-md glass-effect rounded-3xl p-10 shadow-2xl fade-in relative z-10 mx-4 my-auto">
+            <div class="text-center mb-8">
+                <div class="text-6xl mb-4 float">🌟</div>
+                <h1 class="text-5xl font-black mb-3 bg-clip-text text-transparent bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 pulse-animation">PostKinaa</h1>
+                <p class="text-gray-600 font-semibold text-lg">✨ යාළුවෝ එක්ක සම්බන්ධ වෙන්න!</p>
             </div>
 
-            <!-- Sign Up Section -->
-            <div id="signUpSection" class="hidden">
-                <h2 class="text-3xl font-bold mb-6 text-gray-800 text-center">🎉 ලියාපදිංචි වන්න</h2>
-                
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-bold text-gray-700 mb-2">📧 ඊමේල් ලිපිනය</label>
-                        <input type="email" id="signUpEmail" placeholder="your@email.com" 
-                            class="w-full p-4 border-2 border-gray-300 rounded-2xl focus:outline-none focus:ring-4 focus:ring-pink-300 focus:border-pink-500 transition duration-300 font-medium bg-white/60 backdrop-blur-sm">
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-bold text-gray-700 mb-2">👤 පරිශීලක නාමය (Username)</label>
-                        <input type="text" id="displayName" placeholder="අපූරු නමක් තෝරන්න..." 
-                            class="w-full p-4 border-2 border-gray-300 rounded-2xl focus:outline-none focus:ring-4 focus:ring-pink-300 focus:border-pink-500 transition duration-300 font-medium bg-white/60 backdrop-blur-sm">
-                        <p class="text-xs text-gray-500 mt-1 font-medium">⚠️ ඔබගේ නම අන් අයට පෙනෙනු ඇත</p>
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-bold text-gray-700 mb-2">🔒 මුරපදය</label>
-                        <input type="password" id="signUpPassword" placeholder="අවම වශයෙන් 6ක්" 
-                            class="w-full p-4 border-2 border-gray-300 rounded-2xl focus:outline-none focus:ring-4 focus:ring-pink-300 focus:border-pink-500 transition duration-300 font-medium bg-white/60 backdrop-blur-sm">
-                    </div>
-                </div>
-                
-                <button id="signUpBtn" class="auth-button w-full bg-gradient-to-r from-pink-600 via-purple-600 to-blue-600 text-white p-4 rounded-2xl font-bold text-lg hover:from-pink-700 hover:via-purple-700 hover:to-blue-700 focus:outline-none focus:ring-4 focus:ring-pink-300 transition duration-300 mt-6 shadow-xl hover:shadow-2xl">
-                    🚀 ලියාපදිංචි වන්න
-                </button>
+            <div id="notification" class="mb-4 hidden"></div>
 
-                <p class="text-center text-gray-600 mt-6 font-medium">
-                    ගිණුමක් දැනටමත් තිබෙනවද? 
-                    <button id="backToSignIn" class="text-pink-600 font-bold hover:text-purple-600 transition-colors duration-300 hover:underline">🔐 පිවිසෙන්න</button>
-                </p>
+            <div id="authContainer">
+                <div id="signInSection">
+                    <h2 class="text-3xl font-bold mb-6 text-gray-800 text-center">🔐 පිවිසෙන්න</h2>
+                    
+                    <button id="googleSignInBtn" class="auth-button w-full flex items-center justify-center space-x-3 bg-white text-gray-700 border-2 border-gray-300 p-4 rounded-2xl font-bold text-lg hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 hover:border-purple-400 focus:outline-none focus:ring-4 focus:ring-purple-300 transition duration-300 mb-6 shadow-lg hover:shadow-xl">
+                        <svg class="w-6 h-6" viewBox="0 0 533.5 544.3" xmlns="http://www.w3.org/2000/svg"><path d="M533.5 244.3c0-14.7-1.2-29.2-3.4-43.2H267.5v82.7h149.3c-6.4 39.8-29.7 73.5-62.8 96.1l-2.6 1.8 69.4 53.7 3.8.3c42.8-39.7 67.5-97 67.5-164.8z" fill="#4285F4"/><path d="M267.5 544.3c71.2 0 131-23.7 174.7-64.4l-73.4-56.9c-20.4 13.6-46.7 22-77.2 22-59 0-109.8-39.9-127.7-93.5l-2.5.3-71.1 55.4-1.7.9c41 81.3 124.9 138.2 229.7 138.2z" fill="#34A853"/><path d="M140.2 329.8c-3.1-9.4-5.2-19.4-5.2-29.8 0-10.4 2.1-20.4 5.1-29.8l-1.9-1.5-73.6-57.2-1.4.7c-21.7 43.1-34.4 92.5-34.4 147.2 0 54.7 12.7 104.1 34.4 147.2l75-58.4z" fill="#FBBC05"/><path d="M267.5 108.3c38.7 0 73.1 13.3 99.9 38.6L437 78.4c-43.7-41-103.5-66.7-169.5-66.7-104.8 0-188.7 56.9-229.7 138.2l75 58.4c17.9-53.6 68.7-93.5 127.7-93.5z" fill="#EA4335"/></svg>
+                        <span>🚀 ගූගල් හරහා පිවිසෙන්න</span>
+                    </button>
+                    
+                    <div class="flex items-center my-6">
+                        <hr class="flex-grow border-gray-300">
+                        <span class="px-4 text-gray-500 text-sm font-semibold">නැතහොත</span>
+                        <hr class="flex-grow border-gray-300">
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-2">📧 ඊමේල් ලිපිනය</label>
+                            <input type="email" id="authEmail" placeholder="your@email.com" 
+                                class="w-full p-4 border-2 border-gray-300 rounded-2xl focus:outline-none focus:ring-4 focus:ring-purple-300 focus:border-purple-500 transition duration-300 font-medium bg-white/60 backdrop-blur-sm">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-2">🔒 මුරපදය</label>
+                            <input type="password" id="authPassword" placeholder="••••••••" 
+                                class="w-full p-4 border-2 border-gray-300 rounded-2xl focus:outline-none focus:ring-4 focus:ring-purple-300 focus:border-purple-500 transition duration-300 font-medium bg-white/60 backdrop-blur-sm">
+                        </div>
+                    </div>
+                    
+                    <button id="signInBtn" class="auth-button w-full bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 text-white p-4 rounded-2xl font-bold text-lg hover:from-purple-700 hover:via-pink-700 hover:to-blue-700 focus:outline-none focus:ring-4 focus:ring-purple-300 transition duration-300 mt-6 shadow-xl hover:shadow-2xl">
+                        🎯 ඊමේල්/මුරපදයෙන් පිවිසෙන්න
+                    </button>
+                    
+                    <p class="text-center text-gray-600 mt-6 font-medium">
+                        ගිණුමක් නොද්ද? 
+                        <button id="toggleAuthBtn" class="text-purple-600 font-bold hover:text-pink-600 transition-colors duration-300 hover:underline">✨ ලියාපදිංචි වෙන්න</button>
+                    </p>
+                </div>
+
+                <div id="signUpSection" class="hidden">
+                    <h2 class="text-3xl font-bold mb-6 text-gray-800 text-center">🎉 ලියාපදිංචි වන්න</h2>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-2">📧 ඊමේල් ලිපිනය</label>
+                            <input type="email" id="signUpEmail" placeholder="your@email.com" 
+                                class="w-full p-4 border-2 border-gray-300 rounded-2xl focus:outline-none focus:ring-4 focus:ring-pink-300 focus:border-pink-500 transition duration-300 font-medium bg-white/60 backdrop-blur-sm">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-2">👤 පරිශීලක නාමය (Username)</label>
+                            <input type="text" id="displayName" placeholder="අපූරු නමක් තෝරන්න..." 
+                                class="w-full p-4 border-2 border-gray-300 rounded-2xl focus:outline-none focus:ring-4 focus:ring-pink-300 focus:border-pink-500 transition duration-300 font-medium bg-white/60 backdrop-blur-sm">
+                            <p class="text-xs text-gray-500 mt-1 font-medium">⚠️ ඔබගේ නම අන් අයට පෙනෙනු ඇත</p>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-2">🔒 මුරපදය</label>
+                            <input type="password" id="signUpPassword" placeholder="අවම වශයෙන් 6ක්" 
+                                class="w-full p-4 border-2 border-gray-300 rounded-2xl focus:outline-none focus:ring-4 focus:ring-pink-300 focus:border-pink-500 transition duration-300 font-medium bg-white/60 backdrop-blur-sm">
+                        </div>
+                    </div>
+                    
+                    <button id="signUpBtn" class="auth-button w-full bg-gradient-to-r from-pink-600 via-purple-600 to-blue-600 text-white p-4 rounded-2xl font-bold text-lg hover:from-pink-700 hover:via-purple-700 hover:to-blue-700 focus:outline-none focus:ring-4 focus:ring-pink-300 transition duration-300 mt-6 shadow-xl hover:shadow-2xl">
+                        🚀 ලියාපදිංචි වන්න
+                    </button>
+
+                    <p class="text-center text-gray-600 mt-6 font-medium">
+                        ගිණුමක් දැනටමත් තිබෙනවද? 
+                        <button id="backToSignIn" class="text-pink-600 font-bold hover:text-purple-600 transition-colors duration-300 hover:underline">🔐 පිවිසෙන්න</button>
+                    </p>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Username Modal -->
     <div id="usernameModal" class="fixed inset-0 modal-backdrop hidden items-center justify-center z-50">
         <div class="modal-content glass-effect rounded-3xl p-8 max-w-md w-full mx-4 shadow-2xl border-2 border-white/40">
             <div class="text-center mb-6">
@@ -378,29 +370,20 @@
                 return;
             }
 
-            // Check if username already exists
-            // Step 1 — Create User first
-const userCredential = await auth.createUserWithEmailAndPassword(email, password);
-
-// Step 2 — Now check username (user is authenticated)
-const usernameExists = await checkUsernameExists(displayName);
-if (usernameExists) {
-   showMessage('❌ මෙම නම දැනටමත් භාවිතා වේ!', 'error');
-   return;
-}
-
-// Step 3 — Save username
-await userCredential.user.updateProfile({ displayName: displayName });
-await saveUsername(userCredential.user.uid, displayName);
-
-            if (usernameExists) {
-                showMessage('❌ මෙම නම දැනටමත් භාවිතා වේ! වෙනත් නමක් තෝරන්න.', 'error');
-                return;
-            }
-
             disableButtons(true);
             try {
+                // Step 1: Check username existence before creating user
+                const usernameExists = await checkUsernameExists(displayName);
+                if (usernameExists) {
+                    showMessage('❌ මෙම නම දැනටමත් භාවිතා වේ! වෙනත් නමක් තෝරන්න.', 'error');
+                    disableButtons(false);
+                    return;
+                }
+
+                // Step 2: Create User
                 const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+                
+                // Step 3: Save username
                 await userCredential.user.updateProfile({ displayName: displayName });
                 await saveUsername(userCredential.user.uid, displayName);
                 
@@ -417,6 +400,9 @@ await saveUsername(userCredential.user.uid, displayName);
                     errorMsg = 'වලංගු නොවන ඊමේල් ලිපිනයක්!';
                 } else if (error.code === 'auth/weak-password') {
                     errorMsg = 'මුරපදය වඩාත් ශක්තිමත් විය යුතුයි!';
+                } else {
+                    // 🔥 දෝෂය හඳුනාගැනීම සඳහා නව වෙනස
+                    errorMsg = `දෝෂයක් සිදු විය! (කේතය: ${error.code})`;
                 }
                 showMessage(`❌ ${errorMsg}`, 'error');
             }
@@ -444,12 +430,13 @@ await saveUsername(userCredential.user.uid, displayName);
             } catch (error) {
                 disableButtons(false);
                 let errorMsg = 'දෝෂයක් සිදු විය!';
-                if (error.code === 'auth/user-not-found') {
-                    errorMsg = 'ගිණුමක් හමු නොවීය! කරුණාකර ලියාපදිංචි වන්න.';
-                } else if (error.code === 'auth/wrong-password') {
-                    errorMsg = 'වැරදි මුරපදයක්!';
+                if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+                    errorMsg = 'ඊමේල් හෝ මුරපදය වැරදියි! නැතහොත් ගිණුමක් හමු නොවීය.';
                 } else if (error.code === 'auth/invalid-email') {
                     errorMsg = 'වලංගු නොවන ඊමේල් ලිපිනයක්!';
+                } else {
+                    // 🔥 දෝෂය හඳුනාගැනීම සඳහා නව වෙනස
+                    errorMsg = `දෝෂයක් සිදු විය! (කේතය: ${error.code})`;
                 }
                 showMessage(`❌ ${errorMsg}`, 'error');
             }
@@ -477,6 +464,9 @@ await saveUsername(userCredential.user.uid, displayName);
                     errorMsg = 'පිවිසුම අවලංගු කරන ලදී.';
                 } else if (error.code === 'auth/popup-blocked') {
                     errorMsg = 'කරුණාකර popup අවහිර කිරීම අක්‍රිය කරන්න.';
+                } else {
+                    // 🔥 දෝෂය හඳුනාගැනීම සඳහා නව වෙනස
+                    errorMsg = `Google පිවිසුමේ දෝෂයක්! (කේතය: ${error.code})`;
                 }
                 showMessage(`❌ ${errorMsg}`, 'error');
             }
