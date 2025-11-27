@@ -135,12 +135,40 @@
                     <textarea id="newPostInput" placeholder="💭 ඔබේ අදහස් මෙතන ලියන්න... අද මොකද සිතන්නේ?"
                         class="w-full px-5 py-4 bg-white/60 backdrop-blur-sm rounded-2xl border-2 border-purple-200 focus:border-purple-500 outline-none resize-none transition-all duration-300 font-medium text-gray-700 hover:bg-white/80 shadow-sm"
                         rows="4"></textarea>
+                    
+                    <div class="mb-4 relative">
+                        <span id="selectedFeelingDisplay" class="hidden px-4 py-2 bg-purple-100 text-purple-700 rounded-full text-sm font-semibold shadow-inner transition-all duration-300 inline-flex items-center">
+                            <span class="mr-1">Feeling:</span> <span id="currentFeelingEmoji"></span> <span id="currentFeelingText" class="ml-1"></span>
+                            <button onclick="clearFeeling()" class="ml-3 text-red-500 hover:text-red-700 text-lg leading-none">x</button>
+                        </span>
+                        
+                        <div id="feelingSelector" class="hidden absolute top-full left-0 mt-2 p-4 w-full glass-effect rounded-xl shadow-2xl border border-white/50 fade-in z-10">
+                            <h4 class="font-bold text-gray-700 mb-3 text-lg">අද ඔබේ හැඟීම කුමක්ද?</h4>
+                            
+                            <div class="flex flex-wrap gap-2 mb-4" id="defaultFeelingsContainer">
+                                </div>
 
+                            <div class="flex items-center space-x-2">
+                                <div class="relative flex-1">
+                                    <input type="text" id="customFeelingInput" 
+                                        oninput="updateRecommendedEmoji(this.value)"
+                                        placeholder="වෙනත් හැඟීමක් ටයිප් කරන්න... (උදා: happy, දුකෙන්)"
+                                        class="w-full px-4 py-2 pr-12 bg-white/70 rounded-lg border border-purple-200 focus:border-purple-500 outline-none transition-all duration-300 text-gray-700 text-sm">
+                                    <span id="recommendedEmojiDisplay" class="absolute right-3 top-1/2 -translate-y-1/2 text-2xl opacity-50 transition-opacity duration-200" title="Recommended Emoji">
+                                        💭
+                                    </span>
+                                </div>
+                                <button onclick="handleCustomFeeling()"
+                                    class="p-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors duration-300 text-sm font-semibold">
+                                    ✔️ Add
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                     <div class="flex items-center justify-between mt-5">
                         <div class="flex space-x-2">
-                            <button class="p-3 hover:bg-gradient-to-br hover:from-purple-100 hover:to-pink-100 rounded-2xl text-2xl transition-all duration-300 hover:scale-110 hover:rotate-6">🖼️</button>
-                            <button class="p-3 hover:bg-gradient-to-br hover:from-pink-100 hover:to-yellow-100 rounded-2xl text-2xl transition-all duration-300 hover:scale-110 hover:-rotate-6">😀</button>
-                            <button class="p-3 hover:bg-gradient-to-br hover:from-blue-100 hover:to-purple-100 rounded-2xl text-2xl transition-all duration-300 hover:scale-110">🎨</button>
+                            <button onclick="openFeelingSelector()" title="හැඟීමක් එක් කරන්න"
+                                class="p-3 hover:bg-gradient-to-br hover:from-pink-100 hover:to-yellow-100 rounded-2xl text-2xl transition-all duration-300 hover:scale-110 hover:-rotate-6">😀</button>
                         </div>
 
                         <button onclick="createPost()" id="postButton"
@@ -189,6 +217,7 @@
     const postsRef = database.ref("posts");
 
     let currentUser = null;
+    let selectedFeeling = null; 
 
     /* ============================================================
         🔥 Theme System
@@ -352,7 +381,7 @@
     }
 
     /* ============================================================
-        🔥 Create Post Element - NEW FUNCTION
+        🔥 Create Post Element
     ============================================================ */
     function createPostElement(post) {
         const timeAgo = getTimeAgo(post.timestamp);
@@ -360,6 +389,7 @@
         const isAuthor = post.authorId === me;
 
         const myReaction = post.reactions && post.reactions[me] ? post.reactions[me] : null;
+        const postFeeling = post.feeling; 
 
         const likeCount = post.reactionCounts?.like || 0;
         const laughCount = post.reactionCounts?.laugh || 0;
@@ -369,6 +399,14 @@
         div.id = `post-${post.id}`;
         div.className =
             "post-card glass-effect rounded-3xl shadow-2xl border-2 border-white/40 p-7 hover:shadow-[0_30px_70px_rgba(168,85,247,0.3)] transition-all duration-500 fade-in mb-8";
+        
+        div.style.position = 'relative'; 
+
+        const feelingDisplayHTML = postFeeling ? 
+            `<span class="ml-2 px-2 py-0.5 bg-gradient-to-r from-yellow-50 to-pink-50 text-gray-700 rounded-full text-xs font-bold shadow-sm inline-flex items-center">
+                <span class="mr-1 text-base">${postFeeling.emoji}</span> is feeling ${postFeeling.text}
+            </span>`
+            : '';
 
         div.innerHTML = `
             <div class="flex items-center justify-between mb-5">
@@ -377,7 +415,10 @@
                         ${post.avatar || '❓'}
                     </div>
                     <div>
-                        <h3 class="font-bold text-gray-800 text-xl">${post.author || 'නමක් නැත'}</h3>
+                        <div class="flex items-center">
+                            <h3 class="font-bold text-gray-800 text-xl">${post.author || 'නමක් නැත'}</h3>
+                            ${feelingDisplayHTML} 
+                        </div>
                         <p class="text-sm text-gray-500 font-semibold">⏰ ${timeAgo}</p>
                     </div>
                 </div>
@@ -430,7 +471,7 @@
                 </button>
 
                 <button onclick="downloadPost('${post.id}')"
-                    class="px-5 py-3 rounded-2xl hover:bg-gradient-to-r hover:from-green-50 hover:to-teal-50 text-gray-700 transition-all duration-300 hover:scale-110 hover:rotate-12">
+                    class="px-5 py-3 rounded-2xl hover:bg-gradient-to-r hover:from-green-50 hover:to-teal-50 text-gray-700 transition-all duration-300 flex items-center space-x-2 hover:scale-110 hover:rotate-12">
                     <span class="text-2xl">⬇️</span>
                 </button>
             </div>
@@ -440,7 +481,7 @@
     }
 
     /* ============================================================
-        🔥 Render Single Post - UPDATED
+        🔥 Render Single Post 
     ============================================================ */
     function renderPost(post) {
         const feed = document.getElementById("postsFeed");
@@ -449,13 +490,116 @@
     }
 
     /* ============================================================
-        🔥 Create Post
+        🔥 NEW: Feeling Feature Logic 
+    ============================================================ */
+    const FEELINGS_MAP = [
+        { text: "සතුටින්", emoji: "😊" },
+        { text: "ආදරයෙන්", emoji: "🥰" },
+        { text: "කම්මැලි", emoji: "😪" },
+        { text: "සන්සුන්", emoji: "🧘" },
+        { text: "කෝපයෙන්", emoji: "😡" },
+        { text: "උද්යෝගයෙන්", emoji: "🤩" },
+        { text: "දුකෙන්", emoji: "😢" },
+        { text: "බලාපොරොත්තු සහගතයි", emoji: "🙏" },
+    ];
+
+    function renderFeelingButtons() {
+        const container = document.getElementById('defaultFeelingsContainer');
+        container.innerHTML = '';
+        
+        FEELINGS_MAP.forEach(f => {
+            const button = document.createElement('button');
+            button.className = 'px-4 py-2 bg-white/80 rounded-full shadow-md text-sm font-medium hover:bg-purple-100 transition-colors duration-200 flex items-center space-x-1';
+            button.innerHTML = `<span>${f.emoji}</span> <span class="ml-1">${f.text}</span>`;
+            button.onclick = () => selectFeeling(f.text, f.emoji);
+            container.appendChild(button);
+        });
+    }
+
+    function openFeelingSelector() {
+        const selector = document.getElementById('feelingSelector');
+        selector.classList.toggle('hidden');
+        // Render buttons the first time it opens
+        if (selector.querySelector('#defaultFeelingsContainer').children.length === 0) {
+            renderFeelingButtons();
+        }
+    }
+
+    function selectFeeling(text, emoji) {
+        selectedFeeling = { text: text, emoji: emoji };
+        
+        // Update display
+        document.getElementById('currentFeelingEmoji').textContent = emoji;
+        document.getElementById('currentFeelingText').textContent = text;
+        document.getElementById('selectedFeelingDisplay').classList.remove('hidden');
+        document.getElementById('feelingSelector').classList.add('hidden'); // Hide selector after selection
+        
+        showNotification(`Feeling added: ${emoji} ${text} 🎉`);
+    }
+
+    function clearFeeling() {
+        selectedFeeling = null;
+        document.getElementById('selectedFeelingDisplay').classList.add('hidden');
+        document.getElementById('customFeelingInput').value = '';
+        document.getElementById('recommendedEmojiDisplay').textContent = "💭"; // Reset recommended emoji
+        showNotification("Feeling removed.");
+    }
+    
+    // 🔥 NEW FUNCTION: Logic to recommend emoji based on text
+    function recommendEmoji(text) {
+        if (!text) return "💭";
+        
+        const lowerText = text.toLowerCase();
+
+        // Specific keywords check (more weight)
+        if (lowerText.includes("love") || lowerText.includes("ආදර") || lowerText.includes("ප්‍රේම")) return "💖";
+        if (lowerText.includes("tired") || lowerText.includes("මහන්සි") || lowerText.includes("නිදි")) return "😴";
+        if (lowerText.includes("happy") || lowerText.includes("සතුට") || lowerText.includes("joy")) return "🥳";
+        if (lowerText.includes("angry") || lowerText.includes("කේන්තිය") || lowerText.includes("heat")) return "🔥";
+        if (lowerText.includes("sad") || lowerText.includes("දුක") || lowerText.includes("අඩු")) return "😭";
+        if (lowerText.includes("hungry") || lowerText.includes("බඩගිනි")) return "🍔";
+        if (lowerText.includes("excited") || lowerText.includes("උද්යෝග") || lowerText.includes("විනෝද")) return "🎉";
+
+        // General keywords check
+        if (lowerText.includes("සතුට") || lowerText.includes("happy")) return "😊";
+        if (lowerText.includes("කම්මැලි") || lowerText.includes("boring")) return "😪";
+        if (lowerText.includes("සන්සුන්") || lowerText.includes("calm")) return "🧘";
+        if (lowerText.includes("කෝප") || lowerText.includes("angry")) return "😡";
+        
+        return "💭"; // Default when no match
+    }
+
+    // 🔥 NEW FUNCTION: Updates the visible emoji next to the input
+    function updateRecommendedEmoji(text) {
+        const display = document.getElementById('recommendedEmojiDisplay');
+        if (display) {
+            display.textContent = recommendEmoji(text);
+        }
+    }
+
+    // 🔥 UPDATED FUNCTION: Uses the recommended emoji
+    function handleCustomFeeling() {
+        const input = document.getElementById('customFeelingInput');
+        const display = document.getElementById('recommendedEmojiDisplay');
+        
+        const customText = input.value.trim();
+        const finalEmoji = display.textContent.trim() || "💭"; // Get the currently recommended emoji
+
+        if (!customText) return;
+
+        selectFeeling(customText, finalEmoji);
+        input.value = ''; // Clear input
+        display.textContent = "💭"; // Reset recommended emoji after use
+    }
+    
+    /* ============================================================
+        🔥 Create Post 
     ============================================================ */
     function createPost() {
         const name = document.getElementById("authorName").value.trim() || currentUser.email.split("@")[0];
         const content = document.getElementById("newPostInput").value.trim();
 
-        if (!content) return showNotification("කරුණාකර පෝස්ට් එක ලියන්න!");
+        if (!content && !selectedFeeling) return showNotification("කරුණාකර පෝස්ට් එක ලියන්න, නැත්නම් හැඟීමක් එක් කරන්න!");
 
         const btn = document.getElementById("postButton");
         btn.disabled = true;
@@ -476,6 +620,7 @@
             authorId: currentUser.uid,
             avatar: avatars[Math.floor(Math.random()*avatars.length)],
             gradient: gradients[Math.floor(Math.random()*gradients.length)],
+            feeling: selectedFeeling || null, 
             timestamp: firebase.database.ServerValue.TIMESTAMP,
             reactionCounts: {
                 like: 0, 
@@ -488,15 +633,18 @@
         postsRef.push(newPost)
         .then(() => {
             document.getElementById("newPostInput").value = "";
+            clearFeeling(); 
             btn.disabled = false;
-            btn.innerHTML = "📝 පෝස්ට් කරන්න";
-            showNotification("පෝස්ට් එක සාර්ථකයි! 🎉");
+            btn.innerHTML = `<span>🚀 පෝස්ට් කරන්න</span>`;
+            showNotification("පෝස්ට් එක සාර්ථකව පළ කළා! 🎉");
+            // Also save the name to the user's profile
+            database.ref('users/' + currentUser.uid).update({ name: name }); 
         })
-        .catch((error) => {
+        .catch(error => {
+            console.error("Post Creation Error:", error);
             btn.disabled = false;
-            btn.innerHTML = "📝 පෝස්ට් කරන්න";
-            console.error("Post creation error: ", error); 
-            showNotification("පෝස්ට් upload error ❌");
+            btn.innerHTML = `<span>🚀 පෝස්ට් කරන්න</span>`;
+            showNotification("පෝස්ට් කිරීමේ දෝෂයක් ❌");
         });
     }
 
@@ -543,7 +691,7 @@
     }
 
     function editPost(id, oldContent) {
-        const newText = prompt("නව content:", oldContent);
+        const newText = prompt("නව අන්තර්ගතය ඇතුළත් කරන්න:", unescapeText(oldContent));
         if (!newText) return;
 
         postsRef.child(id).update({
@@ -558,7 +706,7 @@
     }
 
     /* ============================================================
-        🔥 Download Post
+        🔥 Download Post (Original Complex Logic - UNCHANGED)
     ============================================================ */
     function downloadPost(postId) {
         postsRef.child(postId).once("value").then(snap => {
@@ -729,8 +877,14 @@
         },2500);
     }
 
-    function escapeText(txt) {
-        return txt.replace(/'/g,"&#39;").replace(/"/g,"&quot;");
+    // HTML special character escaping for passing content via onclick
+    function escapeText(text) {
+        return text.replace(/'/g, '&#39;').replace(/"/g, '&#34;');
+    }
+    
+    // Reverse escape for use in JS prompt
+    function unescapeText(text) {
+        return text.replace(/&#39;/g, "'").replace(/&#34;/g, '"');
     }
 
     </script>
