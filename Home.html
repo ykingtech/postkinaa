@@ -116,6 +116,23 @@
                     class="px-3 py-1.5 sm:px-5 sm:py-2 bg-gradient-to-r from-red-400 to-pink-500 text-white rounded-full text-xs sm:text-sm font-bold hover:from-red-500 hover:to-pink-600 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105">
                     🚪 Logout
                 </button>
+                
+                <div class="relative">
+                    
+                        </svg>
+                        <span id="notificationCount" class="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-red-100 transform translate-x-1/2 -translate-y-1/2 bg-red-600 rounded-full hidden">0</span>
+                    </button>
+                    
+                    <div id="notificationPanel" class="hidden absolute right-0 mt-3 w-80 sm:w-96 glass-effect rounded-2xl shadow-2xl border-2 border-white/50 p-4 fade-in max-h-[70vh] overflow-y-auto z-[100]">
+                        <h3 class="font-bold text-xl text-gray-800 border-b pb-2 mb-3">🔔 දැනුම්දීම්</h3>
+                        <div id="notificationsList" class="space-y-3">
+                            <p class="text-center text-gray-500 py-4" id="loadingNotifications">Loading...</p>
+                        </div>
+                        <div id="noNotifications" class="text-center text-gray-500 py-4 hidden">
+                            තවම අලුත් දැනුම්දීම් නෑ.
+                        </div>
+                    </div>
+                </div>
                 <span id="connectionStatus" style="display:none;" 
                     class="hidden sm:inline-block px-3 py-1.5 bg-gradient-to-r from-green-400 to-emerald-500 text-white rounded-full text-xs font-bold shadow-lg glow">
                     ✨ Connected
@@ -229,24 +246,67 @@
     const THEMES = {
         default: {
             bg: 'bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50',
-            header: 'bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600',
-            download: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+            header: 'from-purple-600 via-pink-600 to-blue-600',
+            download: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            button: 'from-purple-600 via-pink-600 to-blue-600', // Main button color
+            avatarGradient: 'from-purple-500 via-pink-500 to-blue-500', // Post creation avatar
+            settingBack: 'text-purple-600 hover:bg-purple-100', // Back button in settings
+            settingBackBG: '#9333ea', // Back button background color for comment.html consistency
         },
         blue: {
             bg: 'bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50',
-            header: 'bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600',
-            download: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)'
+            header: 'from-blue-600 via-indigo-600 to-purple-600',
+            download: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+            button: 'from-blue-600 via-indigo-600 to-purple-600',
+            avatarGradient: 'from-blue-500 via-indigo-500 to-purple-500',
+            settingBack: 'text-blue-600 hover:bg-blue-100',
+            settingBackBG: '#3b82f6',
         },
         green: {
             bg: 'bg-gradient-to-br from-green-50 via-teal-50 to-cyan-50',
-            header: 'bg-gradient-to-r from-green-600 via-teal-600 to-cyan-600',
-            download: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)'
+            header: 'from-green-600 via-teal-600 to-cyan-600',
+            download: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+            button: 'from-green-600 via-teal-600 to-cyan-600',
+            avatarGradient: 'from-green-500 via-teal-500 to-cyan-500',
+            settingBack: 'text-green-600 hover:bg-green-100',
+            settingBackBG: '#10b981',
         },
         dark: {
             bg: 'bg-gray-800', 
-            header: 'bg-gradient-to-r from-gray-300 via-gray-100 to-gray-300', 
-            download: 'linear-gradient(135deg, #374151 0%, #1f2937 100%)'
+            header: 'bg-white', 
+            download: 'linear-gradient(135deg, #374151 0%, #1f2937 100%)',
+            button: 'from-gray-600 via-gray-700 to-gray-800', 
+            avatarGradient: 'from-gray-700 via-gray-600 to-gray-500',
+            settingBack: 'text-gray-400 hover:bg-gray-700 hover:text-white',
+            settingBackBG: '#4b5563',
         },
+        red: {
+            bg: 'bg-gradient-to-br from-red-50 via-pink-50 to-orange-50',
+            header: 'from-red-600 via-pink-600 to-orange-600',
+            download: 'linear-gradient(135deg, #f87171 0%, #f43f5e 100%)',
+            button: 'from-red-600 via-pink-600 to-orange-600',
+            avatarGradient: 'from-red-500 via-pink-500 to-orange-500',
+            settingBack: 'text-red-600 hover:bg-red-100',
+            settingBackBG: '#ef4444',
+        },
+        yellow: {
+            bg: 'bg-gradient-to-br from-yellow-50 via-amber-50 to-orange-50',
+            header: 'from-yellow-600 via-amber-600 to-orange-600',
+            download: 'linear-gradient(135deg, #fcd34d 0%, #fb923c 100%)',
+            button: 'from-yellow-600 via-amber-600 to-orange-600',
+            avatarGradient: 'from-yellow-500 via-amber-500 to-orange-500',
+            settingBack: 'text-yellow-600 hover:bg-yellow-100',
+            settingBackBG: '#f59e0b',
+        },
+        teal: {
+            bg: 'bg-gradient-to-br from-teal-50 via-cyan-50 to-blue-50',
+            header: 'from-teal-600 via-cyan-600 to-blue-600',
+            download: 'linear-gradient(135deg, #2dd4bf 0%, #06b6d4 100%)',
+            button: 'from-teal-600 via-cyan-600 to-blue-600',
+            avatarGradient: 'from-teal-500 via-cyan-500 to-blue-500',
+            settingBack: 'text-teal-600 hover:bg-teal-100',
+            settingBackBG: '#14b8a6',
+        }
     };
 
     function applyTheme() {
@@ -255,14 +315,29 @@
 
         document.body.className = "min-h-screen " + theme.bg;
         const headerTitle = document.getElementById("headerTitle");
-        
+        const postButton = document.getElementById("postButton");
+        const postAvatar = document.querySelector("#postCreationCard > div > div:nth-child(1)"); // The avatar div
+
+        // Update Header Title
         if (themeName === 'dark') {
             headerTitle.className =
-                "text-3xl sm:text-4xl font-bold bg-clip-text text-white";
+                "text-3xl sm:text-4xl font-black bg-clip-text text-white float pulse-animation";
         } else {
+            // Remove existing gradient classes and apply new ones
+            headerTitle.className = headerTitle.className.replace(/from-.*?to-.*?/g, ''); 
             headerTitle.className =
-                "text-3xl sm:text-4xl font-bold bg-clip-text text-transparent " + theme.header;
+                "text-3xl sm:text-4xl font-black bg-clip-text text-transparent float pulse-animation bg-gradient-to-r " + theme.header;
         }
+
+        // Update Post Button (Primary action button)
+        // Remove existing gradient classes and apply new ones
+        postButton.classList.remove('from-purple-600', 'via-pink-600', 'to-blue-600', 'from-purple-700', 'via-pink-700', 'to-blue-700');
+        postButton.classList.add(...theme.button.split(' '), ...theme.button.replace(/600/g, '700').split(' ').map(cls => cls.replace('from-', 'hover:from-').replace('via-', 'hover:via-').replace('to-', 'hover:to-')));
+
+        // Update Post Avatar Gradient
+        // Remove existing gradient classes and apply new ones
+        postAvatar.classList.remove('from-purple-500', 'via-pink-500', 'to-blue-500');
+        postAvatar.classList.add('bg-gradient-to-br', ...theme.avatarGradient.split(' '));
     }
 
     /* ============================================================
@@ -333,6 +408,7 @@
 
         applyTheme();
         loadPosts();
+        setupNotificationListener(currentUser.uid); // Setup listener here
     });
 
     function signOutUser() {
@@ -673,10 +749,14 @@
     }
     
     /* ============================================================
-        🔥 Create Post
+        🔥 Create Post (FIXED BUG)
     ============================================================ */
     function createPost() {
-        const name = document.getElementById("authorName").value.trim() || currentUser.displayName.split("@")[0];
+        // 🔥 FIX: Robust name fetching to prevent error if currentUser.displayName is null
+        const inputName = document.getElementById("authorName").value.trim();
+        const defaultName = currentUser.email ? currentUser.email.split("@")[0] : 'පරිශීලකයා';
+        const name = inputName || defaultName;
+
         const content = document.getElementById("newPostInput").value.trim();
 
         if (!content && !selectedFeeling) return showNotification("කරුණාකර පෝස්ට් එක ලියන්න, නැත්නම් හැඟීමක් එක් කරන්න!");
@@ -969,7 +1049,6 @@
 
     /* ============================================================
         🔥 NEW: UI/UX Focus Logic (Input Blur/Focus) - UPDATED BLUR
-        (applyBlur and removeBlur are now used by Feeling Selector too)
     ============================================================ */
     let newPostInput, postsFeed, header, authorNameInput, postCreationCard;
 
@@ -1008,6 +1087,7 @@
     };
 
     document.addEventListener('DOMContentLoaded', () => {
+       
         newPostInput = document.getElementById('newPostInput');
         postsFeed = document.getElementById('postsFeed');
         header = document.getElementById('appHeader');
@@ -1020,8 +1100,308 @@
         
         newPostInput.addEventListener('blur', removeBlur);
         authorNameInput.addEventListener('blur', removeBlur);
+              
+        // 1. URL Parameter එක පරීක්ෂා කිරීම (comment.html වෙතින් Back Button එක හරහා පැමිණි විට)
+        const urlParams = new URLSearchParams(window.location.search);
+        const highlightPostId = urlParams.get('highlightPost');
+
+        if (highlightPostId) {
+            // Post ID ය URL එකේ තිබේ නම්, එය යාවත්කාලීන කරමු.
+            refreshSinglePost(highlightPostId);
+            
+            // එම Post එක වෙත Scroll කිරීම
+            const targetPost = document.getElementById(`post-${highlightPostId}`);
+            if (targetPost) {
+                targetPost.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+            
+            // URL එක පිරිසිදු කිරීම (නැවත Load වූ විට නැවත refresh වීම වැළැක්වීමට)
+            window.history.replaceState(null, null, window.location.pathname);
+        } 
+        
+        // 2. Local Storage පරීක්ෂා කිරීම (සාමාන්‍ය Back බොත්තම භාවිතයෙන් පැමිණි විට)
+        Object.keys(localStorage).forEach(key => {
+            if (key.startsWith('refreshPost_')) {
+                const postId = key.split('_')[1];
+                if (localStorage.getItem(key) === 'true') {
+                    refreshSinglePost(postId);
+                }
+            }
+        });
     });
 
+    /* ============================================================
+        🔥 POST REFRESH LOGIC (NEW)
+    ============================================================ */
+    function refreshSinglePost(postId) {
+        // 1. Firebase වෙතින් එම post එකේ නවතම දත්ත ලබා ගැනීම
+        database.ref('posts/' + postId).once('value', (snapshot) => {
+            const post = snapshot.val();
+            if (post) {
+                // 2. පවතින post element එක සොයා ගැනීම
+                const postElement = document.getElementById(`post-${postId}`);
+                if (postElement) {
+                    
+                    // 3. Comment Count එක යාවත්කාලීන කිරීම
+                    const commentsCountSpan = postElement.querySelector('.comment-count');
+                    if (commentsCountSpan) {
+                        commentsCountSpan.textContent = post.commentsCount || 0;
+                    }
+                    
+                    // 4. (විකල්ප) - එම post එක විශේෂයෙන් ඉස්මතු කර පෙන්වීම
+                    postElement.style.border = '2px solid #f87171'; // රතු පාට border එකක් පෙන්වමු
+                    setTimeout(() => {
+                        postElement.style.border = 'none'; // ටික වෙලාවකින් border එක අයින් කරමු
+                    }, 1500);
+                }
+            }
+        });
+
+        // 5. Local Storage හි සංඥාව ඉවත් කිරීම
+        localStorage.removeItem('refreshPost_' + postId);
+    }
+    
+    /* ============================================================
+            🔔 NEW: NOTIFICATION & PUSH NOTIFICATION LOGIC
+        ============================================================ */
+
+        function requestNotificationPermission() {
+            if (!("Notification" in window)) {
+                showNotification("මෙම බ්‍රවුසරය Notifications සඳහා සහය නොදක්වයි.");
+                return;
+            }
+            if (Notification.permission === "granted") {
+                showNotification('Notification අවසරය දැනටමත් ලබා දී ඇත.');
+                return;
+            }
+
+            // User must interact with the page to trigger this
+            Notification.requestPermission().then(permission => {
+                if (permission === "granted") {
+                    showNotification("Notifications ලබා දීමට අවසර ලැබුණි!");
+                } else {
+                    showNotification("Notifications අවසරය ප්‍රතික්ෂේප විය.");
+                }
+            });
+        }
+        
+        function displayBrowserNotification(title, body) {
+            if (Notification.permission === "granted") {
+                // Browser Push Notification එකක් පෙන්වීම
+                new Notification(title, {
+                    body: body,
+                    icon: 'https://via.placeholder.com/48' // ඔබට මෙහි නිවැරදි icon path එකක් දැක්විය හැක.
+                });
+            }
+        }
+        
+        // Notification Count සහ Real-time Alerts සඳහා Listener එක
+        function setupNotificationListener(userId) {
+            const notificationsRef = database.ref(`notifications/${userId}`); // Changed db.ref to database.ref
+            const notificationCountElement = document.getElementById('notificationCount');
+            
+            // 1. Initial/Real-time Count Update
+            notificationsRef.orderByChild('read').equalTo(false).on('value', snapshot => {
+                const unreadCount = snapshot.numChildren();
+
+                if (unreadCount > 0) {
+                    notificationCountElement.textContent = unreadCount;
+                    notificationCountElement.classList.remove('hidden');
+                } else {
+                    notificationCountElement.classList.add('hidden');
+                }
+            });
+
+            // 2. Real-time New Notification Alert
+            notificationsRef.limitToLast(1).on('child_added', snapshot => {
+                const notif = snapshot.val();
+                
+                // Notification එක read කර නැතිනම් සහ එය ඔබගේම ක්‍රියාවක් නොවේ නම් පමණක් පෙන්වන්න
+                if (!notif.read && notif.actorId !== userId) {
+                    
+                    database.ref(`users/${notif.actorId}`).once('value', userSnap => { // Changed db.ref to database.ref
+                        const userData = userSnap.val();
+                        const actorName = userData ? userData.name : 'කවුරුන් හෝ';
+                        
+                        let title = 'අලුත් පෝස්ට් කිනා දැනුම්දීම';
+                        let message = '';
+                        
+                        if (notif.type === 'like') {
+                            message = `${actorName} ඔබේ පෝස්ට් එකට රියැක්ෂන් එකක් දුන්නා! 👍`;
+                        } else if (notif.type === 'comment') {
+                            const commentContent = notif.content || 'ඔබගේ පෝස්ට් එකට අලුත් කමෙන්ට් එකක්.';
+                            const commentSnippet = commentContent.length > 50 ? commentContent.substring(0, 50) + '...' : commentContent;
+                            message = `${actorName} කමෙන්ට් කළා: "${commentSnippet}" 💬`;
+                        }
+                        
+                        // Web Browser Push Notification එක පෙන්වීම
+                        displayBrowserNotification(title, message);
+                        
+                        // In-App Notification එක පෙන්වීම (පවතින showNotification භාවිතා කරයි)
+                        showNotification(message); 
+                    });
+                }
+            });
+        }
+        
+        /* ============================================================
+            🔥 NEW: Notification Panel Functions
+        ============================================================ */
+        let notificationPanelOpen = false;
+
+        function toggleNotificationPanel() {
+            const panel = document.getElementById('notificationPanel');
+            const button = document.getElementById('notificationButton');
+            
+            // Optional: Request permission the first time the user interacts with the button
+            if (Notification.permission === 'default') {
+                requestNotificationPermission();
+            }
+
+            if (panel.classList.contains('hidden')) {
+                // Open the panel
+                panel.classList.remove('hidden');
+                notificationPanelOpen = true;
+                loadAndRenderNotifications();
+
+                // Close when clicking outside
+                document.addEventListener('click', closeNotificationPanelOutside, true);
+            } else {
+                // Close the panel
+                closeNotificationPanel();
+            }
+        }
+
+        function closeNotificationPanel() {
+            const panel = document.getElementById('notificationPanel');
+            panel.classList.add('hidden');
+            notificationPanelOpen = false;
+            document.removeEventListener('click', closeNotificationPanelOutside, true);
+        }
+
+        function closeNotificationPanelOutside(event) {
+            const panel = document.getElementById('notificationPanel');
+            const button = document.getElementById('notificationButton');
+            
+            // Check if the click occurred outside the panel AND outside the button
+            if (!panel.contains(event.target) && !button.contains(event.target)) {
+                closeNotificationPanel();
+            }
+        }
+
+        function loadAndRenderNotifications() {
+            if (!currentUser) return;
+
+            const list = document.getElementById('notificationsList');
+            const loading = document.getElementById('loadingNotifications');
+            const noNotifs = document.getElementById('noNotifications');
+            
+            list.innerHTML = '';
+            loading.style.display = 'block';
+            noNotifs.style.display = 'none';
+
+            const notificationsRef = database.ref(`notifications/${currentUser.uid}`);
+            
+            // Get the latest 30 notifications
+            notificationsRef.orderByChild('timestamp').limitToLast(30).once('value', async (snapshot) => {
+                loading.style.display = 'none';
+                
+                if (!snapshot.exists()) {
+                    noNotifs.style.display = 'block';
+                    return;
+                }
+
+                const notifications = [];
+                snapshot.forEach(s => {
+                    notifications.push({ key: s.key, ...s.val() });
+                });
+                
+                notifications.reverse(); // Newest first
+                
+                let needsMarkingAsRead = false;
+                
+                for (const notif of notifications) {
+                    // Fetch actor details
+                    const actorSnap = await database.ref(`users/${notif.actorId}`).once('value');
+                    const actor = actorSnap.val();
+                    const actorName = actor ? (actor.name || 'Unknown User') : 'Unknown User';
+
+                    const html = createNotificationElement(notif, actorName);
+                    list.appendChild(html);
+
+                    if (!notif.read) {
+                        needsMarkingAsRead = true;
+                    }
+                }
+
+                // Mark all currently visible unread notifications as read
+                if (needsMarkingAsRead) {
+                    markAllNotificationsAsRead(notifications);
+                }
+                
+                if (notifications.length === 0) {
+                    noNotifs.style.display = 'block';
+                }
+            });
+        }
+
+        function createNotificationElement(notif, actorName) {
+            const element = document.createElement('div');
+            const timeAgo = getTimeAgo(notif.timestamp);
+            let icon = '';
+            let message = '';
+            // Highlight unread notifications
+            let highlightClass = notif.read ? 'bg-white/70' : 'bg-purple-50/90 border-l-4 border-purple-500';
+
+            if (notif.type === 'like') {
+                icon = '❤️';
+                message = `**${actorName}** ඔබේ පෝස්ට් එකට රියැක්ෂන් එකක් දුන්නා.`;
+            } else if (notif.type === 'comment') {
+                icon = '💬';
+                const content = notif.content || 'ඔබගේ පෝස්ට් එකට අලුත් කමෙන්ට් එකක්.';
+                const snippet = content.length > 30 ? content.substring(0, 30) + '...' : content;
+                message = `**${actorName}** කමෙන්ට් කළා: *"${snippet}"*`;
+            }
+
+            element.className = `${highlightClass} rounded-xl p-3 shadow-md transition-all duration-300 hover:shadow-lg cursor-pointer fade-in`;
+            element.innerHTML = `
+                <div class="flex items-start space-x-3">
+                    <span class="text-2xl pt-0.5 shrink-0">${icon}</span>
+                    <div class="flex-1">
+                        <p class="text-sm text-gray-800 font-medium leading-snug">${message.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>').replace(/\*(.*?)\*/g, '<i>$1</i>')}</p>
+                        <p class="text-xs text-gray-500 mt-1">${timeAgo}</p>
+                    </div>
+                </div>
+            `;
+            
+            element.onclick = () => {
+                // Go to the post and close the panel
+                window.location.href = `comment.html?postId=${notif.postId}`;
+                closeNotificationPanel();
+            };
+            
+            return element;
+        }
+
+        function markAllNotificationsAsRead(notifications) {
+            if (!currentUser || !notifications.length) return;
+
+            const updates = {};
+            let unreadFound = false;
+            
+            // Only update notifications that are currently unread
+            notifications.forEach(notif => {
+                if (!notif.read) {
+                    updates[`notifications/${currentUser.uid}/${notif.key}/read`] = true;
+                    unreadFound = true;
+                }
+            });
+
+            if (unreadFound) {
+                database.ref().update(updates)
+                    .catch(error => console.error("Error marking notifications as read:", error));
+            }
+        }
     </script>
 
 </body>
