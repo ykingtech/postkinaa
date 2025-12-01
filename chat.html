@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PostKinaa - Chat</title>
+    <title>PostKinaa - Chat (RTDB)</title>
 
     <script src="https://cdn.tailwindcss.com"></script>
 
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script> 
 
     <style>
         /* ============================================================
@@ -27,7 +27,7 @@
             border: 1px solid rgba(255, 255, 255, 0.3);
         }
         
-        /* Chat-specific styles (retained) */
+        /* Chat-specific styles */
         .user-list-item {
             transition: all 0.3s ease;
         }
@@ -59,7 +59,9 @@
             transition: all 0.3s ease;
         }
         
-        /* Mobile Responsiveness for 2-column layout */
+        /* ============================================================
+            🔥 MOBILE RESPONSIVENESS
+        ============================================================ */
         .main-chat-container {
             display: flex;
         }
@@ -68,24 +70,30 @@
             .main-chat-container {
                 flex-direction: column;
             }
+            /* Default: User list is visible, Chat is hidden */
             #userListPanel {
                 width: 100%;
                 min-width: unset;
                 margin-right: 0;
-                height: auto;
-                max-height: 80vh; 
+                height: 80vh; /* Set a fixed height for the list */
             }
             .chat-area-main {
                 width: 100%;
                 height: 80vh;
+                position: fixed; /* Fix the chat area to the screen for better mobile transition */
+                top: 0;
+                left: 0;
+                z-index: 40;
+                /* By default hide chat on mobile */
+                display: none !important; 
             }
             
             /* Toggle visibility for mobile */
             .mobile-hide {
-                display: none;
+                display: none !important;
             }
             .mobile-show {
-                display: flex !important;
+                display: flex !important; /* Overrides the default mobile hidden state */
             }
         }
     </style>
@@ -115,9 +123,9 @@
                     class="p-2 sm:p-3 text-xl sm:text-2xl text-gray-600 hover:text-purple-600 hover:bg-purple-100 rounded-xl sm:rounded-2xl transition-all duration-300 hover:scale-110 hover:-rotate-6">
                     🏠
                 </button>
-                <h1 class="text-3xl sm:text-4xl font-black text-purple-600">💬 Chat</h1>
+                <h1 class="text-3xl sm:text-4xl font-black text-purple-600">💬 Chat</h1> 
                 <div id="user-info-header" class="ml-4 flex items-center space-x-2 text-gray-700 hidden sm:flex">
-                    </div>
+                </div>
             </div>
 
             <div class="flex items-center space-x-3">
@@ -151,7 +159,9 @@
                     <span id="chat-partner-name" class="font-bold text-lg text-gray-800"></span>
                     <div id="online-status" class="text-xs ml-3 px-2 py-1 rounded-full font-semibold"></div> 
                 </div>
-                <button id="block-button" class="bg-red-500 text-white px-4 py-1.5 rounded-full text-sm font-bold hover:bg-red-600 transition-all duration-300 shadow-lg">🚫 Block</button>
+                <button onclick="blockUser()" id="block-button" class="text-white px-4 py-1.5 rounded-full text-sm font-bold transition-all duration-300 shadow-lg">
+                    🚫 Block
+                </button>
             </div>
 
 
@@ -159,12 +169,12 @@
                 <div class="text-center fade-in">
                     <div class="text-6xl mb-4 float">👋</div>
                     <h3 class="text-2xl font-bold text-gray-700">කතාබස් කිරීමට පරිශීලකයෙක් තෝරන්න.</h3>
-                    <p class="text-gray-500 mt-2">වම් පස ඇති ලැයිස්තුවෙන් කෙනෙකු තෝරන්න.</p>
+                    <p class="text-gray-500 mt-2">වම් පස ඇති ලැයිස්තුවෙන් කෙනෙක් තෝරන්න.</p>
                 </div>
             </div>
 
             <div id="messagesContainer" class="flex-1 overflow-y-auto p-5 space-y-4 hidden">
-                </div>
+            </div>
 
             <div id="chatInputArea" class="p-5 border-t border-gray-200 bg-white/70 rounded-b-3xl hidden">
                 <div class="flex space-x-3">
@@ -173,7 +183,7 @@
                         onkeydown="if(event.key === 'Enter') sendMessage()">
                     
                     <button onclick="sendMessage()" id="sendButton"
-                        class="px-6 py-3 bg-gradient-to-r from-blue-600 to-teal-600 text-white rounded-2xl font-bold hover:from-blue-700 hover:to-teal-700 shadow-xl transition-all duration-300 flex items-center space-x-2 hover:scale-105 text-base">
+                        class="px-4 py-3 sm:px-6 bg-gradient-to-r from-blue-600 to-teal-600 text-white rounded-2xl font-bold hover:from-blue-700 hover:to-teal-700 shadow-xl transition-all duration-300 flex items-center space-x-1 sm:space-x-2 hover:scale-105 text-sm sm:text-base">
                         <span>🚀 යවන්න</span>
                     </button>
                 </div>
@@ -184,12 +194,12 @@
     <script>
     
     /* ============================================================
-        🔥 Firebase Config + Init (User's Config Used)
+        🔥 Firebase Config + Init 
     ============================================================ */
     const firebaseConfig = {
         apiKey: "AIzaSyAzNJ-P8aAMvTuNWKcQYCjIIHiaL0BpdZ0",
         authDomain: "game-f1c21.firebaseapp.com",
-        databaseURL: "https://game-f1c21-default-rtdb.firebaseio.com",
+        databaseURL: "https://game-f1c21-default-rtdb.firebaseio.com", 
         projectId: "game-f1c21",
         storageBucket: "game-f1c21.firebasestorage.app",
         messagingSenderId: "656338565711",
@@ -198,37 +208,41 @@
 
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
-    const database = firebase.database();
-    const usersRef = database.ref("users"); 
-    const chatsRef = database.ref("chats"); 
+    const rtdb = firebase.database(); 
+    const usersRef = rtdb.ref("users"); 
+    const chatsRef = rtdb.ref("chats"); 
 
     let currentUser = null;
     let currentChatRecipient = null; 
-    let messagesListenerRef = null; 
-    let presenceListenerRef = null;
+    let messageListener = null; 
+    let presenceListener = null; 
+    let isCurrentUserBlockedByPartnerListener = null; 
 
     let isEditingMessage = false;
     let editingMessageKey = null;
+    let isPartnerBlocked = false; 
+    let isCurrentUserBlockedByPartner = false; 
 
     /* ============================================================
         🔥 Auth Check and User Data Setup
     ============================================================ */
     auth.onAuthStateChanged(user => {
         if (!user) {
-            window.location.href = "index.html"; // Redirect to login/index
+            window.location.href = "index.html"; 
             return;
         }
         
-        // Fetch current user details (name, feeling, etc.) from DB
-        usersRef.child(user.uid).once('value', snapshot => {
+        usersRef.child(user.uid).once('value').then(snapshot => {
             if (snapshot.exists()) {
-                currentUser = { ...user, ...snapshot.val() };
-                initChatApp();
+                currentUser = { uid: user.uid, ...snapshot.val() };
             } else {
-                 // Fallback if DB data is missing
-                currentUser = user; 
-                initChatApp();
+                currentUser = { uid: user.uid, name: user.displayName || 'User' };
             }
+            initChatApp();
+        }).catch(error => {
+            console.error("Error fetching user data:", error);
+            currentUser = { uid: user.uid, name: user.displayName || 'User' };
+            initChatApp();
         });
     });
 
@@ -237,24 +251,34 @@
     }
 
     function signOutUser() {
+        if (currentUser) {
+            // Set last active timestamp on sign out
+            usersRef.child(currentUser.uid).child('presence').set(firebase.database.ServerValue.TIMESTAMP)
+            .catch(e => console.error("Error setting offline status:", e));
+        }
+
         auth.signOut().then(() => {
             window.location.href = "index.html";
         });
     }
 
     function initChatApp() {
-        // 1. Initial UI Setup
         document.getElementById('user-search-input').addEventListener('input', (e) => loadUsers(e.target.value));
-        document.getElementById('block-button').addEventListener('click', blockUser);
         document.getElementById('back-to-list-btn').addEventListener('click', showUserList);
         
-        // 2. Load Users
         loadUsers(); 
+        setupOnlineHeartbeat();
         
-        // 3. Set Online Status
-        setOnlineStatus();
+        // Listener: අප විසින් බ්ලොක් කළ අයගේ ලැයිස්තුව
+        usersRef.child(currentUser.uid).child('blocked').on('value', snapshot => {
+            currentUser.blockedUsers = snapshot.val() || {}; 
+            
+            if (currentChatRecipient) {
+                 const recipientName = document.getElementById('chat-partner-name').textContent;
+                 updateChatUIBasedOnInternalBlockStatus(currentChatRecipient, recipientName);
+            }
+        });
         
-        // 4. Update Header with Name/Emoji
         const userInfoHeader = document.getElementById('user-info-header');
         userInfoHeader.innerHTML = `
             <span class="font-semibold">${currentUser.name || 'User'}</span>
@@ -262,124 +286,124 @@
         `;
         userInfoHeader.classList.remove('hidden');
         
-        // 5. Context Menu Setup
         document.getElementById('edit-message-btn').addEventListener('click', editMessageAction);
         document.getElementById('delete-message-btn').addEventListener('click', deleteMessageAction);
     }
     
     /* ============================================================
-        🔥 PRESENCE (Online Status)
+        🔥 RTDB PRESENCE & Helpers
     ============================================================ */
-    function setOnlineStatus() {
+    function setupOnlineHeartbeat() {
         const presenceRef = usersRef.child(currentUser.uid).child('presence');
-        const isOnlineRef = database.ref('.info/connected');
+        const connectedRef = rtdb.ref('.info/connected');
 
-        isOnlineRef.on('value', (snapshot) => {
+        connectedRef.on('value', (snapshot) => {
             if (snapshot.val() === true) {
-                // When connected, set presence to true and set disconnect value
+                presenceRef.set(true);
                 presenceRef.onDisconnect().set(firebase.database.ServerValue.TIMESTAMP);
-                presenceRef.set(true); 
             }
         });
+    }
+
+    function getTimeAgo(ts) {
+        if (!ts || typeof ts !== 'number') return "දැන්ම";
+        const diff = Date.now() - ts;
+        const s = diff/1000;
+        if (s<60) return `${Math.floor(s)}s පෙර`;
+        const m=s/60;
+        if (m<60) return `${Math.floor(m)}min පෙර`;
+        const h=m/60;
+        if (h<24) return `${Math.floor(h)}h පෙර`;
+        
+        return `${new Date(ts).toLocaleDateString()} ${new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`; 
     }
 
     function listenForPartnerPresence(partnerId) {
-        if (presenceListenerRef) {
-            presenceListenerRef.off(); // Clear previous listener
+        if (presenceListener) {
+            if (currentChatRecipient) usersRef.child(currentChatRecipient).child('presence').off('value', presenceListener);
+            presenceListener = null;
         }
         
-        presenceListenerRef = usersRef.child(partnerId).child('presence');
-        const statusDiv = document.getElementById('online-status');
+        const partnerPresenceRef = usersRef.child(partnerId).child('presence');
         
-        presenceListenerRef.on('value', snapshot => {
-            const presence = snapshot.val();
-            
-            if (presence === true) {
+        presenceListener = partnerPresenceRef.on('value', snapshot => {
+            const statusDiv = document.getElementById('online-status');
+            const presenceValue = snapshot.val();
+
+            if (presenceValue === true) {
                 statusDiv.textContent = 'Online';
                 statusDiv.className = 'text-xs ml-3 px-2 py-1 rounded-full font-semibold bg-green-500 text-white';
-            } else if (typeof presence === 'number') {
-                statusDiv.textContent = `Last seen: ${getTimeAgo(presence)}`;
-                statusDiv.className = 'text-xs ml-3 px-2 py-1 rounded-full font-semibold bg-gray-200 text-gray-600';
+            } else if (typeof presenceValue === 'number') {
+                const lastActiveTime = presenceValue;
+                const timeDiffHours = (Date.now() - lastActiveTime) / 3600000;
+
+                if (timeDiffHours < 1) {
+                    statusDiv.textContent = 'Just now';
+                    statusDiv.className = 'text-xs ml-3 px-2 py-1 rounded-full font-semibold bg-yellow-500 text-white';
+                } else {
+                    statusDiv.textContent = `Last seen: ${getTimeAgo(lastActiveTime)}`;
+                    statusDiv.className = 'text-xs ml-3 px-2 py-1 rounded-full font-semibold bg-gray-400 text-white';
+                }
             } else {
                 statusDiv.textContent = 'Offline';
-                statusDiv.className = 'text-xs ml-3 px-2 py-1 rounded-full font-semibold bg-red-200 text-red-600';
+                statusDiv.className = 'text-xs ml-3 px-2 py-1 rounded-full font-semibold bg-gray-400 text-white';
             }
-        });
-    }
-
-    /* ============================================================
-        🔥 User Search and List
-    ============================================================ */
-    function loadUsers(query = '') {
-        const usersListEl = document.getElementById("usersList");
-        usersListEl.innerHTML = ""; 
-        let listRef = usersRef;
-        
-        // Basic filtering implementation for search
-        if (query.length > 0) {
-            listRef = usersRef.orderByChild('name')
-                              .startAt(query)
-                              .endAt(query + "\uf8ff")
-                              .limitToFirst(10);
-        } else {
-            // Load all users if no query
-            listRef = usersRef.limitToFirst(20);
-        }
-        
-        listRef.once('value', (snapshot) => {
-            let foundUsers = false;
-            snapshot.forEach(snap => {
-                const user = snap.val();
-                const uid = snap.key;
-                
-                if (uid === currentUser.uid) return;
-                
-                renderUserListItem(uid, user.name || 'නමක් නැත', user.avatar || '👤');
-                foundUsers = true;
-            });
-            
-            if (!foundUsers) {
-                usersListEl.innerHTML = "<p class='text-center text-gray-500 py-4'>පරිශීලකයින් සොයා ගැනීමට නොහැක.</p>";
-            }
-        });
-    }
-
-    function renderUserListItem(uid, name, avatar) {
-        const usersListEl = document.getElementById("usersList");
-        const div = document.createElement('div');
-        div.className = "user-list-item flex items-center space-x-3 p-3 rounded-xl bg-white/70 border-2 border-gray-100 cursor-pointer hover:bg-purple-50 shadow-md";
-        div.setAttribute('data-uid', uid);
-        div.id = `user-list-item-${uid}`;
-        div.onclick = () => startChat(uid, name);
-
-        div.innerHTML = `
-            <div class="w-10 h-10 bg-gradient-to-br from-blue-400 to-purple-400 rounded-full flex items-center justify-center text-xl shadow-lg shrink-0">
-                ${avatar}
-            </div>
-            <div class="flex-1 overflow-hidden">
-                <p class="font-bold text-gray-800 truncate">${name}</p>
-                </div>
-        `;
-        usersListEl.appendChild(div);
+        }, error => console.error("Presence listen error:", error));
     }
     
+    function listenForBeingBlockedByPartner(partnerId) {
+        // Listener: අන්තිමයා විසින් අපව බ්ලොක් කර ඇත්දැයි පරීක්ෂා කිරීමට
+        const isBlockedByPartnerRef = usersRef.child(partnerId).child('blocked').child(currentUser.uid);
+        
+        if (isCurrentUserBlockedByPartnerListener) {
+            isBlockedByPartnerRef.off('value', isCurrentUserBlockedByPartnerListener);
+            isCurrentUserBlockedByPartnerListener = null;
+        }
+
+        isCurrentUserBlockedByPartnerListener = isBlockedByPartnerRef.on('value', snapshot => {
+            isCurrentUserBlockedByPartner = snapshot.val() === true;
+            
+            const recipientName = document.getElementById('chat-partner-name').textContent;
+            updateChatUIBasedOnExternalBlockStatus(recipientName);
+        }, error => console.error("External block listen error:", error));
+    }
+
     /* ============================================================
-        🔥 Chat Initialization
+        🔥 Chat Initialization and UI Control
     ============================================================ */
     function startChat(recipientUid, recipientName) {
-        if (currentChatRecipient === recipientUid) return;
+        if (!recipientUid || typeof recipientUid !== 'string' || recipientUid === 'undefined' || recipientUid === currentUser.uid) {
+            console.error("Invalid recipient:", recipientUid);
+            showNotification("පරිශීලකයා තෝරන්නේ දෝෂයක්. ❌");
+            return;
+        }
+
+        // Clean up previous listeners
+        if (messageListener && currentChatRecipient) {
+            const oldChatRoomId = getChatRoomId(currentUser.uid, currentChatRecipient);
+            chatsRef.child(oldChatRoomId).off('value', messageListener);
+            messageListener = null;
+        }
+        if (presenceListener && currentChatRecipient) {
+            usersRef.child(currentChatRecipient).child('presence').off('value', presenceListener);
+            presenceListener = null;
+        }
+        if (isCurrentUserBlockedByPartnerListener && currentChatRecipient) {
+            usersRef.child(currentChatRecipient).child('blocked').child(currentUser.uid).off('value', isCurrentUserBlockedByPartnerListener);
+            isCurrentUserBlockedByPartnerListener = null;
+        }
 
         currentChatRecipient = recipientUid;
         
         // UI updates
         document.getElementById('chatDefaultMessage').classList.add('hidden');
         document.getElementById('messagesContainer').classList.remove('hidden');
-        document.getElementById('chatInputArea').classList.remove('hidden');
         document.getElementById('chat-partner-header').classList.remove('hidden');
         document.getElementById('chat-partner-header').classList.add('flex');
         
         document.getElementById('chat-partner-name').textContent = recipientName;
         document.getElementById('messagesContainer').innerHTML = ""; 
+        document.getElementById('chatMessageInput').value = "";
         document.getElementById('chatMessageInput').focus();
 
         // Mobile responsiveness: Hide user list, show chat area
@@ -394,61 +418,178 @@
             }
         });
 
-        // 1. Stop any previous listeners
-        if (messagesListenerRef) {
-            chatsRef.child(messagesListenerRef).off();
-        }
-        if (presenceListenerRef) {
-             presenceListenerRef.off();
-        }
-
-        // 2. Determine the unique chat ID
-        const chatRoomId = getChatRoomId(currentUser.uid, recipientUid);
-        messagesListenerRef = chatRoomId; 
-
-        // 3. Start presence listener
+        // Start necessary listeners
         listenForPartnerPresence(recipientUid);
+        listenForBeingBlockedByPartner(recipientUid); 
+        
+        // අභ්‍යන්තර බ්ලොක් තත්ත්වය පරීක්ෂා කර UI යාවත්කාලීන කිරීම
+        updateChatUIBasedOnInternalBlockStatus(recipientUid, recipientName); 
+        
+        // බාහිර බ්ලොක් තත්ත්වය මත අවසාන UI තත්ත්වය සකස් කිරීම
+        updateChatUIBasedOnExternalBlockStatus(recipientName); 
+        
+        // පණිවිඩ Load කිරීම (පරීක්ෂාවන් දෙකම අසමත් වුවහොත්)
+        if (!isPartnerBlocked && !isCurrentUserBlockedByPartner) {
+             listenForMessages(recipientUid);
+        }
+    }
+    
+    function listenForMessages(recipientUid) {
+        if (messageListener) return; 
+        
+        const chatRoomId = getChatRoomId(currentUser.uid, recipientUid);
+        const chatRoomRef = chatsRef.child(chatRoomId);
+        
+        messageListener = chatRoomRef.on('value', snapshot => {
+            const messagesContainer = document.getElementById("messagesContainer");
+            
+            if (messagesContainer.querySelector('.block-message-container')) return; 
 
-        // 4. Start new real-time listener for messages
-        chatsRef.child(chatRoomId).on('child_added', (snapshot) => {
-            const message = snapshot.val();
-            renderMessage(snapshot.key, message);
+            messagesContainer.innerHTML = ""; 
+            
+            snapshot.forEach(childSnapshot => {
+                const messageKey = childSnapshot.key;
+                const message = childSnapshot.val();
+                renderMessage(messageKey, message);
+            });
             scrollToBottom();
+        }, error => {
+            console.error("Error listening to messages:", error);
+            showNotification("පණිවිඩ Load කිරීමේ දෝෂයක්. ❌");
         });
     }
 
     function showUserList() {
-        // Only for mobile
+        // Mobile only: Show user list, hide chat area
         document.getElementById('userListPanel').classList.remove('mobile-hide');
         document.getElementById('chat-area-main').classList.remove('mobile-show');
     }
 
-    // Helper to create a consistent chat room ID
     function getChatRoomId(uid1, uid2) {
         return uid1 < uid2 ? `${uid1}_${uid2}` : `${uid2}_${uid1}`;
     }
 
+    // අප විසින් බ්ලොක් කළ අයගේ තත්ත්වය පරීක්ෂා කිරීම
+    function updateChatUIBasedOnInternalBlockStatus(recipientUid, recipientName) {
+        const isBlocked = !!(currentUser.blockedUsers && currentUser.blockedUsers[recipientUid]);
+        isPartnerBlocked = isBlocked; 
+        
+        const blockButton = document.getElementById('block-button');
+        
+        if (isBlocked) {
+            blockButton.textContent = '🔓 Unblock';
+            blockButton.className = 'bg-green-500 text-white px-4 py-1.5 rounded-full text-sm font-bold hover:bg-green-600 transition-all duration-300 shadow-lg';
+            
+            if (messageListener && currentChatRecipient) {
+                chatsRef.child(getChatRoomId(currentUser.uid, currentChatRecipient)).off('value', messageListener);
+                messageListener = null;
+            }
+            
+        } else {
+            blockButton.textContent = '🚫 Block';
+            blockButton.className = 'bg-red-500 text-white px-4 py-1.5 rounded-full text-sm font-bold hover:bg-red-600 transition-all duration-300 shadow-lg';
+            
+            if (!isCurrentUserBlockedByPartner && !messageListener && currentChatRecipient) {
+                 listenForMessages(currentChatRecipient);
+            }
+        }
+        
+        updateChatUIBasedOnExternalBlockStatus(recipientName);
+    }
+
+    // අන්තිමයා විසින් අපව බ්ලොක් කළ විට UI යාවත්කාලීන කිරීම
+    function updateChatUIBasedOnExternalBlockStatus(partnerName) {
+        const chatInputArea = document.getElementById('chatInputArea');
+        const messagesContainer = document.getElementById('messagesContainer');
+        
+        // 1. අපි බ්ලොක් කර ඇත්ද (අපේ පැත්තෙන්)
+        if (isPartnerBlocked) {
+             chatInputArea.classList.add('hidden');
+             messagesContainer.innerHTML = `
+                <div class="block-message-container flex items-center justify-center h-full p-8">
+                    <div class="text-center bg-white/70 backdrop-blur-sm p-8 rounded-xl shadow-lg">
+                        <p class="text-3xl mb-3">🚫</p>
+                        <p class="text-xl font-bold text-red-700">${partnerName} ඔබ විසින් බ්ලොක් කර ඇත.</p>
+                        <p class="text-gray-600 mt-2">පණිවිඩ යැවීමට ඉඩ දීමට 'Unblock' බොත්තම ඔබන්න.</p>
+                    </div>
+                </div>
+            `;
+            
+
+        // 2. ඔවුන් අපව බ්ලොක් කර ඇත්නම් (බාහිර පැත්තෙන්)
+        } else if (isCurrentUserBlockedByPartner) {
+            chatInputArea.classList.add('hidden');
+            
+            if (messageListener && currentChatRecipient) {
+                chatsRef.child(getChatRoomId(currentUser.uid, currentChatRecipient)).off('value', messageListener);
+                messageListener = null;
+            }
+
+            messagesContainer.innerHTML = `
+                <div class="block-message-container flex items-center justify-center h-full p-8">
+                    <div class="text-center bg-white/70 backdrop-blur-sm p-8 rounded-xl shadow-lg">
+                        <p class="text-3xl mb-3">🛑</p>
+                        <p class="text-xl font-bold text-red-700">${partnerName} ඔබව බ්ලොක් කර ඇත.</p>
+                        <p class="text-gray-600 mt-2">ඔබට පණිවිඩ යැවීමට නොහැකිය.</p>
+                    </div>
+                </div>
+            `;
+            
+        // 3. කිසිවෙකු බ්ලොක් කර නැත්නම්
+        } else {
+            chatInputArea.classList.remove('hidden');
+            
+            // බ්ලොක් පණිවිඩය ඉවත් කර පණිවිඩ listener නැවත ආරම්භ කරන්න
+            const blockMessage = messagesContainer.querySelector('.block-message-container');
+            if (blockMessage) {
+                messagesContainer.innerHTML = '';
+            }
+             if (!messageListener && currentChatRecipient) {
+                 listenForMessages(currentChatRecipient);
+            }
+        }
+    }
+
+
     /* ============================================================
-        🔥 Messaging & Actions (Send, Edit, Delete, Block)
+        🔥 Messaging & Actions (Send, Edit, Delete, Block/Unblock)
     ============================================================ */
     function sendMessage() {
-        if (!currentChatRecipient) return;
+        if (!currentUser || !currentUser.uid) {
+            showNotification("පරිශීලක දත්ත නැත. ❌");
+            return;
+        }
+
+        if (!currentChatRecipient || typeof currentChatRecipient !== 'string' || currentChatRecipient === 'undefined') {
+            showNotification("කතාබස් කිරීමට පරිශීලකයෙක් තෝරන්න. ❌");
+            return; 
+        }
+
+        // 🛡️ Block sending if either party has blocked the other
+        if (isPartnerBlocked || isCurrentUserBlockedByPartner) { 
+             showNotification("පණිවිඩ යැවීමට නොහැක. කතාබස් තහනම් කර ඇත. 🚫");
+             return;
+        }
         
         const inputEl = document.getElementById("chatMessageInput");
         const content = inputEl.value.trim();
 
-        if (content === "") return;
+        if (content === "") {
+            showNotification("පණිවිඩයක් ලියන්න. ⚠️");
+            return;
+        }
 
         const chatRoomId = getChatRoomId(currentUser.uid, currentChatRecipient);
+        const chatRoomRef = chatsRef.child(chatRoomId);
 
-        if (isEditingMessage) {
+        if (isEditingMessage && editingMessageKey) {
              // 1. Edit existing message
-            chatsRef.child(chatRoomId).child(editingMessageKey).update({
+             chatRoomRef.child(editingMessageKey).update({
                 content: content,
                 edited: true,
-                timestamp: firebase.database.ServerValue.TIMESTAMP 
+                timestamp: firebase.database.ServerValue.TIMESTAMP
             }).then(() => {
-                showNotification("පණිවිඩය සංස්කරණය කරන ලදී. ✏️");
+                showNotification("පණිවිඩය සංස්කරණය කරන ලදි. ✏️");
                 resetInputMode();
             }).catch(error => {
                 console.error("Edit error:", error);
@@ -461,11 +602,11 @@
                 senderId: currentUser.uid,
                 recipientId: currentChatRecipient,
                 content: content,
-                timestamp: firebase.database.ServerValue.TIMESTAMP,
+                timestamp: firebase.database.ServerValue.TIMESTAMP, 
                 edited: false
             };
 
-            chatsRef.child(chatRoomId).push(newMessage)
+            chatRoomRef.push(newMessage) 
             .then(() => {
                 inputEl.value = ""; 
                 inputEl.focus();
@@ -476,54 +617,52 @@
             });
         }
     }
-
+    
     function renderMessage(messageKey, message) {
         const container = document.getElementById("messagesContainer");
         const isSender = message.senderId === currentUser.uid;
+
+        const existingEl = document.getElementById(`msg-${messageKey}`);
+        if (existingEl) {
+             const time = message.timestamp ? getTimeAgo(message.timestamp) : "දැන්ම"; 
+             const editedMark = message.edited ? '<span class="text-xs ml-1 opacity-60">(edited)</span>' : '';
+             existingEl.querySelector('.message-content').textContent = message.content;
+             existingEl.querySelector('.message-timestamp').innerHTML = `${time} ${editedMark}`;
+             return;
+        }
 
         const div = document.createElement('div');
         div.id = `msg-${messageKey}`;
         div.className = `flex ${isSender ? 'justify-end' : 'justify-start'} fade-in`;
         
-        const time = getTimeAgo(message.timestamp);
+        const time = message.timestamp ? getTimeAgo(message.timestamp) : "දැන්ම"; 
         const editedMark = message.edited ? '<span class="text-xs ml-1 opacity-60">(edited)</span>' : '';
         
         const bubble = document.createElement('div');
         bubble.className = `chat-message-bubble ${isSender ? 'sender-bubble' : 'receiver-bubble'} px-4 py-2 text-sm sm:text-base shadow-md cursor-pointer`;
         bubble.innerHTML = `
             <span class="message-content">${message.content}</span>
-            <p class="text-xs mt-1 ${isSender ? 'text-purple-200' : 'text-gray-400'} text-right">
+            <p class="text-xs mt-1 message-timestamp ${isSender ? 'text-purple-200' : 'text-gray-400'} text-right">
                 ${time} ${editedMark}
             </p>
         `;
 
-        // Add context menu listener only for the sender's message
+        // Add context menu listener only for the sender's message (for Edit/Delete)
         if (isSender) {
             bubble.addEventListener('contextmenu', (e) => showContextMenu(messageKey, e));
-            bubble.addEventListener('click', (e) => { // Also trigger on tap/click for mobile UX
-                if (window.innerWidth < 768) showContextMenu(messageKey, e);
+            bubble.addEventListener('click', (e) => { 
+                if (window.innerWidth < 768) showContextMenu(messageKey, e); // Mobile click = context menu
             });
         }
         
         div.appendChild(bubble);
         container.appendChild(div);
-
-         // Handle child_changed event for edits
-        chatsRef.child(getChatRoomId(currentUser.uid, currentChatRecipient)).child(messageKey).on('value', (snapshot) => {
-            const updatedMessage = snapshot.val();
-            if (updatedMessage && updatedMessage.edited) {
-                const existingEl = document.getElementById(`msg-${messageKey}`);
-                if (existingEl) {
-                    existingEl.querySelector('.message-content').textContent = updatedMessage.content;
-                    existingEl.querySelector('.text-right').innerHTML = `${getTimeAgo(updatedMessage.timestamp)} <span class="text-xs ml-1 opacity-60">(edited)</span>`;
-                    scrollToBottom();
-                }
-            }
-        });
     }
-
+    
     function showContextMenu(messageKey, event) {
-        event.preventDefault(); // Prevent default browser context menu
+        if (isPartnerBlocked || isCurrentUserBlockedByPartner) return; // Cannot edit/delete if chat is blocked
+
+        event.preventDefault(); 
         
         editingMessageKey = messageKey;
         const menu = document.getElementById('message-context-menu');
@@ -533,7 +672,6 @@
         menu.style.left = `${event.clientX}px`;
         menu.classList.remove('hidden');
 
-        // Hide when clicking outside
         document.removeEventListener('click', hideContextMenu); 
         document.addEventListener('click', hideContextMenu, { once: true });
     }
@@ -559,12 +697,9 @@
         if (editingMessageKey && currentChatRecipient) {
             if (confirm("ඔබට මෙම පණිවිඩය මැකීමට අවශ්‍යද?")) {
                 const chatRoomId = getChatRoomId(currentUser.uid, currentChatRecipient); 
-                chatsRef.child(chatRoomId).child(editingMessageKey).remove()
+                chatsRef.child(chatRoomId).child(editingMessageKey).remove() 
                     .then(() => {
                         showNotification("පණිවිඩය මැකුවා! 🗑️");
-                        // Remove the message element from the UI
-                        const element = document.getElementById(`msg-${editingMessageKey}`);
-                        if (element) element.remove();
                     })
                     .catch(error => {
                         console.error("Delete error:", error);
@@ -584,56 +719,51 @@
     }
 
     function blockUser() {
-        if (!currentChatRecipient) return;
+        if (!currentChatRecipient || typeof currentChatRecipient !== 'string' || currentChatRecipient === 'undefined') {
+            showNotification("කතාබස් කිරීමට පරිශීලකයෙක් තෝරන්න. ❌");
+            return;
+        }
 
         const partnerName = document.getElementById('chat-partner-name').textContent;
+        const recipientUid = currentChatRecipient;
+        const isCurrentlyBlocked = isPartnerBlocked; 
 
-        if (confirm(`ඔබට ${partnerName} බ්ලොක් කිරීමට අවශ්‍යද? ඉන්පසු ඔබට පණිවිඩ යැවිය නොහැක.`)) {
-            // Save the block status in the current user's profile
-            usersRef.child(currentUser.uid).child('blocked').child(currentChatRecipient).set(true)
-                .then(() => {
-                    showNotification(`${partnerName} බ්ලොක් කරන ලදී.`);
-                    
-                    // Reset chat state
-                    if (messagesListenerRef) chatsRef.child(messagesListenerRef).off();
-                    if (presenceListenerRef) presenceListenerRef.off();
-                    currentChatRecipient = null;
-                    
-                    // UI cleanup
-                    document.getElementById('chatDefaultMessage').classList.remove('hidden');
-                    document.getElementById('messagesContainer').classList.add('hidden');
-                    document.getElementById('chatInputArea').classList.add('hidden');
-                    document.getElementById('chat-partner-header').classList.add('hidden');
-                    
-                    showUserList(); // Show the list again
-                })
-                .catch(err => console.error("Block error:", err));
+        const action = isCurrentlyBlocked ? 'unblock' : 'block';
+        const confirmMessage = isCurrentlyBlocked 
+            ? `${partnerName} Unblock කිරීමට අවශ්‍යද?` 
+            : `${partnerName} බ්ලොක් කිරීමට අවශ්‍යද? ඉන්පසු ඔබට පණිවිඩ යැවිය නොහැක.`;
+
+        if (confirm(confirmMessage)) {
+            
+            const blockRef = usersRef.child(currentUser.uid).child('blocked').child(recipientUid);
+            
+            if (action === 'block') {
+                blockRef.set(true)
+                    .then(() => {
+                        showNotification(`${partnerName} බ්ලොක් කරන ලදී. 🚫`);
+                    })
+                    .catch(err => console.error("Block error:", err));
+            } else { // Unblock
+                blockRef.remove()
+                    .then(() => {
+                        showNotification(`${partnerName} Unblock කරන ලදී. ✅`);
+                        // Unblock වූ පසු UI යාවත්කාලීන කිරීමට chat එක නැවත ආරම්භ කිරීම
+                        startChat(recipientUid, partnerName); 
+                    })
+                    .catch(err => console.error("Unblock error:", err));
+            }
         }
     }
-
-
+    
     /* ============================================================
-        🔥 Helpers (User's Helpers Retained)
+        🔥 Helpers 
     ============================================================ */
-    function getTimeAgo(ts) {
-        if (!ts) return "දැන්ම";
-        const diff = Date.now() - ts;
-        const s = diff/1000;
-        if (s<60) return `${Math.floor(s)}s පෙර`;
-        const m=s/60;
-        if (m<60) return `${Math.floor(m)}min පෙර`;
-        const h=m/60;
-        if (h<24) return `${Math.floor(h)}h පෙර`;
-        return `${new Date(ts).toLocaleDateString()} ${new Date(ts).toLocaleTimeString()}`; // For messages older than 24h
-    }
-
     function showNotification(text) {
         const container = document.getElementById('notification-box');
         container.innerHTML = ''; 
         container.classList.remove('hidden');
 
         const box = document.createElement('div');
-        // Use the Home.html style for consistency
         box.className = "fixed top-5 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-blue-600 via-teal-600 to-green-600 text-white px-6 py-3 rounded-full shadow-2xl text-sm z-50 fade-in font-bold";
         box.textContent = text;
         container.appendChild(box);
@@ -651,6 +781,71 @@
     function scrollToBottom() {
         const container = document.getElementById("messagesContainer");
         container.scrollTop = container.scrollHeight;
+    }
+    
+    /* ============================================================
+        🔥 User List Loading (Retained from previous code)
+    ============================================================ */
+    function loadUsers(query = '') {
+        const usersListEl = document.getElementById("usersList");
+        usersListEl.innerHTML = '<p class="text-center text-gray-500 py-4"><span class="inline-block w-6 h-6 border-2 border-gray-200 border-t-gray-600 rounded-full spinner"></span> Loading...</p>'; 
+        
+        let queryRef = usersRef.orderByChild('name').limitToFirst(20);
+
+        if (query.length > 0) {
+            queryRef = usersRef.orderByChild('name')
+                               .startAt(query)
+                               .endAt(query + '\uf8ff') 
+                               .limitToFirst(10);
+        }
+        
+        queryRef.once('value').then(snapshot => {
+            usersListEl.innerHTML = "";
+            let foundUsers = false;
+            
+            snapshot.forEach(childSnapshot => {
+                const user = childSnapshot.val();
+                const uid = childSnapshot.key;
+                
+                if (!uid || uid === 'undefined' || uid === currentUser.uid) {
+                    return;
+                }
+                
+                renderUserListItem(uid, user.name || 'නමක් නැත', user.avatar || '👤');
+                foundUsers = true;
+            });
+            
+            if (!foundUsers) {
+                usersListEl.innerHTML = "<p class='text-center text-gray-500 py-4'>පරිශීලකයින් සොයා ගැනීමට නොහැක.</p>";
+            }
+        }).catch(error => {
+            console.error("Error loading users:", error);
+            usersListEl.innerHTML = "<p class='text-center text-red-500 py-4'>පරිශීලකයින් Load කිරීමේ දෝෂයක්.</p>";
+        });
+    }
+
+    function renderUserListItem(uid, name, avatar) {
+        if (!uid || uid === 'undefined') {
+            console.error("Invalid UID:", uid);
+            return;
+        }
+
+        const usersListEl = document.getElementById("usersList");
+        const div = document.createElement('div');
+        div.className = "user-list-item flex items-center space-x-3 p-3 rounded-xl bg-white/70 border-2 border-gray-100 cursor-pointer hover:bg-purple-50 shadow-md";
+        div.setAttribute('data-uid', uid);
+        div.id = `user-list-item-${uid}`;
+        div.onclick = () => startChat(uid, name);
+
+        div.innerHTML = `
+            <div class="w-10 h-10 bg-gradient-to-br from-blue-400 to-purple-400 rounded-full flex items-center justify-center text-xl shadow-lg shrink-0">
+                ${avatar}
+            </div>
+            <div class="flex-1 overflow-hidden">
+                <p class="font-bold text-gray-800 truncate">${name}</p>
+            </div>
+        `;
+        usersListEl.appendChild(div);
     }
     
     /* ============================================================
