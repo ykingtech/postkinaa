@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="si">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PostKinaa - Chat</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+
+    <style>
+        /* ============================================================
+            🔥 ANIMATIONS & BASE STYLES
+        ============================================================ */
+        @keyframes fadeIn { from { opacity:0; transform:translateY(20px);} to {opacity:1; transform:translateY(0);} }
+        .fade-in { animation: fadeIn 0.5s ease-out; }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .spinner { animation: spin 1s linear infinite; }
+
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        /* Chat-specific styles (retained) */
+        .user-list-item {
+            transition: all 0.3s ease;
+        }
+
+        .user-list-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+        }
+        
+        .chat-message-bubble {
+            max-width: 80%;
+            word-wrap: break-word;
+        }
+
+        .sender-bubble {
+            background-color: #a855f7; /* Purple-500 */
+            color: white;
+            border-radius: 20px 20px 5px 20px;
+        }
+
+        .receiver-bubble {
+            background-color: #f3f4f6; /* Gray-100 */
+            color: #1f2937; /* Gray-900 */
+            border-radius: 20px 20px 20px 5px;
+        }
+
+        input:focus, textarea:focus {
+            transform: scale(1.01);
+            transition: all 0.3s ease;
+        }
+        
+        /* Mobile Responsiveness for 2-column layout */
+        .main-chat-container {
+            display: flex;
+        }
+
+        @media (max-width: 767px) {
+            .main-chat-container {
+                flex-direction: column;
+            }
+            #userListPanel {
+                width: 100%;
+                min-width: unset;
+                margin-right: 0;
+                height: auto;
+                max-height: 80vh; 
+            }
+            .chat-area-main {
+                width: 100%;
+                height: 80vh;
+            }
+            
+            /* Toggle visibility for mobile */
+            .mobile-hide {
+                display: none;
+            }
+            .mobile-show {
+                display: flex !important;
+            }
+        }
+    </style>
+</head>
+
+<body class="min-h-screen">
+
+    <div id="notification-box" class="fixed top-5 left-1/2 transform -translate-x-1/2 hidden z-[100]"></div>
+    
+    <div id="message-context-menu" 
+         class="absolute glass-effect shadow-xl rounded-lg border border-gray-200 z-50 py-1 hidden">
+        <button id="edit-message-btn" 
+                class="w-full text-left px-4 py-2 text-sm text-gray-800 hover:bg-purple-50">
+            පණිවිඩය සංස්කරණය කරන්න
+        </button>
+        <button id="delete-message-btn" 
+                class="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-red-50">
+            පණිවිඩය මකන්න
+        </button>
+    </div>
+
+    <header id="appHeader" class="glass-effect sticky top-0 z-50 shadow-2xl border-b-2 border-white/50">
+        <div class="max-w-4xl mx-auto px-4 py-3 sm:py-5 flex items-center justify-between">
+            
+            <div class="flex items-center space-x-2 sm:space-x-4">
+                <button onclick="goToHome()" title="ප්‍රධාන පිටුව"
+                    class="p-2 sm:p-3 text-xl sm:text-2xl text-gray-600 hover:text-purple-600 hover:bg-purple-100 rounded-xl sm:rounded-2xl transition-all duration-300 hover:scale-110 hover:-rotate-6">
+                    🏠
+                </button>
+                <h1 class="text-3xl sm:text-4xl font-black text-purple-600">💬 Chat</h1>
+                <div id="user-info-header" class="ml-4 flex items-center space-x-2 text-gray-700 hidden sm:flex">
+                    </div>
+            </div>
+
+            <div class="flex items-center space-x-3">
+                <button onclick="signOutUser()"  
+                    class="px-3 py-1.5 sm:px-5 sm:py-2 bg-gradient-to-r from-red-400 to-pink-500 text-white rounded-full text-xs sm:text-sm font-bold hover:from-red-500 hover:to-pink-600 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105">
+                    🚪 Logout
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <div class="max-w-4xl mx-auto px-4 py-6 main-chat-container">
+
+        <div id="userListPanel" class="w-1/3 min-w-[200px] glass-effect rounded-3xl shadow-2xl border-2 border-white/40 p-5 mr-6 h-[80vh] overflow-y-auto">
+            
+            <input type="text" id="user-search-input" placeholder="පරිශීලකයන් සොයන්න..." 
+                   class="w-full p-3 mb-4 border border-gray-300 rounded-xl focus:ring-purple-500 focus:border-purple-500 transition duration-300 shadow-inner hover:bg-white/90">
+            
+            <h2 class="text-2xl font-bold text-gray-800 border-b-2 pb-3 mb-4">පරිශීලකයින්</h2>
+            <div id="usersList" class="space-y-3">
+                <p class="text-center text-gray-500 py-4"><span class="inline-block w-6 h-6 border-2 border-gray-200 border-t-gray-600 rounded-full spinner"></span> Loading...</p>
+            </div>
+        </div>
+
+        <div id="chat-area-main" class="flex-1 glass-effect rounded-3xl shadow-2xl border-2 border-white/40 flex flex-col h-[80vh] relative">
+            
+            <div id="chat-partner-header" class="p-4 border-b border-gray-200 bg-white/70 rounded-t-3xl hidden items-center justify-between">
+                <div class="flex items-center">
+                    <button id="back-to-list-btn" class="md:hidden text-purple-600 text-2xl mr-3 font-bold">←</button>
+                    
+                    <span id="chat-partner-name" class="font-bold text-lg text-gray-800"></span>
+                    <div id="online-status" class="text-xs ml-3 px-2 py-1 rounded-full font-semibold"></div> 
+                </div>
+                <button id="block-button" class="bg-red-500 text-white px-4 py-1.5 rounded-full text-sm font-bold hover:bg-red-600 transition-all duration-300 shadow-lg">🚫 Block</button>
+            </div>
+
+
+            <div id="chatDefaultMessage" class="absolute inset-0 flex items-center justify-center p-8 text-center bg-white/50 backdrop-blur-sm rounded-3xl">
+                <div class="text-center fade-in">
+                    <div class="text-6xl mb-4 float">👋</div>
+                    <h3 class="text-2xl font-bold text-gray-700">කතාබස් කිරීමට පරිශීලකයෙක් තෝරන්න.</h3>
+                    <p class="text-gray-500 mt-2">වම් පස ඇති ලැයිස්තුවෙන් කෙනෙකු තෝරන්න.</p>
+                </div>
+            </div>
+
+            <div id="messagesContainer" class="flex-1 overflow-y-auto p-5 space-y-4 hidden">
+                </div>
+
+            <div id="chatInputArea" class="p-5 border-t border-gray-200 bg-white/70 rounded-b-3xl hidden">
+                <div class="flex space-x-3">
+                    <input type="text" id="chatMessageInput" placeholder="ඔබගේ පණිවිඩය මෙතන ලියන්න..."
+                        class="flex-1 px-5 py-3 bg-white/60 backdrop-blur-sm rounded-2xl border-2 border-blue-200 focus:border-blue-500 outline-none transition-all duration-300 font-medium text-gray-700 hover:bg-white/80 shadow-sm text-base"
+                        onkeydown="if(event.key === 'Enter') sendMessage()">
+                    
+                    <button onclick="sendMessage()" id="sendButton"
+                        class="px-6 py-3 bg-gradient-to-r from-blue-600 to-teal-600 text-white rounded-2xl font-bold hover:from-blue-700 hover:to-teal-700 shadow-xl transition-all duration-300 flex items-center space-x-2 hover:scale-105 text-base">
+                        <span>🚀 යවන්න</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    
+    /* ============================================================
+        🔥 Firebase Config + Init (User's Config Used)
+    ============================================================ */
+    const firebaseConfig = {
+        apiKey: "AIzaSyAzNJ-P8aAMvTuNWKcQYCjIIHiaL0BpdZ0",
+        authDomain: "game-f1c21.firebaseapp.com",
+        databaseURL: "https://game-f1c21-default-rtdb.firebaseio.com",
+        projectId: "game-f1c21",
+        storageBucket: "game-f1c21.firebasestorage.app",
+        messagingSenderId: "656338565711",
+        appId: "1:656338565711:web:395f9c7f846588b065883a"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const database = firebase.database();
+    const usersRef = database.ref("users"); 
+    const chatsRef = database.ref("chats"); 
+
+    let currentUser = null;
+    let currentChatRecipient = null; 
+    let messagesListenerRef = null; 
+    let presenceListenerRef = null;
+
+    let isEditingMessage = false;
+    let editingMessageKey = null;
+
+    /* ============================================================
+        🔥 Auth Check and User Data Setup
+    ============================================================ */
+    auth.onAuthStateChanged(user => {
+        if (!user) {
+            window.location.href = "index.html"; // Redirect to login/index
+            return;
+        }
+        
+        // Fetch current user details (name, feeling, etc.) from DB
+        usersRef.child(user.uid).once('value', snapshot => {
+            if (snapshot.exists()) {
+                currentUser = { ...user, ...snapshot.val() };
+                initChatApp();
+            } else {
+                 // Fallback if DB data is missing
+                currentUser = user; 
+                initChatApp();
+            }
+        });
+    });
+
+    function goToHome() {
+        window.location.href = "Home.html";
+    }
+
+    function signOutUser() {
+        auth.signOut().then(() => {
+            window.location.href = "index.html";
+        });
+    }
+
+    function initChatApp() {
+        // 1. Initial UI Setup
+        document.getElementById('user-search-input').addEventListener('input', (e) => loadUsers(e.target.value));
+        document.getElementById('block-button').addEventListener('click', blockUser);
+        document.getElementById('back-to-list-btn').addEventListener('click', showUserList);
+        
+        // 2. Load Users
+        loadUsers(); 
+        
+        // 3. Set Online Status
+        setOnlineStatus();
+        
+        // 4. Update Header with Name/Emoji
+        const userInfoHeader = document.getElementById('user-info-header');
+        userInfoHeader.innerHTML = `
+            <span class="font-semibold">${currentUser.name || 'User'}</span>
+            <span class="text-xl">${currentUser.currentFeeling || '🙂'}</span>
+        `;
+        userInfoHeader.classList.remove('hidden');
+        
+        // 5. Context Menu Setup
+        document.getElementById('edit-message-btn').addEventListener('click', editMessageAction);
+        document.getElementById('delete-message-btn').addEventListener('click', deleteMessageAction);
+    }
+    
+    /* ============================================================
+        🔥 PRESENCE (Online Status)
+    ============================================================ */
+    function setOnlineStatus() {
+        const presenceRef = usersRef.child(currentUser.uid).child('presence');
+        const isOnlineRef = database.ref('.info/connected');
+
+        isOnlineRef.on('value', (snapshot) => {
+            if (snapshot.val() === true) {
+                // When connected, set presence to true and set disconnect value
+                presenceRef.onDisconnect().set(firebase.database.ServerValue.TIMESTAMP);
+                presenceRef.set(true); 
+            }
+        });
+    }
+
+    function listenForPartnerPresence(partnerId) {
+        if (presenceListenerRef) {
+            presenceListenerRef.off(); // Clear previous listener
+        }
+        
+        presenceListenerRef = usersRef.child(partnerId).child('presence');
+        const statusDiv = document.getElementById('online-status');
+        
+        presenceListenerRef.on('value', snapshot => {
+            const presence = snapshot.val();
+            
+            if (presence === true) {
+                statusDiv.textContent = 'Online';
+                statusDiv.className = 'text-xs ml-3 px-2 py-1 rounded-full font-semibold bg-green-500 text-white';
+            } else if (typeof presence === 'number') {
+                statusDiv.textContent = `Last seen: ${getTimeAgo(presence)}`;
+                statusDiv.className = 'text-xs ml-3 px-2 py-1 rounded-full font-semibold bg-gray-200 text-gray-600';
+            } else {
+                statusDiv.textContent = 'Offline';
+                statusDiv.className = 'text-xs ml-3 px-2 py-1 rounded-full font-semibold bg-red-200 text-red-600';
+            }
+        });
+    }
+
+    /* ============================================================
+        🔥 User Search and List
+    ============================================================ */
+    function loadUsers(query = '') {
+        const usersListEl = document.getElementById("usersList");
+        usersListEl.innerHTML = ""; 
+        let listRef = usersRef;
+        
+        // Basic filtering implementation for search
+        if (query.length > 0) {
+            listRef = usersRef.orderByChild('name')
+                              .startAt(query)
+                              .endAt(query + "\uf8ff")
+                              .limitToFirst(10);
+        } else {
+            // Load all users if no query
+            listRef = usersRef.limitToFirst(20);
+        }
+        
+        listRef.once('value', (snapshot) => {
+            let foundUsers = false;
+            snapshot.forEach(snap => {
+                const user = snap.val();
+                const uid = snap.key;
+                
+                if (uid === currentUser.uid) return;
+                
+                renderUserListItem(uid, user.name || 'නමක් නැත', user.avatar || '👤');
+                foundUsers = true;
+            });
+            
+            if (!foundUsers) {
+                usersListEl.innerHTML = "<p class='text-center text-gray-500 py-4'>පරිශීලකයින් සොයා ගැනීමට නොහැක.</p>";
+            }
+        });
+    }
+
+    function renderUserListItem(uid, name, avatar) {
+        const usersListEl = document.getElementById("usersList");
+        const div = document.createElement('div');
+        div.className = "user-list-item flex items-center space-x-3 p-3 rounded-xl bg-white/70 border-2 border-gray-100 cursor-pointer hover:bg-purple-50 shadow-md";
+        div.setAttribute('data-uid', uid);
+        div.id = `user-list-item-${uid}`;
+        div.onclick = () => startChat(uid, name);
+
+        div.innerHTML = `
+            <div class="w-10 h-10 bg-gradient-to-br from-blue-400 to-purple-400 rounded-full flex items-center justify-center text-xl shadow-lg shrink-0">
+                ${avatar}
+            </div>
+            <div class="flex-1 overflow-hidden">
+                <p class="font-bold text-gray-800 truncate">${name}</p>
+                </div>
+        `;
+        usersListEl.appendChild(div);
+    }
+    
+    /* ============================================================
+        🔥 Chat Initialization
+    ============================================================ */
+    function startChat(recipientUid, recipientName) {
+        if (currentChatRecipient === recipientUid) return;
+
+        currentChatRecipient = recipientUid;
+        
+        // UI updates
+        document.getElementById('chatDefaultMessage').classList.add('hidden');
+        document.getElementById('messagesContainer').classList.remove('hidden');
+        document.getElementById('chatInputArea').classList.remove('hidden');
+        document.getElementById('chat-partner-header').classList.remove('hidden');
+        document.getElementById('chat-partner-header').classList.add('flex');
+        
+        document.getElementById('chat-partner-name').textContent = recipientName;
+        document.getElementById('messagesContainer').innerHTML = ""; 
+        document.getElementById('chatMessageInput').focus();
+
+        // Mobile responsiveness: Hide user list, show chat area
+        document.getElementById('userListPanel').classList.add('mobile-hide');
+        document.getElementById('chat-area-main').classList.add('mobile-show');
+
+        // Highlight the selected user
+        document.querySelectorAll('.user-list-item').forEach(el => {
+            el.classList.remove('border-purple-500', 'bg-purple-100/90', 'scale-105');
+            if (el.getAttribute('data-uid') === recipientUid) {
+                el.classList.add('border-purple-500', 'bg-purple-100/90', 'scale-105');
+            }
+        });
+
+        // 1. Stop any previous listeners
+        if (messagesListenerRef) {
+            chatsRef.child(messagesListenerRef).off();
+        }
+        if (presenceListenerRef) {
+             presenceListenerRef.off();
+        }
+
+        // 2. Determine the unique chat ID
+        const chatRoomId = getChatRoomId(currentUser.uid, recipientUid);
+        messagesListenerRef = chatRoomId; 
+
+        // 3. Start presence listener
+        listenForPartnerPresence(recipientUid);
+
+        // 4. Start new real-time listener for messages
+        chatsRef.child(chatRoomId).on('child_added', (snapshot) => {
+            const message = snapshot.val();
+            renderMessage(snapshot.key, message);
+            scrollToBottom();
+        });
+    }
+
+    function showUserList() {
+        // Only for mobile
+        document.getElementById('userListPanel').classList.remove('mobile-hide');
+        document.getElementById('chat-area-main').classList.remove('mobile-show');
+    }
+
+    // Helper to create a consistent chat room ID
+    function getChatRoomId(uid1, uid2) {
+        return uid1 < uid2 ? `${uid1}_${uid2}` : `${uid2}_${uid1}`;
+    }
+
+    /* ============================================================
+        🔥 Messaging & Actions (Send, Edit, Delete, Block)
+    ============================================================ */
+    function sendMessage() {
+        if (!currentChatRecipient) return;
+        
+        const inputEl = document.getElementById("chatMessageInput");
+        const content = inputEl.value.trim();
+
+        if (content === "") return;
+
+        const chatRoomId = getChatRoomId(currentUser.uid, currentChatRecipient);
+
+        if (isEditingMessage) {
+             // 1. Edit existing message
+            chatsRef.child(chatRoomId).child(editingMessageKey).update({
+                content: content,
+                edited: true,
+                timestamp: firebase.database.ServerValue.TIMESTAMP 
+            }).then(() => {
+                showNotification("පණිවිඩය සංස්කරණය කරන ලදී. ✏️");
+                resetInputMode();
+            }).catch(error => {
+                console.error("Edit error:", error);
+                showNotification("සංස්කරණ දෝෂයක්. ❌");
+            });
+            
+        } else {
+            // 2. Send new message
+            const newMessage = {
+                senderId: currentUser.uid,
+                recipientId: currentChatRecipient,
+                content: content,
+                timestamp: firebase.database.ServerValue.TIMESTAMP,
+                edited: false
+            };
+
+            chatsRef.child(chatRoomId).push(newMessage)
+            .then(() => {
+                inputEl.value = ""; 
+                inputEl.focus();
+            })
+            .catch(error => {
+                console.error("Error sending message:", error);
+                showNotification("පණිවිඩය යැවීමේ දෝෂයක් ❌");
+            });
+        }
+    }
+
+    function renderMessage(messageKey, message) {
+        const container = document.getElementById("messagesContainer");
+        const isSender = message.senderId === currentUser.uid;
+
+        const div = document.createElement('div');
+        div.id = `msg-${messageKey}`;
+        div.className = `flex ${isSender ? 'justify-end' : 'justify-start'} fade-in`;
+        
+        const time = getTimeAgo(message.timestamp);
+        const editedMark = message.edited ? '<span class="text-xs ml-1 opacity-60">(edited)</span>' : '';
+        
+        const bubble = document.createElement('div');
+        bubble.className = `chat-message-bubble ${isSender ? 'sender-bubble' : 'receiver-bubble'} px-4 py-2 text-sm sm:text-base shadow-md cursor-pointer`;
+        bubble.innerHTML = `
+            <span class="message-content">${message.content}</span>
+            <p class="text-xs mt-1 ${isSender ? 'text-purple-200' : 'text-gray-400'} text-right">
+                ${time} ${editedMark}
+            </p>
+        `;
+
+        // Add context menu listener only for the sender's message
+        if (isSender) {
+            bubble.addEventListener('contextmenu', (e) => showContextMenu(messageKey, e));
+            bubble.addEventListener('click', (e) => { // Also trigger on tap/click for mobile UX
+                if (window.innerWidth < 768) showContextMenu(messageKey, e);
+            });
+        }
+        
+        div.appendChild(bubble);
+        container.appendChild(div);
+
+         // Handle child_changed event for edits
+        chatsRef.child(getChatRoomId(currentUser.uid, currentChatRecipient)).child(messageKey).on('value', (snapshot) => {
+            const updatedMessage = snapshot.val();
+            if (updatedMessage && updatedMessage.edited) {
+                const existingEl = document.getElementById(`msg-${messageKey}`);
+                if (existingEl) {
+                    existingEl.querySelector('.message-content').textContent = updatedMessage.content;
+                    existingEl.querySelector('.text-right').innerHTML = `${getTimeAgo(updatedMessage.timestamp)} <span class="text-xs ml-1 opacity-60">(edited)</span>`;
+                    scrollToBottom();
+                }
+            }
+        });
+    }
+
+    function showContextMenu(messageKey, event) {
+        event.preventDefault(); // Prevent default browser context menu
+        
+        editingMessageKey = messageKey;
+        const menu = document.getElementById('message-context-menu');
+        
+        // Position the menu
+        menu.style.top = `${event.clientY}px`;
+        menu.style.left = `${event.clientX}px`;
+        menu.classList.remove('hidden');
+
+        // Hide when clicking outside
+        document.removeEventListener('click', hideContextMenu); 
+        document.addEventListener('click', hideContextMenu, { once: true });
+    }
+
+    function hideContextMenu() {
+        document.getElementById('message-context-menu').classList.add('hidden');
+    }
+
+    function editMessageAction() {
+        if (!editingMessageKey || !currentChatRecipient) return;
+        
+        const messageEl = document.getElementById(`msg-${editingMessageKey}`);
+        const currentText = messageEl.querySelector('.message-content').textContent;
+
+        document.getElementById('chatMessageInput').value = currentText;
+        document.getElementById('sendButton').innerHTML = '<span>💾 Save Edit</span>';
+        isEditingMessage = true;
+        hideContextMenu();
+        document.getElementById('chatMessageInput').focus();
+    }
+
+    function deleteMessageAction() {
+        if (editingMessageKey && currentChatRecipient) {
+            if (confirm("ඔබට මෙම පණිවිඩය මැකීමට අවශ්‍යද?")) {
+                const chatRoomId = getChatRoomId(currentUser.uid, currentChatRecipient); 
+                chatsRef.child(chatRoomId).child(editingMessageKey).remove()
+                    .then(() => {
+                        showNotification("පණිවිඩය මැකුවා! 🗑️");
+                        // Remove the message element from the UI
+                        const element = document.getElementById(`msg-${editingMessageKey}`);
+                        if (element) element.remove();
+                    })
+                    .catch(error => {
+                        console.error("Delete error:", error);
+                        showNotification("පණිවිඩය මැකීමේ දෝෂයක්. ❌");
+                    });
+            }
+        }
+        resetInputMode();
+        hideContextMenu();
+    }
+
+    function resetInputMode() {
+        document.getElementById('chatMessageInput').value = '';
+        document.getElementById('sendButton').innerHTML = '<span>🚀 යවන්න</span>';
+        isEditingMessage = false;
+        editingMessageKey = null;
+    }
+
+    function blockUser() {
+        if (!currentChatRecipient) return;
+
+        const partnerName = document.getElementById('chat-partner-name').textContent;
+
+        if (confirm(`ඔබට ${partnerName} බ්ලොක් කිරීමට අවශ්‍යද? ඉන්පසු ඔබට පණිවිඩ යැවිය නොහැක.`)) {
+            // Save the block status in the current user's profile
+            usersRef.child(currentUser.uid).child('blocked').child(currentChatRecipient).set(true)
+                .then(() => {
+                    showNotification(`${partnerName} බ්ලොක් කරන ලදී.`);
+                    
+                    // Reset chat state
+                    if (messagesListenerRef) chatsRef.child(messagesListenerRef).off();
+                    if (presenceListenerRef) presenceListenerRef.off();
+                    currentChatRecipient = null;
+                    
+                    // UI cleanup
+                    document.getElementById('chatDefaultMessage').classList.remove('hidden');
+                    document.getElementById('messagesContainer').classList.add('hidden');
+                    document.getElementById('chatInputArea').classList.add('hidden');
+                    document.getElementById('chat-partner-header').classList.add('hidden');
+                    
+                    showUserList(); // Show the list again
+                })
+                .catch(err => console.error("Block error:", err));
+        }
+    }
+
+
+    /* ============================================================
+        🔥 Helpers (User's Helpers Retained)
+    ============================================================ */
+    function getTimeAgo(ts) {
+        if (!ts) return "දැන්ම";
+        const diff = Date.now() - ts;
+        const s = diff/1000;
+        if (s<60) return `${Math.floor(s)}s පෙර`;
+        const m=s/60;
+        if (m<60) return `${Math.floor(m)}min පෙර`;
+        const h=m/60;
+        if (h<24) return `${Math.floor(h)}h පෙර`;
+        return `${new Date(ts).toLocaleDateString()} ${new Date(ts).toLocaleTimeString()}`; // For messages older than 24h
+    }
+
+    function showNotification(text) {
+        const container = document.getElementById('notification-box');
+        container.innerHTML = ''; 
+        container.classList.remove('hidden');
+
+        const box = document.createElement('div');
+        // Use the Home.html style for consistency
+        box.className = "fixed top-5 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-blue-600 via-teal-600 to-green-600 text-white px-6 py-3 rounded-full shadow-2xl text-sm z-50 fade-in font-bold";
+        box.textContent = text;
+        container.appendChild(box);
+
+        setTimeout(() => {
+            box.style.opacity = "0";
+            box.style.transform = "translateX(-50%) translateY(-20px)";
+            setTimeout(()=> {
+                box.remove();
+                container.classList.add('hidden');
+            },300);
+        },2500);
+    }
+    
+    function scrollToBottom() {
+        const container = document.getElementById("messagesContainer");
+        container.scrollTop = container.scrollHeight;
+    }
+    
+    /* ============================================================
+        🔥 Theme Logic for Background (User's Logic Retained)
+    ============================================================ */
+    const THEMES = {
+        default: { bg: 'bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50' },
+        blue: { bg: 'bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50' },
+        green: { bg: 'bg-gradient-to-br from-green-50 via-teal-50 to-cyan-50' },
+        dark: { bg: 'bg-gray-800' }, 
+        red: { bg: 'bg-gradient-to-br from-red-50 via-pink-50 to-orange-50' },
+        yellow: { bg: 'bg-gradient-to-br from-yellow-50 via-amber-50 to-orange-50' },
+        teal: { bg: 'bg-gradient-to-br from-teal-50 via-cyan-50 to-blue-50' }
+    };
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const themeName = localStorage.getItem("appTheme") || "default";
+        const theme = THEMES[themeName] || THEMES.default;
+        document.body.className = "min-h-screen " + theme.bg;
+    });
+
+    </script>
+
+</body>
+</html>
