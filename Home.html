@@ -15,7 +15,7 @@
 
     <style>
         /* ============================================================
-            🔥 ANIMATIONS & STYLES (UNCHANGED)
+            🔥 ANIMATIONS & STYLES
         ============================================================ */
         @keyframes fadeIn { from { opacity:0; transform:translateY(20px);} to {opacity:1; transform:translateY(0);} }
         .fade-in { animation: fadeIn 0.5s ease-out; }
@@ -23,854 +23,787 @@
         @keyframes spin { to { transform: rotate(360deg); } }
         .spinner { animation: spin 1s linear infinite; }
 
-        @keyframes float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-10px); } }
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
         .float { animation: float 3s ease-in-out infinite; }
-
-        @keyframes glow { 0%, 100% { box-shadow: 0 0 20px rgba(168, 85, 247, 0.4); } 50% { box-shadow: 0 0 40px rgba(168, 85, 247, 0.8); } }
-        .glow { animation: glow 2s ease-in-out infinite; }
-
-        @keyframes slideIn { from { opacity: 0; transform: translateX(-100%); } to { opacity: 1; transform: translateX(0); } }
-        .slide-in { animation: slideIn 0.6s ease-out; }
-
-        .glass-effect {
-            background: rgba(255, 255, 255, 0.7);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
         }
-
-        .post-card {
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .post-card:hover {
-            transform: translateY(-8px) scale(1.02);
-            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.2);
-        }
-
-        .reaction-btn {
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .reaction-btn:hover {
-            transform: scale(1.15);
-        }
-
-        .reaction-btn:active {
-            transform: scale(0.95);
-        }
-
-        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
         .pulse-animation { animation: pulse 2s ease-in-out infinite; }
 
-        .gradient-border {
-            position: relative;
-            border: 3px solid transparent;
-            background-clip: padding-box;
+        .glass-effect {
+            background-color: rgba(255, 255, 255, 0.5); 
+            backdrop-filter: blur(10px);
+        }
+        
+        /* Utility for pre-line wrapping */
+        .whitespace-pre-line {
+            white-space: pre-line;
         }
 
-        .gradient-border::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            border-radius: inherit;
-            padding: 3px;
-            background: linear-gradient(135deg, #667eea, #764ba2, #f093fb);
-            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-            -webkit-mask-composite: xor;
-            mask-composite: exclude;
-            animation: rotate 3s linear infinite;
+        /* Hide Scrollbar for Notifications Panel */
+        #notificationList::-webkit-scrollbar {
+            width: 0;
+            background: transparent; 
         }
-
-        @keyframes rotate { to { filter: hue-rotate(360deg); } }
-
-        input:focus, textarea:focus {
-            transform: scale(1.02);
-            transition: all 0.3s ease;
+        #notificationList {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
         }
+        
+        /* 🔥 NEW: Modal Enter/Exit Animations */
+        .modal-enter { opacity: 0; transform: translateY(20px); }
+        .modal-enter-active { opacity: 1; transform: translateY(0); transition: opacity 0.3s, transform 0.3s; }
+        .modal-exit { opacity: 1; transform: translateY(0); }
+        .modal-exit-active { opacity: 0; transform: translateY(20px); transition: opacity 0.3s, transform 0.3s; }
 
-        .hover-lift {
-            transition: all 0.3s ease;
-        }
-
-        .hover-lift:hover {
-            transform: translateY(-3px);
-        }
     </style>
 </head>
+<body class="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50">
 
-<body class="min-h-screen">
+    <span id="connectionStatus" 
+          class="fixed bottom-4 right-4 z-[100] text-xs font-semibold px-3 py-1 rounded-full text-white bg-gradient-to-r from-emerald-500 to-green-500 shadow-lg glow">
+          ✨ Connected
+    </span>
 
-    <header id="appHeader" class="glass-effect sticky top-0 z-50 shadow-2xl border-b-2 border-white/50">
-        <div class="max-w-4xl mx-auto px-4 py-3 sm:py-5 flex items-center justify-between">
+    <header class="sticky top-0 z-50 p-4 sm:p-5 bg-white/90 backdrop-blur-lg shadow-lg border-b border-gray-100">
+        <div class="max-w-4xl mx-auto flex items-center justify-between">
+            <h1 id="headerTitle" class="text-3xl sm:text-4xl font-black bg-clip-text text-transparent float pulse-animation bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600">PostKinaa</h1>
             
-            <div class="flex items-center space-x-2 sm:space-x-4">
-                <button onclick="goToSettings()" title="සැකසීම්"
-                    class="p-2 sm:p-3 text-xl sm:text-2xl text-gray-600 hover:text-purple-600 hover:bg-purple-100 rounded-xl sm:rounded-2xl transition-all duration-300 hover:rotate-90 hover:scale-110">
-                    ⚙️
-                </button>
-                <h1 class="text-3xl sm:text-4xl font-black bg-clip-text text-transparent float pulse-animation" id="headerTitle">🌟 PostKinaa</h1>
-            </div>
-
-            <div class="flex items-center space-x-2 sm:space-x-3">
-                <button onclick="signOutUser()"  
-                    class="px-3 py-1.5 sm:px-5 sm:py-2 bg-gradient-to-r from-red-400 to-pink-500 text-white rounded-full text-xs sm:text-sm font-bold hover:from-red-500 hover:to-pink-600 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105">
-                    🚪 Logout
-                </button>
+            <div class="flex items-center space-x-3 sm:space-x-4">
                 
                 <div class="relative">
-                    
-                        </svg>
-                        <span id="notificationCount" class="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-red-100 transform translate-x-1/2 -translate-y-1/2 bg-red-600 rounded-full hidden">0</span>
+                    <button onclick="goToChat()" class="p-3 text-2xl text-gray-700 hover:text-purple-600 transition-colors duration-200 focus:outline-none">
+                        🗨️
                     </button>
-                    
-                    <div id="notificationPanel" class="hidden absolute right-0 mt-3 w-80 sm:w-96 glass-effect rounded-2xl shadow-2xl border-2 border-white/50 p-4 fade-in max-h-[70vh] overflow-y-auto z-[100]">
-                        <h3 class="font-bold text-xl text-gray-800 border-b pb-2 mb-3">🔔 දැනුම්දීම්</h3>
-                        <div id="notificationsList" class="space-y-3">
-                            <p class="text-center text-gray-500 py-4" id="loadingNotifications">Loading...</p>
-                        </div>
-                        <div id="noNotifications" class="text-center text-gray-500 py-4 hidden">
-                            තවම අලුත් දැනුම්දීම් නෑ.
-                        </div>
-                    </div>
+                    <span id="unreadChatIndicator" class="hidden absolute top-1 right-1 w-3 h-3 bg-red-600 rounded-full border-2 border-white shadow-md"></span>
                 </div>
-                <span id="connectionStatus" style="display:none;" 
-                    class="hidden sm:inline-block px-3 py-1.5 bg-gradient-to-r from-green-400 to-emerald-500 text-white rounded-full text-xs font-bold shadow-lg glow">
-                    ✨ Connected
-                </span>
+                
+                <div class="relative">
+                    <button onclick="toggleNotificationPanel()" class="p-3 text-2xl text-gray-700 hover:text-purple-600 transition-colors duration-200 focus:outline-none">
+                        <span role="img" aria-label="Notifications">🔔</span>
+                    </button>
+                    <span id="unreadIndicator" class="hidden absolute top-1 right-1 w-3 h-3 bg-red-600 rounded-full border-2 border-white shadow-md"></span>
+                </div>
+                
+                <button onclick="goToSettings()" class="w-10 h-10 sm:w-11 sm:h-11 bg-gray-200 rounded-full text-xl font-bold flex items-center justify-center hover:ring-4 hover:ring-purple-300 transition-all duration-300">
+                    ⚙️
+                </button>
             </div>
         </div>
     </header>
 
-    <div class="max-w-4xl mx-auto px-4 py-6">
+    <main class="max-w-4xl mx-auto p-4 sm:p-6 pb-20">
 
-        <div id="postCreationCard" class="glass-effect rounded-3xl shadow-2xl border-2 border-white/40 p-5 sm:p-8 mb-8 hover:shadow-[0_30px_70px_rgba(168,85,247,0.3)] transition-all duration-500 relative z-10">
-            <div class="flex items-start space-x-3 sm:space-x-5">
-
-                <div class="w-10 h-10 sm:w-14 sm:h-14 bg-gradient-to-br from-purple-500 via-pink-500 to-blue-500 rounded-xl sm:rounded-2xl flex items-center justify-center text-2xl sm:text-3xl shadow-2xl shrink-0 float">😊</div>
-
-                <div class="flex-1">
-                    <input id="authorName" type="text" placeholder="✨ ඔබේ නම..." 
-                        class="w-full px-4 py-2 sm:px-5 sm:py-3 mb-3 bg-white/60 backdrop-blur-sm rounded-xl sm:rounded-2xl border-2 border-purple-200 focus:border-purple-500 outline-none transition-all duration-300 font-semibold text-gray-800 hover:bg-white/80 shadow-sm text-sm sm:text-base">
-
-                    <textarea id="newPostInput" placeholder="💭 ඔබේ අදහස් මෙතන ලියන්න... අද මොකද සිතන්නේ?"
-                        class="w-full px-4 py-3 sm:px-5 sm:py-4 bg-white/60 backdrop-blur-sm rounded-xl sm:rounded-2xl border-2 border-purple-200 focus:border-purple-500 outline-none resize-none transition-all duration-300 font-medium text-gray-700 hover:bg-white/80 shadow-sm text-sm sm:text-base"
-                        rows="4"></textarea>
-                    
-                    <div class="mb-4 relative">
-                        <span id="selectedFeelingDisplay" class="hidden px-3 py-1.5 bg-purple-100 text-purple-700 rounded-full text-sm font-semibold shadow-inner transition-all duration-300 inline-flex items-center">
-                            <span class="mr-1">Feeling:</span> <span id="currentFeelingEmoji"></span> <span id="currentFeelingText" class="ml-1"></span>
-                            <button onclick="clearFeeling()" class="ml-2 text-red-500 hover:text-red-700 text-base leading-none">x</button>
-                        </span>
-                        
-                        <div id="feelingSelector" class="hidden absolute top-full left-0 mt-2 p-4 w-full glass-effect rounded-xl shadow-2xl border border-white/50 fade-in z-20">
-                            <h4 class="font-bold text-gray-700 mb-3 text-lg">අද ඔබේ හැඟීම කුමක්ද?</h4>
-                            
-                            <div class="flex flex-nowrap overflow-x-auto pb-2 -mx-4 px-4 gap-2 mb-4" id="defaultFeelingsContainer">
-                                </div>
-
-                            <div class="flex items-center space-x-2">
-                                <div class="relative flex-1">
-                                    <input type="text" id="customFeelingInput" 
-                                        oninput="updateRecommendedEmoji(this.value)"
-                                        placeholder="වෙනත් හැඟීමක් ටයිප් කරන්න... (උදා: happy, දුකෙන්)"
-                                        class="w-full px-4 py-2 pr-12 bg-white/70 rounded-lg border border-purple-200 focus:border-purple-500 outline-none transition-all duration-300 text-gray-700 text-sm">
-                                    <span id="recommendedEmojiDisplay" class="absolute right-3 top-1/2 -translate-y-1/2 text-2xl opacity-50 transition-opacity duration-200" title="Recommended Emoji">
-                                        💭
-                                    </span>
-                                </div>
-                                <button onclick="handleCustomFeeling()"
-                                    class="p-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors duration-300 text-sm font-semibold">
-                                    ✔️ Add
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="flex items-center justify-between mt-3 sm:mt-5">
-                        <div class="flex space-x-1 sm:space-x-2">
-                            <button onclick="openFeelingSelector()" title="හැඟීමක් එක් කරන්න"
-                                class="p-2 sm:p-3 hover:bg-gradient-to-br hover:from-pink-100 hover:to-yellow-100 rounded-xl sm:rounded-2xl text-xl sm:text-2xl transition-all duration-300 hover:scale-110 hover:-rotate-6">😀</button>
-                        </div>
-
-                        <button onclick="createPost()" id="postButton"
-                            class="px-5 py-2.5 sm:px-8 sm:py-3.5 bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 text-white rounded-full font-bold hover:from-purple-700 hover:via-pink-700 hover:to-blue-700 shadow-2xl transition-all duration-300 flex items-center space-x-2 hover:scale-105 hover:shadow-[0_15px_40px_rgba(168,85,247,0.5)] text-sm sm:text-base">
-                            <span>🚀 පෝස්ට් කරන්න</span>
-                        </button>
-                    </div>
-                </div>
-            </div>
+        <div id="loadingIndicator" class="text-center py-10">
+            <div class="w-12 h-12 border-4 border-purple-200 border-t-purple-600 rounded-full inline-block spinner"></div>
+            <p class="text-gray-600 mt-3 font-semibold">Posts Loading...</p>
         </div>
         
-        <div id="postsFeed" style="display:none;"></div> 
-
-        <div id="loadingIndicator" class="text-center py-12">
-            <div class="inline-block w-16 h-16 border-4 border-purple-200 border-t-purple-600 rounded-full spinner"></div>
-            <p class="mt-6 text-gray-700 font-bold text-lg">✨ පෝස්ට් Loading වෙමින්...</p>
-            <p class="mt-2 text-gray-500">කරුණාකර රැඳී සිටින්න</p>
+        <div id="noPostsMessage" class="hidden text-center py-20 glass-effect rounded-2xl p-8 border-2 border-white/40 shadow-xl">
+            <p class="text-3xl mb-3">😭</p>
+            <h2 class="text-xl font-bold text-gray-700">තවම Post එකක් නෑ!</h2>
+            <p class="text-gray-500 mt-2">පළමු Post එක දාන්න.</p>
         </div>
 
-        <div id="noPostsMessage" class="text-center py-16 glass-effect rounded-3xl border-2 border-white/40 shadow-2xl" style="display:none;">
-            <div class="text-8xl mb-6 float">📭</div>
-            <p class="text-2xl text-gray-700 font-bold mb-3">තවම පෝස්ට් නෑ</p>
-            <p class="text-gray-500 text-lg">පළමු පෝස්ට් එක ඔබ කරන්න!</p>
-            <p class="text-6xl mt-8">✨</p>
+        <div id="postsFeed" class="space-y-8">
+            </div>
+
+    </main>
+    
+    <button onclick="openPostModal()" 
+            class="fixed bottom-20 right-5 sm:bottom-8 sm:right-8 z-40 
+                   w-14 h-14 sm:w-16 sm:h-16 
+                   bg-gradient-to-r from-pink-500 to-purple-600 text-white 
+                   rounded-full shadow-2xl hover:scale-105 transition-transform duration-300 
+                   flex items-center justify-center text-3xl font-bold ring-4 ring-white ring-opacity-50">
+        +
+    </button>
+    
+    <div id="postModalOverlay" onclick="closePostModal()"
+         class="fixed inset-0 bg-black/50 backdrop-blur-sm z-[1000] hidden flex items-center justify-center transition-opacity duration-300">
+        
+        <div id="postCreationCard" onclick="event.stopPropagation()"
+             class="bg-white rounded-3xl shadow-2xl p-6 sm:p-8 w-11/12 max-w-lg modal-enter max-h-[90vh] overflow-y-auto">
+             
+            <div class="flex items-start justify-between border-b pb-4 mb-4">
+                <h2 class="text-2xl font-bold text-gray-800">නව Post එකක්</h2>
+                <button onclick="closePostModal()" class="p-1 text-gray-500 hover:text-red-500">
+                    ✖️
+                </button>
+            </div>
+
+            <div class="flex items-start space-x-4 mb-4">
+                <div id="postAvatarContainer" class="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-purple-500 via-pink-500 to-blue-500 rounded-xl sm:rounded-2xl flex items-center justify-center text-2xl sm:text-3xl shadow-xl shrink-0">
+                    </div>
+                <div class="flex-1">
+                    <input type="text" id="authorName" placeholder="ඔබගේ නම..." class="w-full bg-white/70 backdrop-blur-sm p-3 rounded-lg border border-gray-300 text-gray-700 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 mb-3" maxlength="50" readonly>
+                </div>
+            </div>
+            
+            <textarea id="postContent" placeholder="ඔබේ අදහස මෙහි ලියන්න..." class="w-full bg-white p-3 rounded-lg border border-gray-300 text-gray-700 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500 h-32 sm:h-40 resize-none mb-4"></textarea>
+
+            <div class="flex flex-col sm:flex-row items-center justify-between space-y-3 sm:space-y-0 sm:space-x-4">
+                <div class="w-full sm:w-auto relative group">
+                    <button id="feelingButton" onclick="toggleFeelingPanel()" class="w-full sm:w-auto px-4 py-2 bg-gray-100 border border-gray-300 rounded-full text-gray-700 hover:bg-gray-200 transition-colors duration-200 flex items-center justify-center sm:justify-start space-x-2">
+                        <span id="currentFeelingEmoji" class="text-xl">🙂</span>
+                        <span id="currentFeelingText" class="font-medium text-sm">Select Feeling (Optional)</span>
+                    </button>
+                    <div id="feelingPanel" class="hidden absolute z-20 bottom-full mb-2 w-full sm:w-72 bg-white rounded-xl shadow-2xl p-3 border border-gray-200">
+                        <p class="font-bold text-sm mb-2 text-gray-700">How are you feeling?</p>
+                        <div class="grid grid-cols-3 gap-2">
+                            </div>
+                    </div>
+                </div>
+
+                <button id="postButton" onclick="createPost()" class="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 text-white font-bold rounded-full shadow-lg hover:from-purple-700 hover:via-pink-700 hover:to-blue-700 transition-all duration-300 text-base sm:text-lg">
+                    Post කරන්න! ✨
+                </button>
+            </div>
+            
         </div>
     </div>
 
+
+    <div id="notificationPanel" 
+         class="fixed top-0 right-0 w-full md:w-96 h-full bg-white/90 backdrop-blur-xl shadow-2xl z-[1001] transform translate-x-full transition-transform duration-300 ease-in-out flex flex-col border-l border-gray-100">
+        
+        <div class="p-5 border-b-2 border-gray-100 flex items-center justify-between sticky top-0 bg-white/90 backdrop-blur-sm">
+            <h2 class="text-2xl font-bold text-gray-800 flex items-center space-x-2">
+                🔔 <span>දැනුම්දීම්</span>
+            </h2>
+            <button onclick="closeNotificationPanel()" class="p-2 text-gray-500 hover:text-red-500 text-xl transition-colors duration-200">
+                ✖️
+            </button>
+        </div>
+        
+        <div id="notificationList" class="flex-1 overflow-y-auto p-4 space-y-3">
+            </div>
+
+    </div>
+
+
     <script>
 
-    /* ============================================================
-        🔥 Firebase Config + Init
-    ============================================================ */
-    const firebaseConfig = {
-        apiKey: "AIzaSyAzNJ-P8aAMvTuNWKcQYCjIIHiaL0BpdZ0",
-        authDomain: "game-f1c21.firebaseapp.com",
-        databaseURL: "https://game-f1c21-default-rtdb.firebaseio.com",
-        projectId: "game-f1c21",
-        storageBucket: "game-f1c21.firebasestorage.app",
-        messagingSenderId: "656338565711",
-        appId: "1:656338565711:web:395f9c7f846588b065883a"
-    };
-
-    firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-    const database = firebase.database();
-    const postsRef = database.ref("posts");
-    const usersRef = database.ref("users"); 
-
-    let currentUser = null;
-    let selectedFeeling = null; 
-
-    /* ============================================================
-        🔥 Theme System (UNCHANGED)
-    ============================================================ */
-    const THEMES = {
-        default: {
-            bg: 'bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50',
-            header: 'from-purple-600 via-pink-600 to-blue-600',
-            download: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            button: 'from-purple-600 via-pink-600 to-blue-600', // Main button color
-            avatarGradient: 'from-purple-500 via-pink-500 to-blue-500', // Post creation avatar
-            settingBack: 'text-purple-600 hover:bg-purple-100', // Back button in settings
-            settingBackBG: '#9333ea', // Back button background color for comment.html consistency
-        },
-        blue: {
-            bg: 'bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50',
-            header: 'from-blue-600 via-indigo-600 to-purple-600',
-            download: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-            button: 'from-blue-600 via-indigo-600 to-purple-600',
-            avatarGradient: 'from-blue-500 via-indigo-500 to-purple-500',
-            settingBack: 'text-blue-600 hover:bg-blue-100',
-            settingBackBG: '#3b82f6',
-        },
-        green: {
-            bg: 'bg-gradient-to-br from-green-50 via-teal-50 to-cyan-50',
-            header: 'from-green-600 via-teal-600 to-cyan-600',
-            download: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
-            button: 'from-green-600 via-teal-600 to-cyan-600',
-            avatarGradient: 'from-green-500 via-teal-500 to-cyan-500',
-            settingBack: 'text-green-600 hover:bg-green-100',
-            settingBackBG: '#10b981',
-        },
-        dark: {
-            bg: 'bg-gray-800', 
-            header: 'bg-white', 
-            download: 'linear-gradient(135deg, #374151 0%, #1f2937 100%)',
-            button: 'from-gray-600 via-gray-700 to-gray-800', 
-            avatarGradient: 'from-gray-700 via-gray-600 to-gray-500',
-            settingBack: 'text-gray-400 hover:bg-gray-700 hover:text-white',
-            settingBackBG: '#4b5563',
-        },
-        red: {
-            bg: 'bg-gradient-to-br from-red-50 via-pink-50 to-orange-50',
-            header: 'from-red-600 via-pink-600 to-orange-600',
-            download: 'linear-gradient(135deg, #f87171 0%, #f43f5e 100%)',
-            button: 'from-red-600 via-pink-600 to-orange-600',
-            avatarGradient: 'from-red-500 via-pink-500 to-orange-500',
-            settingBack: 'text-red-600 hover:bg-red-100',
-            settingBackBG: '#ef4444',
-        },
-        yellow: {
-            bg: 'bg-gradient-to-br from-yellow-50 via-amber-50 to-orange-50',
-            header: 'from-yellow-600 via-amber-600 to-orange-600',
-            download: 'linear-gradient(135deg, #fcd34d 0%, #fb923c 100%)',
-            button: 'from-yellow-600 via-amber-600 to-orange-600',
-            avatarGradient: 'from-yellow-500 via-amber-500 to-orange-500',
-            settingBack: 'text-yellow-600 hover:bg-yellow-100',
-            settingBackBG: '#f59e0b',
-        },
-        teal: {
-            bg: 'bg-gradient-to-br from-teal-50 via-cyan-50 to-blue-50',
-            header: 'from-teal-600 via-cyan-600 to-blue-600',
-            download: 'linear-gradient(135deg, #2dd4bf 0%, #06b6d4 100%)',
-            button: 'from-teal-600 via-cyan-600 to-blue-600',
-            avatarGradient: 'from-teal-500 via-cyan-500 to-blue-500',
-            settingBack: 'text-teal-600 hover:bg-teal-100',
-            settingBackBG: '#14b8a6',
-        }
-    };
-
-    function applyTheme() {
-        const themeName = localStorage.getItem("appTheme") || "default";
-        const theme = THEMES[themeName] || THEMES.default;
-
-        document.body.className = "min-h-screen " + theme.bg;
-        const headerTitle = document.getElementById("headerTitle");
-        const postButton = document.getElementById("postButton");
-        const postAvatar = document.querySelector("#postCreationCard > div > div:nth-child(1)"); // The avatar div
-
-        // Update Header Title
-        if (themeName === 'dark') {
-            headerTitle.className =
-                "text-3xl sm:text-4xl font-black bg-clip-text text-white float pulse-animation";
-        } else {
-            // Remove existing gradient classes and apply new ones
-            headerTitle.className = headerTitle.className.replace(/from-.*?to-.*?/g, ''); 
-            headerTitle.className =
-                "text-3xl sm:text-4xl font-black bg-clip-text text-transparent float pulse-animation bg-gradient-to-r " + theme.header;
-        }
-
-        // Update Post Button (Primary action button)
-        // Remove existing gradient classes and apply new ones
-        postButton.classList.remove('from-purple-600', 'via-pink-600', 'to-blue-600', 'from-purple-700', 'via-pink-700', 'to-blue-700');
-        postButton.classList.add(...theme.button.split(' '), ...theme.button.replace(/600/g, '700').split(' ').map(cls => cls.replace('from-', 'hover:from-').replace('via-', 'hover:via-').replace('to-', 'hover:to-')));
-
-        // Update Post Avatar Gradient
-        // Remove existing gradient classes and apply new ones
-        postAvatar.classList.remove('from-purple-500', 'via-pink-500', 'to-blue-500');
-        postAvatar.classList.add('bg-gradient-to-br', ...theme.avatarGradient.split(' '));
-    }
-
-    /* ============================================================
-        🔥 NEW: Real-time Connection Status (UPDATED NOTIFICATION - POPUPS REMOVED)
-    ============================================================ */
-    const statusEl = document.getElementById("connectionStatus");
-
-    // Firebase Server Connection State Monitoring
-    database.ref('.info/connected').on('value', (snap) => {
-        const isConnected = snap.val();
-        
-        if (isConnected === false) {
-            statusEl.textContent = '🔴 Offline';
-            // R-G-B: Replace green/emerald with red for offline status
-            statusEl.className = statusEl.className.replace(/green|emerald|blue/g, 'red').replace(/glow/, 'pulse-animation');
-            // Notification removed
-        } else {
-            // 🔥 NEW: Check if we were previously offline before showing connected notification
-            // const wasOffline = statusEl.textContent.includes('Offline'); // Variable kept but not used for notification
-            
-            statusEl.textContent = '✨ Connected';
-            // R-G-B: Restore green/emerald/blue classes for connected status
-            statusEl.className = statusEl.className.replace(/red/g, 'green').replace(/pulse-animation/, 'glow');
-
-            // Notification removed
-        }
-    });
-
-    /* ============================================================
-        🔥 Auth Check and User Data Setup
-    ============================================================ */
-    auth.onAuthStateChanged(user => {
-        if (!user) {
-            statusEl.style.display = "none";
-            window.location.href = "index.html";
-            return;
-        }
-        
-        statusEl.style.display = "inline-block";
-        
-        currentUser = user;
-        
-        // FIX 1: Check and Set Initial User Data (Profile Fix)
-        usersRef.child(user.uid).once('value', snap => {
-            const userData = snap.val();
-            const defaultName = user.email ? user.email.split("@")[0] : 'පරිශීලකයා';
-            
-            if (!userData) {
-                // දත්ත නොමැතිනම් මූලික දත්ත නිර්මාණය කිරීම.
-                usersRef.child(user.uid).set({
-                    name: defaultName,
-                    avatar: '👤',
-                    followerCount: 0,
-                    followingCount: 0,
-                }).then(() => {
-                    document.getElementById('authorName').value = defaultName;
-                });
-            } else {
-                // දත්ත තිබේ නම් නම Load කිරීම
-                document.getElementById('authorName').value = userData.name || defaultName;
-                
-                // Also update the name in case the profile page changed it
-                if (!userData.name) {
-                    usersRef.child(user.uid).update({ name: defaultName });
-                }
-            }
-        });
-
-        applyTheme();
-        loadPosts();
-        setupNotificationListener(currentUser.uid); // Setup listener here
-    });
-
-    function signOutUser() {
-        auth.signOut().then(() => {
-            showNotification("Logout successful.");
-            window.location.href = "index.html";
-        });
-    }
-
-    /* ============================================================
-        🔥 Settings & Profile Navigation
-    ============================================================ */
-    function goToSettings() {
-        window.location.href = "settings.html";
-    }
-
-    function goToProfile(uid) {
-        window.location.href = `profile.html?uid=${uid}`; 
-    }
-
-    /* ============================================================
-        🔥 Load Posts (UNCHANGED)
-    ============================================================ */
-    function loadPosts() {
-        const feed = document.getElementById("postsFeed");
-        const loading = document.getElementById("loadingIndicator");
-        const noPosts = document.getElementById("noPostsMessage");
-
-        feed.innerHTML = "";
-        loading.style.display = "block";
-        feed.style.display = "none";
-        noPosts.style.display = "none";
-
-        postsRef.orderByChild("timestamp").once("value").then(snap => { 
-            loading.style.display = "none";
-            
-            if (!snap.exists()) {
-                feed.style.display = "none";
-                noPosts.style.display = "block";
-                return;
-            }
-
-            const posts = [];
-            snap.forEach(s => {
-                posts.push({ id: s.key, ...s.val() });
-            });
-            
-            posts.reverse(); 
-
-            feed.innerHTML = "";
-            posts.forEach(p => renderPost(p));
-            
-            feed.style.display = "block";
-        }).catch(err => {
-            console.error("Error loading posts:", err);
-            loading.style.display = "none";
-            showNotification("පෝස්ට් ලෝඩ් කිරීමේ දෝෂයක් ❌");
-        });
-
-        postsRef.on("child_added", (snapshot) => {
-            if (feed.innerHTML === "") return;
-            
-            const newPost = { id: snapshot.key, ...snapshot.val() };
-            const existingPost = document.getElementById(`post-${newPost.id}`);
-            
-            if (!existingPost) {
-                feed.insertBefore(createPostElement(newPost), feed.firstChild);
-                showNotification("නව පෝස්ට් එකක් එකතු වුනා! 🎉");
-            }
-        });
-
-        postsRef.on("child_changed", (snapshot) => {
-            const updatedPost = { id: snapshot.key, ...snapshot.val() };
-            const postElement = document.getElementById(`post-${updatedPost.id}`);
-            
-            if (postElement) {
-                const newElement = createPostElement(updatedPost);
-                postElement.replaceWith(newElement);
-            }
-        });
-
-        postsRef.on("child_removed", (snapshot) => {
-            const postElement = document.getElementById(`post-${snapshot.key}`);
-            if (postElement) {
-                postElement.remove();
-            }
-            
-            if (feed.children.length === 0) {
-                feed.style.display = "none";
-                noPosts.style.display = "block";
-            }
-        });
-    }
-
-    /* ============================================================
-        🔥 Create Post Element (WITH PROFILE LINK)
-    ============================================================ */
-    function createPostElement(post) {
-        const timeAgo = getTimeAgo(post.timestamp);
-        const me = currentUser ? currentUser.uid : null;
-        const isAuthor = post.authorId === me;
-
-        const myReaction = post.reactions && post.reactions[me] ? post.reactions[me] : null;
-        const postFeeling = post.feeling; 
-
-        const likeCount = post.reactionCounts?.like || 0;
-        const laughCount = post.reactionCounts?.laugh || 0;
-        const fireCount = post.reactionCounts?.fire || 0;
-
-        const div = document.createElement("div");
-        div.id = `post-${post.id}`;
-        div.className =
-            "post-card glass-effect rounded-3xl shadow-2xl border-2 border-white/40 p-5 sm:p-7 hover:shadow-[0_30px_70px_rgba(168,85,247,0.3)] transition-all duration-500 fade-in mb-8";
-        
-        div.style.position = 'relative'; 
-
-        const feelingDisplayHTML = postFeeling ? 
-            `<span class="ml-2 px-2 py-0.5 bg-gradient-to-r from-yellow-50 to-pink-50 text-gray-700 rounded-full text-xs font-bold shadow-sm inline-flex items-center mt-1 sm:mt-0">
-                <span class="mr-1 text-base">${postFeeling.emoji}</span> is feeling ${postFeeling.text}
-            </span>`
-            : '';
-
-        div.innerHTML = `
-            <div class="flex items-start justify-between mb-4 sm:mb-5 flex-wrap">
-                <div class="flex items-center space-x-3 sm:space-x-4">
-                    <div class="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br ${post.gradient} rounded-xl sm:rounded-2xl flex items-center justify-center text-2xl sm:text-3xl shadow-xl hover:scale-110 transition-transform duration-300 shrink-0">
-                        ${post.avatar || '❓'}
-                    </div>
-                    <div>
-                        <div class="flex items-start flex-wrap">
-                            <h3 class="font-bold text-gray-800 text-lg sm:text-xl">
-                                <a onclick="goToProfile('${post.authorId}')" 
-                                   class="cursor-pointer text-gray-800 hover:text-purple-600 transition-colors duration-200">
-                                    ${post.author || 'නමක් නැත'}
-                                </a>
-                            </h3>
-                            ${feelingDisplayHTML} 
-                        </div>
-                        <p class="text-xs sm:text-sm text-gray-500 font-semibold">⏰ ${timeAgo}</p>
-                    </div>
-                </div>
-
-                ${
-                    isAuthor
-                        ? `
-                    <div class="flex space-x-1 mt-3 sm:mt-0 ml-auto sm:ml-0">
-                        <button onclick="editPost('${post.id}', '${escapeText(post.content)}')"
-                            class="text-blue-500 hover:text-blue-700 hover:bg-blue-50 p-2 rounded-xl text-lg sm:text-xl transition-all duration-300 hover:scale-110 hover:rotate-12" title="සංස්කරණය">
-                            ✏️
-                        </button>
-                        <button onclick="deletePost('${post.id}')"
-                            class="text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded-xl text-lg sm:text-xl transition-all duration-300 hover:scale-110 hover:-rotate-12" title="මකන්න">
-                            🗑️
-                        </button>
-                    </div>`
-                        : ""
-                }
-            </div>
-
-            <p class="text-gray-800 mb-5 sm:mb-6 leading-relaxed text-base sm:text-lg whitespace-pre-line font-medium bg-gradient-to-r from-gray-700 to-gray-900 bg-clip-text">${post.content || 'Content not found'}</p>
-
-            <div class="flex items-center justify-between pt-4 sm:pt-5 border-t-2 border-gray-100 flex-wrap space-y-2 sm:space-y-0 -mx-1 sm:-mx-2">
-                <button onclick="toggleSingleReaction('${post.id}', 'like')"
-                    class="reaction-btn flex items-center space-x-1 sm:space-x-2 px-3 py-1.5 sm:px-5 sm:py-3 rounded-xl sm:rounded-2xl hover:bg-gradient-to-r hover:from-pink-50 hover:to-red-50 text-gray-700 transition-all duration-300 hover:scale-110 text-sm sm:text-base
-                    ${myReaction === 'like' ? 'bg-gradient-to-r from-pink-100 to-red-100 text-pink-600 shadow-lg scale-105' : ''}">
-                    <span class="text-xl sm:text-2xl">❤️</span>
-                    <span class="reaction-count font-bold text-base sm:text-lg">${likeCount}</span>
-                </button>
-
-                <button onclick="toggleSingleReaction('${post.id}', 'laugh')"
-                    class="reaction-btn flex items-center space-x-1 sm:space-x-2 px-3 py-1.5 sm:px-5 sm:py-3 rounded-xl sm:rounded-2xl hover:bg-gradient-to-r hover:from-yellow-50 hover:to-orange-50 text-gray-700 transition-all duration-300 hover:scale-110 text-sm sm:text-base
-                    ${myReaction === 'laugh' ? 'bg-gradient-to-r from-yellow-100 to-orange-100 text-yellow-600 shadow-lg scale-105' : ''}">
-                    <span class="text-xl sm:text-2xl">😂</span>
-                    <span class="reaction-count font-bold text-base sm:text-lg">${laughCount}</span>
-                </button>
-
-                <button onclick="toggleSingleReaction('${post.id}', 'fire')"
-                    class="reaction-btn flex items-center space-x-1 sm:space-x-2 px-3 py-1.5 sm:px-5 sm:py-3 rounded-xl sm:rounded-2xl hover:bg-gradient-to-r hover:from-orange-50 hover:to-red-50 text-gray-700 transition-all duration-300 hover:scale-110 text-sm sm:text-base
-                    ${myReaction === 'fire' ? 'bg-gradient-to-r from-orange-100 to-red-100 text-red-600 shadow-lg scale-105' : ''}">
-                    <span class="text-xl sm:text-2xl">🔥</span>
-                    <span class="reaction-count font-bold text-base sm:text-lg">${fireCount}</span>
-                </button>
-
-                <button onclick="commentPost('${post.id}')"
-                    class="flex items-center space-x-1 sm:space-x-2 px-3 py-1.5 sm:px-5 sm:py-3 rounded-xl sm:rounded-2xl hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 text-gray-700 transition-all duration-300 hover:scale-110 text-sm sm:text-base">
-                    <span class="text-xl sm:text-2xl">💬</span>
-                    <span class="font-bold text-base sm:text-lg">${post.commentsCount || 0}</span>
-                </button>
-
-                <button onclick="downloadPost('${post.id}')"
-                    class="flex items-center space-x-1 sm:space-x-2 px-3 py-1.5 sm:px-5 sm:py-3 rounded-xl sm:rounded-2xl hover:bg-gradient-to-r hover:from-green-50 hover:to-teal-50 text-gray-700 transition-all duration-300 hover:scale-110 hover:rotate-12 text-sm sm:text-base">
-                    <span class="text-xl sm:text-2xl">⬇️</span>
-                </button>
-            </div>
-        `;
-
-        return div;
-    }
-
-    /* ============================================================
-        🔥 Render Single Post (UNCHANGED)
-    ============================================================ */
-    function renderPost(post) {
-        const feed = document.getElementById("postsFeed");
-        const postElement = createPostElement(post);
-        feed.appendChild(postElement);
-    }
-
-    /* ============================================================
-        🔥 NEW: Feeling Feature Logic (UPDATED FOR BLUR CONTROL)
-    ============================================================ */
-    const FEELINGS_MAP = [
-        { text: "සතුටින්", emoji: "😊" },
-        { text: "ආදරයෙන්", emoji: "🥰" },
-        { text: "කම්මැලි", emoji: "😪" },
-        { text: "සන්සුන්", emoji: "🧘" },
-        { text: "කෝපයෙන්", emoji: "😡" },
-        { text: "උද්යෝගයෙන්", emoji: "🤩" },
-        { text: "දුකෙන්", emoji: "😢" },
-        { text: "බලාපොරොත්තු සහගතයි", emoji: "🙏" },
-    ];
-
-    function renderFeelingButtons() {
-        const container = document.getElementById('defaultFeelingsContainer');
-        container.innerHTML = '';
-        
-        FEELINGS_MAP.forEach(f => {
-            const button = document.createElement('button');
-            button.className = 'px-4 py-2 bg-white/80 rounded-full shadow-md text-sm font-medium hover:bg-purple-100 transition-colors duration-200 flex items-center space-x-1 shrink-0';
-            button.innerHTML = `<span>${f.emoji}</span> <span class="ml-1">${f.text}</span>`;
-            button.onclick = () => selectFeeling(f.text, f.emoji);
-            container.appendChild(button);
-        });
-    }
-
-    function openFeelingSelector() {
-        const selector = document.getElementById('feelingSelector');
-        
-        if (selector.classList.contains('hidden')) {
-            selector.classList.remove('hidden');
-            if (selector.querySelector('#defaultFeelingsContainer').children.length === 0) {
-                renderFeelingButtons();
-            }
-            
-            // 🔥 NEW: Call applyBlur when the selector opens
-            applyBlur(); 
-            
-            // Add a click listener to the entire document body for outside click
-            document.body.addEventListener('click', closeFeelingSelectorOutside, true);
-        }
-    }
-
-    // Close the selector when clicking outside
-    function closeFeelingSelectorOutside(event) {
-        const selector = document.getElementById('feelingSelector');
-        const feelingButton = document.querySelector('[onclick="openFeelingSelector()"]');
-
-        // Check if the click occurred outside the selector AND outside the button that opens it
-        if (!selector.contains(event.target) && !feelingButton.contains(event.target)) {
-            closeFeelingSelector();
-        }
-    }
-
-    // Centralized function to close the selector
-    function closeFeelingSelector() {
-        const selector = document.getElementById('feelingSelector');
-        selector.classList.add('hidden');
-        
-        // 🔥 NEW: Call removeBlur when the selector closes
-        removeBlur(); 
-        
-        // Remove the listener after closing
-        document.body.removeEventListener('click', closeFeelingSelectorOutside, true);
-    }
-
-
-    function selectFeeling(text, emoji) {
-        selectedFeeling = { text: text, emoji: emoji };
-        
-        document.getElementById('currentFeelingEmoji').textContent = emoji;
-        document.getElementById('currentFeelingText').textContent = text;
-        document.getElementById('selectedFeelingDisplay').classList.remove('hidden');
-        
-        closeFeelingSelector(); // This calls removeBlur
-        
-        showNotification(`Feeling added: ${emoji} ${text} 🎉`);
-    }
-
-    function clearFeeling() {
-        selectedFeeling = null;
-        document.getElementById('selectedFeelingDisplay').classList.add('hidden');
-        document.getElementById('customFeelingInput').value = '';
-        document.getElementById('recommendedEmojiDisplay').textContent = "💭";
-        closeFeelingSelector(); // This calls removeBlur
-        showNotification("Feeling removed.");
-    }
-    
-    function recommendEmoji(text) {
-        if (!text) return "💭";
-        
-        const lowerText = text.toLowerCase();
-
-        if (lowerText.includes("love") || lowerText.includes("ආදර") || lowerText.includes("ප්‍රේම")) return "💖";
-        if (lowerText.includes("tired") || lowerText.includes("මහන්සි") || lowerText.includes("නිදි")) return "😴";
-        if (lowerText.includes("happy") || lowerText.includes("සතුට") || lowerText.includes("joy")) return "🥳";
-        if (lowerText.includes("angry") || lowerText.includes("කේන්තිය") || lowerText.includes("heat")) return "🔥";
-        if (lowerText.includes("sad") || lowerText.includes("දුක") || lowerText.includes("අඩු")) return "😭";
-        if (lowerText.includes("hungry") || lowerText.includes("බඩගිනි")) return "🍔";
-        if (lowerText.includes("excited") || lowerText.includes("උද්යෝග") || lowerText.includes("විනෝද")) return "🎉";
-
-        if (lowerText.includes("සතුට") || lowerText.includes("happy")) return "😊";
-        if (lowerText.includes("කම්මැලි") || lowerText.includes("boring")) return "😪";
-        if (lowerText.includes("සන්සුන්") || lowerText.includes("calm")) return "🧘";
-        if (lowerText.includes("කෝප") || lowerText.includes("angry")) return "😡";
-        
-        return "💭";
-    }
-
-    function updateRecommendedEmoji(text) {
-        const display = document.getElementById('recommendedEmojiDisplay');
-        if (display) {
-            display.textContent = recommendEmoji(text);
-        }
-    }
-
-    function handleCustomFeeling() {
-        const input = document.getElementById('customFeelingInput');
-        const display = document.getElementById('recommendedEmojiDisplay');
-        
-        const customText = input.value.trim();
-        const finalEmoji = display.textContent.trim() || "💭";
-
-        if (!customText) return;
-
-        selectFeeling(customText, finalEmoji);
-        input.value = '';
-        display.textContent = "💭";
-    }
-    
-    /* ============================================================
-        🔥 Create Post (FIXED BUG)
-    ============================================================ */
-    function createPost() {
-        // 🔥 FIX: Robust name fetching to prevent error if currentUser.displayName is null
-        const inputName = document.getElementById("authorName").value.trim();
-        const defaultName = currentUser.email ? currentUser.email.split("@")[0] : 'පරිශීලකයා';
-        const name = inputName || defaultName;
-
-        const content = document.getElementById("newPostInput").value.trim();
-
-        if (!content && !selectedFeeling) return showNotification("කරුණාකර පෝස්ට් එක ලියන්න, නැත්නම් හැඟීමක් එක් කරන්න!");
-
-        const btn = document.getElementById("postButton");
-        btn.disabled = true;
-        btn.innerHTML = `<span class="inline-block w-5 h-5 border-2 border-white border-t-transparent rounded-full spinner"></span>`;
-
-        const avatars = ["😊","🎨","✨","🌟","🎭","🎮","😎","🤩"];
-        const gradients = [
-            "from-purple-400 to-pink-400",
-            "from-blue-400 to-purple-400",
-            "from-pink-400 to-orange-400",
-            "from-green-400 to-teal-400",
-            "from-indigo-400 to-blue-400"
-        ];
-
-        const newPost = {
-            author: name,
-            content: content,
-            authorId: currentUser.uid,
-            avatar: avatars[Math.floor(Math.random()*avatars.length)],
-            gradient: gradients[Math.floor(Math.random()*gradients.length)],
-            feeling: selectedFeeling || null, 
-            timestamp: firebase.database.ServerValue.TIMESTAMP,
-            reactionCounts: {
-                like: 0, 
-                laugh: 0,
-                fire: 0
-            },
-            commentsCount: 0,
+        /* ============================================================
+            🔥 Firebase Config + Init
+        ============================================================ */
+        const firebaseConfig = {
+            apiKey: "AIzaSyAzNJ-P8aAMvTuNWKcQYCjIIHiaL0BpdZ0",
+            authDomain: "game-f1c21.firebaseapp.com",
+            databaseURL: "https://game-f1c21-default-rtdb.firebaseio.com",
+            projectId: "game-f1c21",
+            storageBucket: "game-f1c21.firebasestorage.app",
+            messagingSenderId: "656338565711",
+            appId: "1:656338565711:web:395f9c7f846588b065883a"
         };
 
-        postsRef.push(newPost)
-        .then(() => {
-            document.getElementById("newPostInput").value = "";
-            clearFeeling(); 
-            btn.disabled = false;
-            btn.innerHTML = `<span>🚀 පෝස්ට් කරන්න</span>`;
-            showNotification("පෝස්ට් එක සාර්ථකව පළ කළා! 🎉");
-            // Remove focus and blur effect
-            document.getElementById("newPostInput").blur(); 
-            document.getElementById("authorName").blur(); 
-            usersRef.child(currentUser.uid).update({ name: name }); 
-        })
-        .catch(error => {
-            console.error("Post Creation Error:", error);
-            btn.disabled = false;
-            btn.innerHTML = `<span>🚀 පෝස්ට් කරන්න</span>`;
-            showNotification("පෝස්ට් කිරීමේ දෝෂයක් ❌");
-        });
-    }
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const database = firebase.database();
+        const postsRef = database.ref("posts");
+        const usersRef = database.ref("users"); 
+        const notificationsRef = database.ref("notifications"); 
 
-    /* ============================================================
-        🔥 Single Reaction System (UNCHANGED)
-    ============================================================ */
-    function toggleSingleReaction(postId, newReactionType) {
-        if (!currentUser) return;
+        let currentUser = null;
+        // 🔥 FIX 3: Feeling එකක් තෝරා නොගෙන Post දැමීමට ඉඩ දීම සඳහා null ලෙස තබයි
+        let selectedFeeling = null; 
+        let allNotifications = []; 
+        let currentUserName = '';
+        let currentUserAvatar = '👤'; 
 
-        const uid = currentUser.uid;
-        const postReactionsRef = postsRef.child(postId).child("reactions");
-        const userReactionRef = postReactionsRef.child(uid);
-        const countsRef = postsRef.child(postId).child("reactionCounts");
+        /* ============================================================
+            🔥 Navigation
+        ============================================================ */
+        function goToChat() {
+            window.location.href = "chat.html";
+        }
+        
+        function goToSettings() {
+            window.location.href = "settings.html";
+        }
 
-        userReactionRef.once("value").then(snap => {
-            const currentReaction = snap.val();
+        function goToProfile(uid) {
+            window.location.href = `profile.html?uid=${uid}`; 
+        }
 
-            if (currentReaction === newReactionType) {
-                userReactionRef.remove();
-                countsRef.child(newReactionType).transaction(count => (count || 1) - 1);
+        /* ============================================================
+            🔥 Theme System (UNCHANGED)
+        ============================================================ */
+        const THEMES = {
+            default: {
+                bg: 'bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50',
+                header: 'from-purple-600 via-pink-600 to-blue-600',
+                download: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                button: 'from-purple-600 via-pink-600 to-blue-600',
+                avatarGradient: 'from-purple-500 via-pink-500 to-blue-500', 
+                settingBack: 'text-purple-600 hover:bg-purple-100', 
+                settingBackBG: '#9333ea', 
+            },
+            blue: {
+                bg: 'bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50',
+                header: 'from-blue-600 via-indigo-600 to-purple-600',
+                download: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+                button: 'from-blue-600 via-indigo-600 to-purple-600',
+                avatarGradient: 'from-blue-500 via-indigo-500 to-purple-500',
+                settingBack: 'text-blue-600 hover:bg-blue-100',
+                settingBackBG: '#3b82f6',
+            },
+            green: {
+                bg: 'bg-gradient-to-br from-green-50 via-teal-50 to-cyan-50',
+                header: 'from-green-600 via-teal-600 to-cyan-600',
+                download: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+                button: 'from-green-600 via-teal-600 to-cyan-600',
+                avatarGradient: 'from-green-500 via-teal-500 to-cyan-500',
+                settingBack: 'text-green-600 hover:bg-green-100',
+                settingBackBG: '#10b981',
+            },
+            dark: {
+                bg: 'bg-gray-800', 
+                header: 'bg-white', 
+                download: 'linear-gradient(135deg, #374151 0%, #1f2937 100%)',
+                button: 'from-gray-600 via-gray-700 to-gray-800', 
+                avatarGradient: 'from-gray-700 via-gray-600 to-gray-500',
+                settingBack: 'text-gray-400 hover:bg-gray-700 hover:text-white',
+                settingBackBG: '#4b5563',
+            },
+            red: {
+                bg: 'bg-gradient-to-br from-red-50 via-pink-50 to-orange-50',
+                header: 'from-red-600 via-pink-600 to-orange-600',
+                download: 'linear-gradient(135deg, #f87171 0%, #f43f5e 100%)',
+                button: 'from-red-600 via-pink-600 to-orange-600',
+                avatarGradient: 'from-red-500 via-pink-500 to-orange-500',
+                settingBack: 'text-red-600 hover:bg-red-100',
+                settingBackBG: '#ef4444',
+            },
+            yellow: {
+                bg: 'bg-gradient-to-br from-yellow-50 via-amber-50 to-orange-50',
+                header: 'from-yellow-600 via-amber-600 to-orange-600',
+                download: 'linear-gradient(135deg, #fcd34d 0%, #fb923c 100%)',
+                button: 'from-yellow-600 via-amber-600 to-orange-600',
+                avatarGradient: 'from-yellow-500 via-amber-500 to-orange-500',
+                settingBack: 'text-yellow-600 hover:bg-yellow-100',
+                settingBackBG: '#f59e0b',
+            },
+            teal: {
+                bg: 'bg-gradient-to-br from-teal-50 via-cyan-50 to-blue-50',
+                header: 'from-teal-600 via-cyan-600 to-blue-600',
+                download: 'linear-gradient(135deg, #2dd4bf 0%, #06b6d4 100%)',
+                button: 'from-teal-600 via-cyan-600 to-blue-600',
+                avatarGradient: 'from-teal-500 via-cyan-500 to-blue-500',
+                settingBack: 'text-teal-600 hover:bg-teal-100',
+                settingBackBG: '#14b8a6',
+            }
+        };
+
+        function applyTheme() {
+            const themeName = localStorage.getItem("appTheme") || "default";
+            const theme = THEMES[themeName] || THEMES.default;
+
+            document.body.className = "min-h-screen " + theme.bg;
+            const headerTitle = document.getElementById("headerTitle");
+            const postButton = document.getElementById("postButton");
+            const postAvatarContainer = document.getElementById("postAvatarContainer");
+
+            if (themeName === 'dark') {
+                headerTitle.className = "text-3xl sm:text-4xl font-black bg-clip-text text-white float pulse-animation";
             } else {
-                if (currentReaction) {
-                    countsRef.child(currentReaction).transaction(count => (count || 1) - 1);
-                }
+                headerTitle.className = headerTitle.className.replace(/from-.*?to-.*?/g, ''); 
+                headerTitle.className =
+                    "text-3xl sm:text-4xl font-black bg-clip-text text-transparent float pulse-animation bg-gradient-to-r " + theme.header;
+            }
 
-                userReactionRef.set(newReactionType);
+            postButton.classList.remove('from-purple-600', 'via-pink-600', 'to-blue-600', 'from-purple-700', 'via-pink-700', 'to-blue-700');
+            postButton.classList.add(...theme.button.split(' '), ...theme.button.replace(/600/g, '700').split(' ').map(cls => cls.replace('from-', 'hover:from-').replace('via-', 'hover:via-').replace('to-', 'hover:to-')));
 
-                countsRef.child(newReactionType).transaction(count => (count || 0) + 1);
+            if (postAvatarContainer) {
+                // 🔥 FIX 5: Avatar container gradient update
+                postAvatarContainer.classList.remove('from-purple-500', 'via-pink-500', 'to-blue-500');
+                postAvatarContainer.classList.add('bg-gradient-to-br', ...theme.avatarGradient.split(' '));
+            }
+        }
+
+        /* ============================================================
+            🔥 Real-time Connection Status (UNCHANGED)
+        ============================================================ */
+        const statusEl = document.getElementById("connectionStatus");
+
+        database.ref('.info/connected').on('value', (snap) => {
+            const isConnected = snap.val();
+            
+            if (isConnected === false) {
+                statusEl.textContent = '🔴 Offline';
+                statusEl.className = statusEl.className.replace(/green|emerald|blue/g, 'red').replace(/glow/, 'pulse-animation');
+            } else {
+                statusEl.textContent = '✨ Connected';
+                statusEl.className = statusEl.className.replace(/red/g, 'green').replace(/pulse-animation/, 'glow');
             }
         });
-    }
 
-    function deletePost(id) {
-        if (!confirm("මෙම පෝස්ට් එක මකන්නද?")) return;
-
-        postsRef.child(id).once("value").then(s => {
-            if (s.val().authorId !== currentUser.uid) {
-                showNotification("ඔබට මෙක මැකීමට අවසර නැහැ");
+        /* ============================================================
+            🔥 Auth Check and User Data Setup
+        ============================================================ */
+        auth.onAuthStateChanged(user => {
+            if (!user) {
+                statusEl.style.display = "none";
+                window.location.href = "index.html";
                 return;
             }
-            postsRef.child(id).remove();
-            showNotification("පෝස්ට් එක මකන ලදී 🗑️");
+            
+            statusEl.style.display = "inline-block";
+            
+            currentUser = user;
+            const uid = user.uid;
+            
+            usersRef.child(uid).once('value', snap => {
+                const userData = snap.val();
+                const defaultName = user.email ? user.email.split("@")[0] : 'පරිශීලකයා';
+                
+                if (!userData) {
+                    usersRef.child(uid).set({
+                        name: defaultName,
+                        avatar: '👤',
+                        followerCount: 0,
+                        followingCount: 0,
+                    }).then(() => {
+                        currentUserName = defaultName;
+                        currentUserAvatar = '👤';
+                        updatePostModalUserInfo();
+                    });
+                } else {
+                    currentUserName = userData.name || defaultName;
+                    currentUserAvatar = userData.avatar || '👤';
+                    
+                    if (!userData.name) {
+                        usersRef.child(uid).update({ name: defaultName });
+                    }
+                    updatePostModalUserInfo();
+                }
+            });
+
+            applyTheme();
+            loadPosts();
+            setupNotificationListener(); 
+            setupUnreadChatListener(); 
         });
-    }
+        
+        // 🔥 FIX 5: Modal එකේ User Info update කිරීම
+        function updatePostModalUserInfo() {
+            const authorNameEl = document.getElementById('authorName');
+            const avatarContainerEl = document.getElementById('postAvatarContainer');
 
-    function editPost(id, oldContent) {
-        const newText = prompt("නව අන්තර්ගතය ඇතුළත් කරන්න:", unescapeText(oldContent));
-        if (!newText) return;
+            if (authorNameEl) {
+                authorNameEl.value = currentUserName;
+            }
+            
+            if (avatarContainerEl) {
+                // Remove old emoji content
+                while (avatarContainerEl.firstChild) {
+                    avatarContainerEl.removeChild(avatarContainerEl.firstChild);
+                }
+                // Add new emoji
+                const span = document.createElement('span');
+                span.textContent = currentUserAvatar;
+                avatarContainerEl.appendChild(span);
+            }
+        }
 
-        postsRef.child(id).update({
-            content: newText,
-            edited: true
-        });
-        showNotification("සංස්කරණය සාර්ථකයි ✏️");
-    }
+        function signOutUser() {
+            auth.signOut().then(() => {
+                showNotification("Logout successful.");
+                window.location.href = "index.html";
+            });
+        }
 
-    function commentPost(id) {
-        window.location.href = `comment.html?postId=${id}`;
-    }
+        /* ============================================================
+            🔥 Post Loading and Rendering (UNCHANGED LOGIC)
+        ============================================================ */
+        function loadPosts() {
+            const feed = document.getElementById("postsFeed");
+            const loading = document.getElementById("loadingIndicator");
+            const noPosts = document.getElementById("noPostsMessage");
 
-    /* ============================================================
-        🔥 Download Post (UNCHANGED)
-    ============================================================ */
-    function downloadPost(postId) {
+            feed.innerHTML = "";
+            loading.style.display = "block";
+            feed.style.display = "none";
+            noPosts.style.display = "none";
+
+            postsRef.orderByChild("timestamp").once("value").then(snap => { 
+                loading.style.display = "none";
+                
+                if (!snap.exists()) {
+                    feed.style.display = "none";
+                    noPosts.style.display = "block";
+                    return;
+                }
+
+                const posts = [];
+                snap.forEach(s => {
+                    posts.push({ id: s.key, ...s.val() });
+                });
+                
+                posts.reverse(); 
+
+                feed.innerHTML = "";
+                posts.forEach(p => renderPost(p));
+                
+                feed.style.display = "block";
+            }).catch(err => {
+                console.error("Error loading posts:", err);
+                loading.style.display = "none";
+                showNotification("පෝස්ට් ලෝඩ් කිරීමේ දෝෂයක් ❌");
+            });
+
+            postsRef.on("child_added", (snapshot) => {
+                if (feed.innerHTML === "") return;
+                
+                const newPost = { id: snapshot.key, ...snapshot.val() };
+                const existingPost = document.getElementById(`post-${newPost.id}`);
+                
+                if (!existingPost) {
+                    feed.insertBefore(createPostElement(newPost), feed.firstChild);
+                    showNotification("නව පෝස්ට් එකක් එකතු වුනා! 🎉");
+                }
+            });
+
+            postsRef.on("child_changed", (snapshot) => {
+                const updatedPost = { id: snapshot.key, ...snapshot.val() };
+                const postElement = document.getElementById(`post-${updatedPost.id}`);
+                
+                if (postElement) {
+                    const newElement = createPostElement(updatedPost);
+                    postElement.replaceWith(newElement);
+                }
+            });
+
+            postsRef.on("child_removed", (snapshot) => {
+                const postElement = document.getElementById(`post-${snapshot.key}`);
+                if (postElement) {
+                    postElement.remove();
+                }
+                
+                if (feed.children.length === 0) {
+                    feed.style.display = "none";
+                    noPosts.style.display = "block";
+                }
+            });
+        }
+
+        function createPostElement(post) {
+            const timeAgo = getTimeAgo(post.timestamp);
+            const me = currentUser ? currentUser.uid : null;
+            const isAuthor = post.authorId === me;
+
+            const myReaction = post.reactions && post.reactions[me] ? post.reactions[me] : null;
+
+            const likeCount = post.reactionCounts?.like || 0;
+            const laughCount = post.reactionCounts?.laugh || 0;
+            const fireCount = post.reactionCounts?.fire || 0;
+            
+            const postFeeling = post.feeling; 
+
+            const div = document.createElement("div");
+            div.id = `post-${post.id}`;
+            div.className = "post-card glass-effect rounded-3xl shadow-2xl border-2 border-white/40 p-5 sm:p-7 hover:shadow-[0_30px_70px_rgba(168,85,247,0.3)] transition-all duration-500 fade-in mb-8";
+            
+            div.style.position = 'relative'; 
+
+            // 🔥 FIX 4: Feeling එකක් තිබේ නම් පමණක් පෙන්වයි
+            const feelingDisplayHTML = postFeeling ? 
+                `<span class="ml-2 px-2 py-0.5 bg-gradient-to-r from-yellow-50 to-pink-50 text-gray-700 rounded-full text-xs font-bold shadow-sm inline-flex items-center mt-1 sm:mt-0">
+                    <span class="mr-1 text-base">${postFeeling.emoji}</span> is feeling ${postFeeling.text}
+                </span>`
+                : '';
+
+
+            div.innerHTML = `
+                <div class="flex items-start justify-between mb-4 sm:mb-5 flex-wrap">
+                    <div class="flex items-center space-x-3 sm:space-x-4">
+                        <div class="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br ${post.gradient} rounded-xl sm:rounded-2xl flex items-center justify-center text-2xl sm:text-3xl shadow-xl hover:scale-110 transition-transform duration-300 shrink-0">
+                            ${post.avatar || '❓'}
+                        </div>
+                        <div>
+                            <div class="flex items-start flex-wrap">
+                                <h3 class="font-bold text-gray-800 text-lg sm:text-xl">
+                                    <a onclick="goToProfile('${post.authorId}')" 
+                                       class="cursor-pointer text-gray-800 hover:text-purple-600 transition-colors duration-200">
+                                        ${post.author || 'නමක් නැත'}
+                                    </a>
+                                </h3>
+                                ${feelingDisplayHTML}
+                            </div>
+                            <p class="text-xs sm:text-sm text-gray-500 mt-1">${timeAgo} ${post.edited ? '(Edited ✏️)' : ''}</p>
+                        </div>
+                    </div>
+                    ${isAuthor ? `
+                        <div class="flex space-x-2 shrink-0 pt-1">
+                            <button onclick="editPost('${post.id}', '${escapeText(post.content)}')" class="p-2 text-gray-400 hover:text-blue-500 transition-colors duration-200">
+                                ✏️
+                            </button>
+                            <button onclick="deletePost('${post.id}')" class="p-2 text-gray-400 hover:text-red-500 transition-colors duration-200">
+                                🗑️
+                            </button>
+                        </div>
+                    ` : ''}
+                </div>
+                
+                <p class="text-gray-700 text-base sm:text-lg mb-4 sm:mb-6 whitespace-pre-line">${unescapeText(post.content)}</p>
+
+                <div class="flex items-center justify-between flex-wrap gap-2">
+                    <div class="flex space-x-2 sm:space-x-3">
+                        <button onclick="toggleSingleReaction('${post.id}', 'like')" class="reaction-btn flex items-center space-x-1 sm:space-x-2 px-3 py-1.5 sm:px-5 sm:py-3 rounded-xl sm:rounded-2xl hover:bg-gradient-to-r hover:from-red-50 hover:to-pink-50 text-gray-700 transition-all duration-300 hover:scale-110 text-sm sm:text-base ${myReaction === 'like' ? 'bg-gradient-to-r from-red-100 to-pink-100 text-pink-600 shadow-lg scale-105' : ''}">
+                            <span class="text-xl sm:text-2xl">👍</span> 
+                            <span class="reaction-count font-bold text-base sm:text-lg">${likeCount}</span>
+                        </button>
+                        <button onclick="toggleSingleReaction('${post.id}', 'laugh')" class="reaction-btn flex items-center space-x-1 sm:space-x-2 px-3 py-1.5 sm:px-5 sm:py-3 rounded-xl sm:rounded-2xl hover:bg-gradient-to-r hover:from-yellow-50 hover:to-orange-50 text-gray-700 transition-all duration-300 hover:scale-110 text-sm sm:text-base ${myReaction === 'laugh' ? 'bg-gradient-to-r from-yellow-100 to-orange-100 text-yellow-600 shadow-lg scale-105' : ''}">
+                            <span class="text-xl sm:text-2xl">😂</span> 
+                            <span class="reaction-count font-bold text-base sm:text-lg">${laughCount}</span>
+                        </button>
+                        <button onclick="toggleSingleReaction('${post.id}', 'fire')" class="reaction-btn flex items-center space-x-1 sm:space-x-2 px-3 py-1.5 sm:px-5 sm:py-3 rounded-xl sm:rounded-2xl hover:bg-gradient-to-r hover:from-orange-50 hover:to-red-50 text-gray-700 transition-all duration-300 hover:scale-110 text-sm sm:text-base ${myReaction === 'fire' ? 'bg-gradient-to-r from-orange-100 to-red-100 text-red-600 shadow-lg scale-105' : ''}">
+                            <span class="text-xl sm:text-2xl">🔥</span> 
+                            <span class="reaction-count font-bold text-base sm:text-lg">${fireCount}</span>
+                        </button>
+                        <button onclick="commentPost('${post.id}')" class="flex items-center space-x-1 sm:space-x-2 px-3 py-1.5 sm:px-5 sm:py-3 rounded-xl sm:rounded-2xl hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 text-gray-700 transition-all duration-300 hover:scale-110 text-sm sm:text-base">
+                            <span class="text-xl sm:text-2xl">💬</span> 
+                            <span class="font-bold text-base sm:text-lg comment-count">${post.commentsCount || 0}</span>
+                        </button>
+                        <button onclick="downloadPost('${post.id}')" class="flex items-center space-x-1 sm:space-x-2 px-3 py-1.5 sm:px-5 sm:py-3 rounded-xl sm:rounded-2xl hover:bg-gradient-to-r hover:from-green-50 hover:to-teal-50 text-gray-700 transition-all duration-300 hover:scale-110 hover:rotate-12 text-sm sm:text-base">
+                            <span class="text-xl sm:text-2xl">⬇️</span>
+                        </button>
+                    </div>
+                </div>
+            `;
+            return div;
+        }
+
+        function renderPost(post) {
+            const feed = document.getElementById("postsFeed");
+            const postElement = createPostElement(post);
+            feed.appendChild(postElement);
+        }
+
+        /* ============================================================
+            🔥 Modal Logic (NEW)
+        ============================================================ */
+        const postModalOverlay = document.getElementById('postModalOverlay');
+        const postModalCard = document.getElementById('postCreationCard');
+        const defaultFeeling = { emoji: '🙂', text: 'Select Feeling (Optional)' };
+
+        function openPostModal() {
+            if (!currentUser) {
+                showNotification("මුලින්ම පිවිසෙන්න.");
+                return;
+            }
+            
+            // 🔥 FIX 3: Reset post content and feeling for new post
+            document.getElementById("postContent").value = "";
+            selectedFeeling = null; 
+            selectFeeling(defaultFeeling); // Set to default optional text
+            
+            updatePostModalUserInfo(); // Ensure avatar/name is correct
+            
+            postModalOverlay.classList.remove('hidden');
+            postModalOverlay.classList.add('flex');
+            postModalCard.classList.remove('modal-enter');
+            postModalCard.classList.add('modal-enter-active');
+
+            // Set focus to textarea for quick typing
+            setTimeout(() => {
+                document.getElementById('postContent').focus();
+            }, 50);
+        }
+
+        function closePostModal() {
+            postModalCard.classList.remove('modal-enter-active');
+            postModalCard.classList.add('modal-exit-active');
+
+            setTimeout(() => {
+                postModalOverlay.classList.remove('flex');
+                postModalOverlay.classList.add('hidden');
+                postModalCard.classList.remove('modal-exit-active');
+                postModalCard.classList.add('modal-enter'); 
+            }, 300);
+        }
+
+        /* ============================================================
+            🔥 Feeling Feature Logic (Updated)
+        ============================================================ */
+        const FEELINGS = [
+            { emoji: '😊', text: 'Happy' },
+            { emoji: '🤩', text: 'Excited' },
+            { emoji: '😴', text: 'Tired' },
+            { emoji: '🤯', text: 'Mind Blown' },
+            { emoji: '🤔', text: 'Thinking' },
+            { emoji: '😎', text: 'Cool' },
+            { emoji: '🥰', text: 'Loved' },
+            { emoji: '😂', text: 'Laughing' },
+            { emoji: '😡', text: 'Angry' },
+            { emoji: '❌', text: 'Remove Feeling' } // Remove option added
+        ];
+
+        function initFeelingPanel() {
+            const panel = document.getElementById('feelingPanel');
+            const grid = panel.querySelector('.grid');
+            grid.innerHTML = '';
+            
+            FEELINGS.forEach(f => {
+                const button = document.createElement('button');
+                button.className = 'p-2 rounded-lg hover:bg-purple-200 transition-colors duration-200 text-center';
+                button.innerHTML = `<span class="text-2xl">${f.emoji}</span><p class="text-xs text-gray-700 mt-1">${f.text}</p>`;
+                button.onclick = () => selectFeeling(f);
+                grid.appendChild(button);
+            });
+            
+            // Initial selection display
+            selectFeeling(defaultFeeling);
+        }
+
+        function toggleFeelingPanel() {
+            const panel = document.getElementById('feelingPanel');
+            panel.classList.toggle('hidden');
+        }
+
+        function selectFeeling(feeling) {
+            if (feeling.emoji === '❌') {
+                selectedFeeling = null;
+                document.getElementById('currentFeelingEmoji').textContent = defaultFeeling.emoji;
+                document.getElementById('currentFeelingText').textContent = defaultFeeling.text;
+            } else if (feeling.emoji === defaultFeeling.emoji) {
+                // Initial load
+                document.getElementById('currentFeelingEmoji').textContent = defaultFeeling.emoji;
+                document.getElementById('currentFeelingText').textContent = defaultFeeling.text;
+                selectedFeeling = null;
+            } else {
+                selectedFeeling = feeling;
+                document.getElementById('currentFeelingEmoji').textContent = feeling.emoji;
+                document.getElementById('currentFeelingText').textContent = `Feeling ${feeling.text}`;
+            }
+            toggleFeelingPanel(); 
+        }
+
+        /* ============================================================
+            🔥 Create Post (Updated Logic for Feeling)
+        ============================================================ */
+        function createPost() {
+            if (!currentUser) {
+                showNotification("මුලින්ම පිවිසෙන්න.");
+                return;
+            }
+
+            const uid = currentUser.uid;
+            const authorName = document.getElementById("authorName").value.trim();
+            const content = document.getElementById("postContent").value.trim();
+
+            if (!authorName || !content) {
+                showNotification("නම සහ අන්තර්ගතය පුරවන්න.");
+                return;
+            }
+            
+            // Get a random gradient for the post background (simplified for quick use)
+            const gradients = ['from-red-500 to-pink-500', 'from-blue-500 to-cyan-500', 'from-green-500 to-teal-500', 'from-yellow-500 to-orange-500', 'from-purple-500 to-indigo-500'];
+            const randomGradient = gradients[Math.floor(Math.random() * gradients.length)];
+
+            const postData = {
+                author: authorName,
+                content: content,
+                authorId: uid,
+                timestamp: Date.now(),
+                avatar: currentUserAvatar, // Use globally stored avatar
+                gradient: randomGradient,
+                edited: false,
+                feeling: selectedFeeling // This will be null if no feeling is selected
+            };
+
+            postsRef.push(postData)
+                .then(() => {
+                    closePostModal(); // Close modal after successful post
+                    document.getElementById("postContent").value = "";
+                    selectedFeeling = null; 
+                    selectFeeling(defaultFeeling);
+                    showNotification("Post එක සාර්ථකයි! 🎉");
+                })
+                .catch(error => {
+                    console.error("Error pushing post:", error);
+                    showNotification("Post කිරීමේ දෝෂයක් ❌");
+                });
+        }
+
+        /* ============================================================
+            🔥 Single Reaction System (WITH NOTIFICATION TRIGGER - UNCHANGED)
+        ============================================================ */
+        function toggleSingleReaction(postId, newReactionType) {
+            // ... (Reaction Logic is unchanged)
+            if (!currentUser) return;
+            const uid = currentUser.uid;
+            const postReactionsRef = postsRef.child(postId).child("reactions");
+            const userReactionRef = postReactionsRef.child(uid);
+            const countsRef = postsRef.child(postId).child("reactionCounts");
+
+            userReactionRef.once("value").then(snap => {
+                const currentReaction = snap.val();
+
+                if (currentReaction === newReactionType) {
+                    userReactionRef.remove();
+                    countsRef.child(newReactionType).transaction(count => (count || 1) - 1);
+                } else {
+                    if (currentReaction) {
+                        countsRef.child(currentReaction).transaction(count => (count || 1) - 1);
+                    }
+
+                    userReactionRef.set(newReactionType);
+                    countsRef.child(newReactionType).transaction(count => (count || 0) + 1);
+
+                    // Create Notification for Reaction
+                    postsRef.child(postId).once('value', postSnap => {
+                        const post = postSnap.val();
+                        if (post && post.authorId !== uid) {
+                            notificationsRef.child(post.authorId).push({
+                                type: 'like', 
+                                postId: postId,
+                                actorId: uid,
+                                read: false,
+                                timestamp: Date.now()
+                            });
+                        }
+                    });
+                }
+            });
+        }
+
+        function deletePost(id) {
+            // ... (Delete Post Logic is unchanged)
+            if (!confirm("මෙම පෝස්ට් එක මකන්නද?")) return;
+            postsRef.child(id).once("value").then(s => {
+                if (s.val().authorId !== currentUser.uid) {
+                    showNotification("ඔබට මෙක මැකීමට අවසර නැහැ");
+                    return;
+                }
+                postsRef.child(id).remove();
+                showNotification("පෝස්ට් එක මකන ලදී 🗑️");
+            });
+        }
+
+        function editPost(id, oldContent) {
+            // ... (Edit Post Logic is unchanged)
+            const newText = prompt("නව අන්තර්ගතය ඇතුළත් කරන්න:", unescapeText(oldContent));
+            if (!newText) return;
+            postsRef.child(id).update({
+                content: newText,
+                edited: true
+            });
+            showNotification("සංස්කරණය සාර්ථකයි ✏️");
+        }
+
+        function commentPost(id) {
+            // ... (Comment Post Logic is unchanged)
+            window.location.href = `comment.html?postId=${id}`;
+        }
+
+       function downloadPost(postId) {
         postsRef.child(postId).once("value").then(snap => {
             const post = snap.val();
             if (!post) return;
@@ -1011,303 +944,169 @@
             });
         });
     }
-
-    /* ============================================================
-        🔥 Helpers (UNCHANGED)
-    ============================================================ */
-    function getTimeAgo(ts) {
-        if (!ts) return "මෙම මොහොතේ";
-        const diff = Date.now() - ts;
-        const s = diff/1000;
-        if (s<60) return `${Math.floor(s)}s පෙර`;
-        const m=s/60;
-        if (m<60) return `${Math.floor(m)}min පෙර`;
-        const h=m/60;
-        if (h<24) return `${Math.floor(h)}h පෙර`;
-        return `${Math.floor(h/24)}d පෙර`;
-    }
-
-    function showNotification(text) {
-        const box = document.createElement("div");
-        box.className = "fixed top-5 left-1/2 -translate-x-1/2 bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 text-white px-6 py-3 rounded-full shadow-2xl text-sm z-50 fade-in font-bold";
-        box.textContent = text;
-        document.body.appendChild(box);
-        setTimeout(() => {
-            box.style.opacity = "0";
-            box.style.transform = "translateX(-50%) translateY(-20px)";
-            setTimeout(()=>box.remove(),300);
-        },2500);
-    }
-
-    function escapeText(text) {
-        return text.replace(/'/g, '&#39;').replace(/"/g, '&#34;');
-    }
-    
-    function unescapeText(text) {
-        return text.replace(/&#39;/g, "'").replace(/&#34;/g, '"');
-    }
-
-    /* ============================================================
-        🔥 NEW: UI/UX Focus Logic (Input Blur/Focus) - UPDATED BLUR
-    ============================================================ */
-    let newPostInput, postsFeed, header, authorNameInput, postCreationCard;
-
-    const applyBlur = () => {
-        // Check if either input is focused OR if the feeling selector is open
-        const isFeelingSelectorOpen = !document.getElementById('feelingSelector').classList.contains('hidden');
-        
-        if (document.activeElement === newPostInput || document.activeElement === authorNameInput || isFeelingSelectorOpen) {
-            
-            // 🔥 Deep Blur (as requested)
-            postsFeed.style.filter = 'blur(10px) grayscale(80%)'; 
-            postsFeed.style.pointerEvents = 'none';
-            header.style.zIndex = '60'; 
-            
-            postCreationCard.style.zIndex = '70';
-            postCreationCard.style.transform = 'scale(1.02)';
-            postCreationCard.style.transition = 'transform 0.3s, z-index 0s';
-        }
-    };
-
-    const removeBlur = () => {
-        // Small delay to allow focus shift between elements
-        setTimeout(() => {
-            const isFeelingSelectorOpen = !document.getElementById('feelingSelector').classList.contains('hidden');
-            
-            // Only remove blur if neither input is currently active AND the feeling selector is closed
-            if (document.activeElement !== newPostInput && document.activeElement !== authorNameInput && !isFeelingSelectorOpen) {
-                postsFeed.style.filter = 'none'; 
-                postsFeed.style.pointerEvents = 'auto';
-                header.style.zIndex = '50'; 
-                
-                postCreationCard.style.zIndex = 'auto';
-                postCreationCard.style.transform = 'none';
-            }
-        }, 100); 
-    };
-
-    document.addEventListener('DOMContentLoaded', () => {
-       
-        newPostInput = document.getElementById('newPostInput');
-        postsFeed = document.getElementById('postsFeed');
-        header = document.getElementById('appHeader');
-        authorNameInput = document.getElementById('authorName');
-        postCreationCard = document.getElementById('postCreationCard'); 
-
-        // Attach listeners for input focus/blur
-        newPostInput.addEventListener('focus', applyBlur);
-        authorNameInput.addEventListener('focus', applyBlur);
-        
-        newPostInput.addEventListener('blur', removeBlur);
-        authorNameInput.addEventListener('blur', removeBlur);
-              
-        // 1. URL Parameter එක පරීක්ෂා කිරීම (comment.html වෙතින් Back Button එක හරහා පැමිණි විට)
-        const urlParams = new URLSearchParams(window.location.search);
-        const highlightPostId = urlParams.get('highlightPost');
-
-        if (highlightPostId) {
-            // Post ID ය URL එකේ තිබේ නම්, එය යාවත්කාලීන කරමු.
-            refreshSinglePost(highlightPostId);
-            
-            // එම Post එක වෙත Scroll කිරීම
-            const targetPost = document.getElementById(`post-${highlightPostId}`);
-            if (targetPost) {
-                targetPost.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }
-            
-            // URL එක පිරිසිදු කිරීම (නැවත Load වූ විට නැවත refresh වීම වැළැක්වීමට)
-            window.history.replaceState(null, null, window.location.pathname);
-        } 
-        
-        // 2. Local Storage පරීක්ෂා කිරීම (සාමාන්‍ය Back බොත්තම භාවිතයෙන් පැමිණි විට)
-        Object.keys(localStorage).forEach(key => {
-            if (key.startsWith('refreshPost_')) {
-                const postId = key.split('_')[1];
-                if (localStorage.getItem(key) === 'true') {
-                    refreshSinglePost(postId);
-                }
-            }
-        });
-    });
-
-    /* ============================================================
-        🔥 POST REFRESH LOGIC (NEW)
-    ============================================================ */
-    function refreshSinglePost(postId) {
-        // 1. Firebase වෙතින් එම post එකේ නවතම දත්ත ලබා ගැනීම
-        database.ref('posts/' + postId).once('value', (snapshot) => {
-            const post = snapshot.val();
-            if (post) {
-                // 2. පවතින post element එක සොයා ගැනීම
-                const postElement = document.getElementById(`post-${postId}`);
-                if (postElement) {
-                    
-                    // 3. Comment Count එක යාවත්කාලීන කිරීම
-                    const commentsCountSpan = postElement.querySelector('.comment-count');
-                    if (commentsCountSpan) {
-                        commentsCountSpan.textContent = post.commentsCount || 0;
-                    }
-                    
-                    // 4. (විකල්ප) - එම post එක විශේෂයෙන් ඉස්මතු කර පෙන්වීම
-                    postElement.style.border = '2px solid #f87171'; // රතු පාට border එකක් පෙන්වමු
-                    setTimeout(() => {
-                        postElement.style.border = 'none'; // ටික වෙලාවකින් border එක අයින් කරමු
-                    }, 1500);
-                }
-            }
-        });
-
-        // 5. Local Storage හි සංඥාව ඉවත් කිරීම
-        localStorage.removeItem('refreshPost_' + postId);
-    }
-    
-    /* ============================================================
-            🔔 NEW: NOTIFICATION & PUSH NOTIFICATION LOGIC
+        /* ============================================================
+            🔥 Helpers (UNCHANGED)
         ============================================================ */
+        function getTimeAgo(ts) { 
+            if (!ts) return "මෙම මොහොතේ"; 
+            const diff = Date.now() - ts; 
+            const s = diff/1000; 
+            if (s<60) return `${Math.floor(s)}s පෙර`; 
+            const m=s/60; 
+            if (m<60) return `${Math.floor(m)}min පෙර`; 
+            const h=m/60; 
+            if (h<24) return `${Math.floor(h)}h පෙර`; 
+            return `${Math.floor(h/24)}d පෙර`; 
+        } 
 
+        function showNotification(text) { 
+            const box = document.createElement("div"); 
+            box.className = "fixed top-5 left-1/2 -translate-x-1/2 bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 text-white px-6 py-3 rounded-full shadow-2xl z-[1002] fade-in font-semibold text-sm sm:text-base"; 
+            box.textContent = text; 
+            document.body.appendChild(box); 
+            setTimeout(() => { 
+                box.classList.remove("fade-in"); 
+                box.classList.add("animate-fadeOut"); 
+                setTimeout(() => box.remove(), 500); 
+            }, 3000); 
+        }
+
+        function escapeText(text) {
+            if (!text) return '';
+            return text.replace(/'/g, '&#39;').replace(/"/g, '&quot;');
+        }
+        
+        function unescapeText(text) {
+            if (!text) return '';
+            return text.replace(/&#39;/g, "'").replace(/&quot;/g, '"');
+        }
+
+        /* ============================================================
+            🔥 Notification Panel Logic (UNCHANGED)
+        ============================================================ */
         function requestNotificationPermission() {
-            if (!("Notification" in window)) {
-                showNotification("මෙම බ්‍රවුසරය Notifications සඳහා සහය නොදක්වයි.");
+            if (!("Notification" in window) || Notification.permission === "granted" || Notification.permission === "denied") {
                 return;
             }
-            if (Notification.permission === "granted") {
-                showNotification('Notification අවසරය දැනටමත් ලබා දී ඇත.');
-                return;
-            }
-
-            // User must interact with the page to trigger this
             Notification.requestPermission().then(permission => {
                 if (permission === "granted") {
-                    showNotification("Notifications ලබා දීමට අවසර ලැබුණි!");
-                } else {
-                    showNotification("Notifications අවසරය ප්‍රතික්ෂේප විය.");
-                }
+                    showNotification("Notifications ලබා දීමට අවසර ලැබුණි! 🎉");
+                } 
             });
         }
-        
+
         function displayBrowserNotification(title, body) {
             if (Notification.permission === "granted") {
-                // Browser Push Notification එකක් පෙන්වීම
                 new Notification(title, {
                     body: body,
-                    icon: 'https://via.placeholder.com/48' // ඔබට මෙහි නිවැරදි icon path එකක් දැක්විය හැක.
+                    icon: 'https://via.placeholder.com/48'
                 });
             }
         }
-        
-        // Notification Count සහ Real-time Alerts සඳහා Listener එක
-        function setupNotificationListener(userId) {
-            const notificationsRef = database.ref(`notifications/${userId}`); // Changed db.ref to database.ref
-            const notificationCountElement = document.getElementById('notificationCount');
+
+        function toggleNotificationPanel() {
+            const panel = document.getElementById('notificationPanel');
             
-            // 1. Initial/Real-time Count Update
-            notificationsRef.orderByChild('read').equalTo(false).on('value', snapshot => {
+            if (Notification.permission === 'default') {
+                requestNotificationPermission();
+            }
+            
+            if (panel.classList.contains('translate-x-full')) {
+                panel.classList.remove('translate-x-full');
+                loadAndRenderNotifications(true); 
+            } else {
+                panel.classList.add('translate-x-full');
+            }
+        }
+
+        function closeNotificationPanel() {
+            document.getElementById('notificationPanel').classList.add('translate-x-full');
+        }
+
+        function setupNotificationListener() {
+            if (!currentUser) return;
+            
+            const userNotificationsRef = notificationsRef.child(currentUser.uid);
+            const unreadIndicator = document.getElementById('unreadIndicator');
+
+            userNotificationsRef.orderByChild('read').equalTo(false).on('value', snapshot => {
                 const unreadCount = snapshot.numChildren();
 
                 if (unreadCount > 0) {
-                    notificationCountElement.textContent = unreadCount;
-                    notificationCountElement.classList.remove('hidden');
+                    unreadIndicator.classList.remove('hidden');
                 } else {
-                    notificationCountElement.classList.add('hidden');
+                    unreadIndicator.classList.add('hidden');
                 }
             });
 
-            // 2. Real-time New Notification Alert
-            notificationsRef.limitToLast(1).on('child_added', snapshot => {
+            userNotificationsRef.limitToLast(1).on('child_added', snapshot => {
                 const notif = snapshot.val();
                 
-                // Notification එක read කර නැතිනම් සහ එය ඔබගේම ක්‍රියාවක් නොවේ නම් පමණක් පෙන්වන්න
-                if (!notif.read && notif.actorId !== userId) {
-                    
-                    database.ref(`users/${notif.actorId}`).once('value', userSnap => { // Changed db.ref to database.ref
+                if (!notif.read && notif.actorId !== currentUser.uid) {
+                    database.ref(`users/${notif.actorId}`).once('value', userSnap => {
                         const userData = userSnap.val();
-                        const actorName = userData ? userData.name : 'කවුරුන් හෝ';
+                        const actorName = userData ? (userData.name || 'කවුරුන් හෝ') : 'කවුරුන් හෝ';
                         
-                        let title = 'අලුත් පෝස්ට් කිනා දැනුම්දීම';
+                        let title = '🎉 අලුත් දැනුම්දීම';
                         let message = '';
                         
                         if (notif.type === 'like') {
-                            message = `${actorName} ඔබේ පෝස්ට් එකට රියැක්ෂන් එකක් දුන්නා! 👍`;
+                            message = `${actorName} ඔබේ පෝස්ට් එකට කැමති වී ඇත. ❤️`;
                         } else if (notif.type === 'comment') {
-                            const commentContent = notif.content || 'ඔබගේ පෝස්ට් එකට අලුත් කමෙන්ට් එකක්.';
-                            const commentSnippet = commentContent.length > 50 ? commentContent.substring(0, 50) + '...' : commentContent;
+                            const commentSnippet = notif.content ? (notif.content.length > 50 ? notif.content.substring(0, 50) + '...' : notif.content) : 'අලුත් කමෙන්ට් එකක්.';
                             message = `${actorName} කමෙන්ට් කළා: "${commentSnippet}" 💬`;
+                        } else if (notif.type === 'message') {
+                            message = `${actorName} ඔබට පණිවිඩයක් යවා ඇත. 🗨️`;
                         }
                         
-                        // Web Browser Push Notification එක පෙන්වීම
-                        displayBrowserNotification(title, message);
-                        
-                        // In-App Notification එක පෙන්වීම (පවතින showNotification භාවිතා කරයි)
-                        showNotification(message); 
+                        if (message) {
+                             displayBrowserNotification(title, message);
+                             showNotification(message); 
+                        }
                     });
                 }
             });
         }
         
-        /* ============================================================
-            🔥 NEW: Notification Panel Functions
-        ============================================================ */
-        let notificationPanelOpen = false;
-
-        function toggleNotificationPanel() {
-            const panel = document.getElementById('notificationPanel');
-            const button = document.getElementById('notificationButton');
+        function setupUnreadChatListener() {
+            if (!currentUser) return;
             
-            // Optional: Request permission the first time the user interacts with the button
-            if (Notification.permission === 'default') {
-                requestNotificationPermission();
-            }
+            const userNotificationsRef = notificationsRef.child(currentUser.uid);
+            const unreadChatIndicator = document.getElementById('unreadChatIndicator');
 
-            if (panel.classList.contains('hidden')) {
-                // Open the panel
-                panel.classList.remove('hidden');
-                notificationPanelOpen = true;
-                loadAndRenderNotifications();
+            userNotificationsRef.orderByChild('read').equalTo(false).on('value', snapshot => {
+                let unreadMessageCount = 0;
+                
+                snapshot.forEach(s => {
+                    const notif = s.val();
+                    if (notif.type === 'message') {
+                        unreadMessageCount++;
+                    }
+                });
 
-                // Close when clicking outside
-                document.addEventListener('click', closeNotificationPanelOutside, true);
-            } else {
-                // Close the panel
-                closeNotificationPanel();
-            }
+                if (unreadMessageCount > 0) {
+                    unreadChatIndicator.classList.remove('hidden');
+                } else {
+                    unreadChatIndicator.classList.add('hidden');
+                }
+            });
         }
 
-        function closeNotificationPanel() {
-            const panel = document.getElementById('notificationPanel');
-            panel.classList.add('hidden');
-            notificationPanelOpen = false;
-            document.removeEventListener('click', closeNotificationPanelOutside, true);
-        }
 
-        function closeNotificationPanelOutside(event) {
-            const panel = document.getElementById('notificationPanel');
-            const button = document.getElementById('notificationButton');
-            
-            // Check if the click occurred outside the panel AND outside the button
-            if (!panel.contains(event.target) && !button.contains(event.target)) {
-                closeNotificationPanel();
-            }
-        }
-
-        function loadAndRenderNotifications() {
+        function loadAndRenderNotifications(markAsRead = false) {
             if (!currentUser) return;
 
-            const list = document.getElementById('notificationsList');
-            const loading = document.getElementById('loadingNotifications');
-            const noNotifs = document.getElementById('noNotifications');
+            const list = document.getElementById('notificationList');
             
-            list.innerHTML = '';
-            loading.style.display = 'block';
-            noNotifs.style.display = 'none';
+            list.innerHTML = `<p class='text-center text-gray-500 py-4'><span class='inline-block w-6 h-6 border-2 border-gray-200 border-t-gray-600 rounded-full spinner'></span> Loading...</p>`;
 
-            const notificationsRef = database.ref(`notifications/${currentUser.uid}`);
+            const userNotificationsRef = notificationsRef.child(currentUser.uid);
             
-            // Get the latest 30 notifications
-            notificationsRef.orderByChild('timestamp').limitToLast(30).once('value', async (snapshot) => {
-                loading.style.display = 'none';
+            userNotificationsRef.orderByChild('timestamp').limitToLast(30).once('value', async (snapshot) => {
+                list.innerHTML = '';
                 
                 if (!snapshot.exists()) {
-                    noNotifs.style.display = 'block';
+                    list.innerHTML = "<p class='text-center text-gray-500 py-4'>අලුත් දැනුම්දීම් නොමැත. 😊</p>";
                     return;
                 }
 
@@ -1316,67 +1115,82 @@
                     notifications.push({ key: s.key, ...s.val() });
                 });
                 
-                notifications.reverse(); // Newest first
+                notifications.reverse(); 
+                allNotifications = notifications; 
                 
                 let needsMarkingAsRead = false;
                 
-                for (const notif of notifications) {
-                    // Fetch actor details
-                    const actorSnap = await database.ref(`users/${notif.actorId}`).once('value');
-                    const actor = actorSnap.val();
-                    const actorName = actor ? (actor.name || 'Unknown User') : 'Unknown User';
-
-                    const html = createNotificationElement(notif, actorName);
-                    list.appendChild(html);
-
+                const renderPromises = notifications.map(async (notif) => {
+                    if (notif.actorId) {
+                        const actorSnap = await database.ref(`users/${notif.actorId}`).once('value');
+                        const actor = actorSnap.val();
+                        notif.actorName = actor ? (actor.name || 'Unknown User') : 'Unknown User';
+                    }
+                    
                     if (!notif.read) {
                         needsMarkingAsRead = true;
                     }
-                }
+                    
+                    return renderNotificationItem(notif);
+                });
 
-                // Mark all currently visible unread notifications as read
-                if (needsMarkingAsRead) {
-                    markAllNotificationsAsRead(notifications);
-                }
+                const notificationElements = await Promise.all(renderPromises);
                 
-                if (notifications.length === 0) {
-                    noNotifs.style.display = 'block';
+                notificationElements.forEach(element => list.appendChild(element));
+
+                if (markAsRead && needsMarkingAsRead) {
+                    markAllNotificationsAsRead(notifications);
                 }
             });
         }
 
-        function createNotificationElement(notif, actorName) {
-            const element = document.createElement('div');
-            const timeAgo = getTimeAgo(notif.timestamp);
+        function renderNotificationItem(notif) {
             let icon = '';
             let message = '';
-            // Highlight unread notifications
-            let highlightClass = notif.read ? 'bg-white/70' : 'bg-purple-50/90 border-l-4 border-purple-500';
+            
+            const actorName = notif.actorName || 'කෙනෙක්'; 
 
             if (notif.type === 'like') {
                 icon = '❤️';
-                message = `**${actorName}** ඔබේ පෝස්ට් එකට රියැක්ෂන් එකක් දුන්නා.`;
+                message = `**${actorName}** ඔබේ පළ කිරීමකට කැමති වී ඇත.`;
             } else if (notif.type === 'comment') {
                 icon = '💬';
-                const content = notif.content || 'ඔබගේ පෝස්ට් එකට අලුත් කමෙන්ට් එකක්.';
-                const snippet = content.length > 30 ? content.substring(0, 30) + '...' : content;
-                message = `**${actorName}** කමෙන්ට් කළා: *"${snippet}"*`;
+                const commentSnippet = notif.content ? (notif.content.length > 50 ? notif.content.substring(0, 50) + '...' : notif.content) : 'නවතම අදහස.';
+                message = `**${actorName}** ඔබේ පළ කිරීමකට අදහස් දක්වා ඇත: *${commentSnippet}*`;
+            } else if (notif.type === 'message') {
+                icon = '🗨️';
+                message = `**${actorName}** ඔබට කෙලින්ම පණිවිඩයක් යවා ඇත.`; 
+            } else {
+                icon = '📢';
+                message = 'නව දැනුම්දීමක්';
             }
 
-            element.className = `${highlightClass} rounded-xl p-3 shadow-md transition-all duration-300 hover:shadow-lg cursor-pointer fade-in`;
+            const timeAgo = getTimeAgo(notif.timestamp);
+
+            const element = document.createElement('div');
+            element.className = `fade-in p-3 rounded-xl shadow-sm cursor-pointer transition-all duration-300 border-2 ${
+                notif.read ? 'bg-gray-50 hover:bg-gray-100 border-gray-100' : 'bg-purple-50 hover:bg-purple-100 border-purple-200 font-semibold'
+            }`;
+            
+            const formattedMessage = message.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>').replace(/\*(.*?)\*/g, '<i>$1</i>');
+            
             element.innerHTML = `
                 <div class="flex items-start space-x-3">
                     <span class="text-2xl pt-0.5 shrink-0">${icon}</span>
                     <div class="flex-1">
-                        <p class="text-sm text-gray-800 font-medium leading-snug">${message.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>').replace(/\*(.*?)\*/g, '<i>$1</i>')}</p>
+                        <p class="text-sm text-gray-800 font-medium leading-snug">${formattedMessage}</p>
                         <p class="text-xs text-gray-500 mt-1">${timeAgo}</p>
                     </div>
                 </div>
             `;
             
             element.onclick = () => {
-                // Go to the post and close the panel
-                window.location.href = `comment.html?postId=${notif.postId}`;
+                // Go to the post/chat and close the panel
+                if (notif.type === 'message') {
+                    window.location.href = `chat.html?uid=${notif.actorId}`;
+                } else if (notif.postId) {
+                    window.location.href = `comment.html?postId=${notif.postId}`;
+                }
                 closeNotificationPanel();
             };
             
@@ -1389,8 +1203,8 @@
             const updates = {};
             let unreadFound = false;
             
-            // Only update notifications that are currently unread
             notifications.forEach(notif => {
+                if (!notif.key) return; 
                 if (!notif.read) {
                     updates[`notifications/${currentUser.uid}/${notif.key}/read`] = true;
                     unreadFound = true;
@@ -1399,10 +1213,18 @@
 
             if (unreadFound) {
                 database.ref().update(updates)
+                    .then(() => {
+                        const unreadIndicator = document.getElementById('unreadIndicator');
+                        unreadIndicator.classList.add('hidden');
+                    })
                     .catch(error => console.error("Error marking notifications as read:", error));
             }
         }
-    </script>
 
+        /* ============================================================
+            🔥 Initialization
+        ============================================================ */
+        initFeelingPanel(); 
+    </script>
 </body>
 </html>
