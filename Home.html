@@ -414,7 +414,7 @@
 
         function signOutUser() {
             auth.signOut().then(() => {
-                showNotification("Logout successful.");
+                notifyUser("PostKinaa", "ලොග් අවුට් වීම සාර්ථකයි."); // 🔥 Modified
                 window.location.href = "index.html";
             });
         }
@@ -455,7 +455,7 @@
             }).catch(err => {
                 console.error("Error loading posts:", err);
                 loading.style.display = "none";
-                showNotification("පෝස්ට් ලෝඩ් කිරීමේ දෝෂයක් ❌");
+                notifyUser("PostKinaa Error", "පෝස්ට් ලෝඩ් කිරීමේ දෝෂයක් ❌"); // 🔥 Modified
             });
 
             postsRef.on("child_added", (snapshot) => {
@@ -466,7 +466,7 @@
                 
                 if (!existingPost) {
                     feed.insertBefore(createPostElement(newPost), feed.firstChild);
-                    showNotification("නව පෝස්ට් එකක් එකතු වුනා! 🎉");
+                    notifyUser("PostKinaa", "නව පෝස්ට් එකක් එකතු වුනා! 🎉"); // 🔥 Modified
                 }
             });
 
@@ -503,6 +503,9 @@
             const likeCount = post.reactionCounts?.like || 0;
             const laughCount = post.reactionCounts?.laugh || 0;
             const fireCount = post.reactionCounts?.fire || 0;
+            // 🔥 NEW: Add Heart and Sad reaction counts
+            const heartCount = post.reactionCounts?.heart || 0;
+            const sadCount = post.reactionCounts?.sad || 0;
             
             const postFeeling = post.feeling; 
 
@@ -555,18 +558,31 @@
 
                 <div class="flex items-center justify-between flex-wrap gap-2">
                     <div class="flex space-x-2 sm:space-x-3">
+                        <button onclick="toggleSingleReaction('${post.id}', 'heart')" class="reaction-btn flex items-center space-x-1 sm:space-x-2 px-3 py-1.5 sm:px-5 sm:py-3 rounded-xl sm:rounded-2xl hover:bg-gradient-to-r hover:from-red-100 hover:to-pink-100 text-gray-700 transition-all duration-300 hover:scale-110 text-sm sm:text-base ${myReaction === 'heart' ? 'bg-gradient-to-r from-pink-200 to-red-200 text-red-600 shadow-lg scale-105' : ''}">
+                            <span class="text-xl sm:text-2xl">❤️</span>
+                            <span class="reaction-count font-bold text-base sm:text-lg">${heartCount}</span>
+                        </button>
+                        
                         <button onclick="toggleSingleReaction('${post.id}', 'like')" class="reaction-btn flex items-center space-x-1 sm:space-x-2 px-3 py-1.5 sm:px-5 sm:py-3 rounded-xl sm:rounded-2xl hover:bg-gradient-to-r hover:from-red-50 hover:to-pink-50 text-gray-700 transition-all duration-300 hover:scale-110 text-sm sm:text-base ${myReaction === 'like' ? 'bg-gradient-to-r from-red-100 to-pink-100 text-pink-600 shadow-lg scale-105' : ''}">
                             <span class="text-xl sm:text-2xl">👍</span> 
                             <span class="reaction-count font-bold text-base sm:text-lg">${likeCount}</span>
                         </button>
+                        
                         <button onclick="toggleSingleReaction('${post.id}', 'laugh')" class="reaction-btn flex items-center space-x-1 sm:space-x-2 px-3 py-1.5 sm:px-5 sm:py-3 rounded-xl sm:rounded-2xl hover:bg-gradient-to-r hover:from-yellow-50 hover:to-orange-50 text-gray-700 transition-all duration-300 hover:scale-110 text-sm sm:text-base ${myReaction === 'laugh' ? 'bg-gradient-to-r from-yellow-100 to-orange-100 text-yellow-600 shadow-lg scale-105' : ''}">
                             <span class="text-xl sm:text-2xl">😂</span> 
                             <span class="reaction-count font-bold text-base sm:text-lg">${laughCount}</span>
                         </button>
+
+                        <button onclick="toggleSingleReaction('${post.id}', 'sad')" class="reaction-btn flex items-center space-x-1 sm:space-x-2 px-3 py-1.5 sm:px-5 sm:py-3 rounded-xl sm:rounded-2xl hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 text-gray-700 transition-all duration-300 hover:scale-110 text-sm sm:text-base ${myReaction === 'sad' ? 'bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-600 shadow-lg scale-105' : ''}">
+                            <span class="text-xl sm:text-2xl">😢</span>
+                            <span class="reaction-count font-bold text-base sm:text-lg">${sadCount}</span>
+                        </button>
+
                         <button onclick="toggleSingleReaction('${post.id}', 'fire')" class="reaction-btn flex items-center space-x-1 sm:space-x-2 px-3 py-1.5 sm:px-5 sm:py-3 rounded-xl sm:rounded-2xl hover:bg-gradient-to-r hover:from-orange-50 hover:to-red-50 text-gray-700 transition-all duration-300 hover:scale-110 text-sm sm:text-base ${myReaction === 'fire' ? 'bg-gradient-to-r from-orange-100 to-red-100 text-red-600 shadow-lg scale-105' : ''}">
                             <span class="text-xl sm:text-2xl">🔥</span> 
                             <span class="reaction-count font-bold text-base sm:text-lg">${fireCount}</span>
                         </button>
+                        
                         <button onclick="commentPost('${post.id}')" class="flex items-center space-x-1 sm:space-x-2 px-3 py-1.5 sm:px-5 sm:py-3 rounded-xl sm:rounded-2xl hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 text-gray-700 transition-all duration-300 hover:scale-110 text-sm sm:text-base">
                             <span class="text-xl sm:text-2xl">💬</span> 
                             <span class="font-bold text-base sm:text-lg comment-count">${post.commentsCount || 0}</span>
@@ -595,7 +611,7 @@
 
         function openPostModal() {
             if (!currentUser) {
-                showNotification("මුලින්ම පිවිසෙන්න.");
+                notifyUser("PostKinaa", "මුලින්ම පිවිසෙන්න."); // 🔥 Modified
                 return;
             }
             
@@ -690,7 +706,7 @@
         ============================================================ */
         function createPost() {
             if (!currentUser) {
-                showNotification("මුලින්ම පිවිසෙන්න.");
+                notifyUser("PostKinaa", "මුලින්ම පිවිසෙන්න."); // 🔥 Modified
                 return;
             }
 
@@ -699,7 +715,7 @@
             const content = document.getElementById("postContent").value.trim();
 
             if (!authorName || !content) {
-                showNotification("නම සහ අන්තර්ගතය පුරවන්න.");
+                notifyUser("PostKinaa", "නම සහ අන්තර්ගතය පුරවන්න."); // 🔥 Modified
                 return;
             }
             
@@ -724,13 +740,24 @@
                     document.getElementById("postContent").value = "";
                     selectedFeeling = null; 
                     selectFeeling(defaultFeeling);
-                    showNotification("Post එක සාර්ථකයි! 🎉");
+                    notifyUser("PostKinaa", "Post එක සාර්ථකයි! 🎉"); // 🔥 Modified
                 })
                 .catch(error => {
                     console.error("Error pushing post:", error);
-                    showNotification("Post කිරීමේ දෝෂයක් ❌");
+                    notifyUser("PostKinaa Error", "Post කිරීමේ දෝෂයක් ❌"); // 🔥 Modified
                 });
         }
+
+        /* ============================================================
+            🔥 Reaction Emojis
+        ============================================================ */
+        const REACTION_EMOJIS = {
+            like: '👍',
+            laugh: '😂',
+            fire: '🔥',
+            heart: '❤️', // NEW
+            sad: '😢',    // NEW
+        };
 
         /* ============================================================
             🔥 Single Reaction System (WITH NOTIFICATION TRIGGER - UNCHANGED)
@@ -762,7 +789,7 @@
                         const post = postSnap.val();
                         if (post && post.authorId !== uid) {
                             notificationsRef.child(post.authorId).push({
-                                type: 'like', 
+                                type: newReactionType, // 🔥 MODIFIED: Use the actual reaction type
                                 postId: postId,
                                 actorId: uid,
                                 read: false,
@@ -779,11 +806,11 @@
             if (!confirm("මෙම පෝස්ට් එක මකන්නද?")) return;
             postsRef.child(id).once("value").then(s => {
                 if (s.val().authorId !== currentUser.uid) {
-                    showNotification("ඔබට මෙක මැකීමට අවසර නැහැ");
+                    notifyUser("PostKinaa", "ඔබට මෙය මැකීමට අවසර නැහැ"); // 🔥 Modified
                     return;
                 }
                 postsRef.child(id).remove();
-                showNotification("පෝස්ට් එක මකන ලදී 🗑️");
+                notifyUser("PostKinaa", "පෝස්ට් එක මකන ලදී 🗑️"); // 🔥 Modified
             });
         }
 
@@ -795,7 +822,7 @@
                 content: newText,
                 edited: true
             });
-            showNotification("සංස්කරණය සාර්ථකයි ✏️");
+            notifyUser("PostKinaa", "සංස්කරණය සාර්ථකයි ✏️"); // 🔥 Modified
         }
 
         function commentPost(id) {
@@ -936,16 +963,16 @@
                 link.href = canvas.toDataURL("image/png", 1.0);
                 link.click();
                 wrapper.remove();
-                showNotification("⬇️ Download සාර්ථකයි!");
+                notifyUser("PostKinaa", "⬇️ Download සාර්ථකයි!"); // 🔥 Modified
             }).catch(err => {
                 console.error(err);
                 wrapper.remove();
-                showNotification("Download error ❌");
+                notifyUser("PostKinaa Error", "Download error ❌"); // 🔥 Modified
             });
         });
     }
         /* ============================================================
-            🔥 Helpers (UNCHANGED)
+            🔥 Helpers (MODIFIED: Popup removed, new notification function added)
         ============================================================ */
         function getTimeAgo(ts) { 
             if (!ts) return "මෙම මොහොතේ"; 
@@ -959,16 +986,11 @@
             return `${Math.floor(h/24)}d පෙර`; 
         } 
 
-        function showNotification(text) { 
-            const box = document.createElement("div"); 
-            box.className = "fixed top-5 left-1/2 -translate-x-1/2 bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 text-white px-6 py-3 rounded-full shadow-2xl z-[1002] fade-in font-semibold text-sm sm:text-base"; 
-            box.textContent = text; 
-            document.body.appendChild(box); 
-            setTimeout(() => { 
-                box.classList.remove("fade-in"); 
-                box.classList.add("animate-fadeOut"); 
-                setTimeout(() => box.remove(), 500); 
-            }, 3000); 
+        // 🔥 REMOVED: showNotification function is removed as requested by the user.
+
+        function notifyUser(title, body) {
+            // This function replaces showNotification and uses displayBrowserNotification.
+            displayBrowserNotification(title, body);
         }
 
         function escapeText(text) {
@@ -982,7 +1004,7 @@
         }
 
         /* ============================================================
-            🔥 Notification Panel Logic (UNCHANGED)
+            🔥 Notification Panel Logic (MODIFIED for Browser Notifications only)
         ============================================================ */
         function requestNotificationPermission() {
             if (!("Notification" in window) || Notification.permission === "granted" || Notification.permission === "denied") {
@@ -990,7 +1012,7 @@
             }
             Notification.requestPermission().then(permission => {
                 if (permission === "granted") {
-                    showNotification("Notifications ලබා දීමට අවසර ලැබුණි! 🎉");
+                    console.log("Notifications permission granted."); // 🔥 Modified (No popup for permission success)
                 } 
             });
         }
@@ -1001,6 +1023,8 @@
                     body: body,
                     icon: 'https://via.placeholder.com/48'
                 });
+            } else if (Notification.permission === 'default') {
+                requestNotificationPermission(); // Request permission if not yet asked
             }
         }
 
@@ -1013,7 +1037,7 @@
             
             if (panel.classList.contains('translate-x-full')) {
                 panel.classList.remove('translate-x-full');
-                loadAndRenderNotifications(true); 
+                loadAndRenderNotifications(true); // Mark as read when opening
             } else {
                 panel.classList.add('translate-x-full');
             }
@@ -1029,16 +1053,10 @@
             const userNotificationsRef = notificationsRef.child(currentUser.uid);
             const unreadIndicator = document.getElementById('unreadIndicator');
 
-            userNotificationsRef.orderByChild('read').equalTo(false).on('value', snapshot => {
-                const unreadCount = snapshot.numChildren();
+            // 🔥 REMOVED: The code that checked unread count on 'value' is removed as requested.
 
-                if (unreadCount > 0) {
-                    unreadIndicator.classList.remove('hidden');
-                } else {
-                    unreadIndicator.classList.add('hidden');
-                }
-            });
-
+            // NEW NOTIFICATION/BROWSER NOTIFICATION LOGIC (child_added)
+            // This now handles both the browser notification and the red dot
             userNotificationsRef.limitToLast(1).on('child_added', snapshot => {
                 const notif = snapshot.val();
                 
@@ -1050,8 +1068,17 @@
                         let title = '🎉 අලුත් දැනුම්දීම';
                         let message = '';
                         
+                        // 🔥 MODIFIED: Handle new reaction types
                         if (notif.type === 'like') {
-                            message = `${actorName} ඔබේ පෝස්ට් එකට කැමති වී ඇත. ❤️`;
+                            message = `${actorName} ඔබේ පෝස්ට් එකට කැමති වී ඇත. 👍`;
+                        } else if (notif.type === 'heart') {
+                            message = `${actorName} ඔබේ පෝස්ට් එකට ආදරය දක්වා ඇත. ❤️`;
+                        } else if (notif.type === 'sad') {
+                            message = `${actorName} ඔබේ පෝස්ට් එකට දුක ප්‍රකාශ කර ඇත. 😢`;
+                        } else if (notif.type === 'fire') {
+                            message = `${actorName} ඔබේ පෝස්ට් එකට '🔥' ප්‍රතිචාරය දක්වා ඇත. 🔥`;
+                        } else if (notif.type === 'laugh') {
+                            message = `${actorName} ඔබේ පෝස්ට් එකට සිනා ප්‍රතිචාරය දක්වා ඇත. 😂`;
                         } else if (notif.type === 'comment') {
                             const commentSnippet = notif.content ? (notif.content.length > 50 ? notif.content.substring(0, 50) + '...' : notif.content) : 'අලුත් කමෙන්ට් එකක්.';
                             message = `${actorName} කමෙන්ට් කළා: "${commentSnippet}" 💬`;
@@ -1060,8 +1087,8 @@
                         }
                         
                         if (message) {
-                             displayBrowserNotification(title, message);
-                             showNotification(message); 
+                             displayBrowserNotification(title, message); // Browser Notification
+                             unreadIndicator.classList.remove('hidden'); // 🔥 NEW: Show red dot only when a new notification arrives
                         }
                     });
                 }
@@ -1074,6 +1101,7 @@
             const userNotificationsRef = notificationsRef.child(currentUser.uid);
             const unreadChatIndicator = document.getElementById('unreadChatIndicator');
 
+            // 🗨️ CHAT RED DOT LOGIC (This logic is kept as is to show unread messages count)
             userNotificationsRef.orderByChild('read').equalTo(false).on('value', snapshot => {
                 let unreadMessageCount = 0;
                 
@@ -1150,9 +1178,22 @@
             
             const actorName = notif.actorName || 'කෙනෙක්'; 
 
+            // 🔥 MODIFIED: Handle new reaction types in the notification panel
             if (notif.type === 'like') {
-                icon = '❤️';
+                icon = '👍';
                 message = `**${actorName}** ඔබේ පළ කිරීමකට කැමති වී ඇත.`;
+            } else if (notif.type === 'heart') {
+                icon = '❤️';
+                message = `**${actorName}** ඔබේ පළ කිරීමකට ආදරය දක්වා ඇත.`;
+            } else if (notif.type === 'sad') {
+                icon = '😢';
+                message = `**${actorName}** ඔබේ පළ කිරීමකට දුක ප්‍රකාශ කර ඇත.`;
+            } else if (notif.type === 'fire') {
+                icon = '🔥';
+                message = `**${actorName}** ඔබේ පළ කිරීමකට '🔥' ප්‍රතිචාරය දක්වා ඇත.`;
+            } else if (notif.type === 'laugh') {
+                icon = '😂';
+                message = `**${actorName}** ඔබේ පළ කිරීමකට සිනා ප්‍රතිචාරය දක්වා ඇත.`;
             } else if (notif.type === 'comment') {
                 icon = '💬';
                 const commentSnippet = notif.content ? (notif.content.length > 50 ? notif.content.substring(0, 50) + '...' : notif.content) : 'නවතම අදහස.';
@@ -1215,7 +1256,7 @@
                 database.ref().update(updates)
                     .then(() => {
                         const unreadIndicator = document.getElementById('unreadIndicator');
-                        unreadIndicator.classList.add('hidden');
+                        unreadIndicator.classList.add('hidden'); // 🔥 Hides the dot after reading
                     })
                     .catch(error => console.error("Error marking notifications as read:", error));
             }
