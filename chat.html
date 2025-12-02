@@ -211,6 +211,7 @@
     const rtdb = firebase.database(); 
     const usersRef = rtdb.ref("users"); 
     const chatsRef = rtdb.ref("chats"); 
+    const notificationsRef = rtdb.ref("notifications"); 
 
     let currentUser = null;
     let currentChatRecipient = null; 
@@ -222,6 +223,8 @@
     let editingMessageKey = null;
     let isPartnerBlocked = false; 
     let isCurrentUserBlockedByPartner = false; 
+    // 🔥 කියවා නැති පණිවිඩ ගණන ගබඩා කරන ගෝලීය වස්තුව
+    let unreadChatCounts = {}; 
 
     /* ============================================================
         🔥 Auth Check and User Data Setup
@@ -268,6 +271,8 @@
         
         loadUsers(); 
         setupOnlineHeartbeat();
+        // 🔥 Unread පණිවිඩ සඳහා සවන් දීම ආරම්භ කිරීම
+        listenForUnreadChatNotifications();
         
         // Listener: අප විසින් බ්ලොක් කළ අයගේ ලැයිස්තුව
         usersRef.child(currentUser.uid).child('blocked').on('value', snapshot => {
@@ -367,6 +372,67 @@
             updateChatUIBasedOnExternalBlockStatus(recipientName);
         }, error => console.error("External block listen error:", error));
     }
+    
+    // 🔥 සංශෝධිත: කියවා නැති chat-type notifications ගණන් කිරීමට සවන් දෙයි
+    function listenForUnreadChatNotifications() {
+        if (!currentUser) return;
+
+        // සියලුම notifications වලට සවන් දෙයි
+        notificationsRef.child(currentUser.uid).on('value', snapshot => {
+            const newUnreadCounts = {};
+            
+            snapshot.forEach(childSnapshot => {
+                const notif = childSnapshot.val();
+                // කියවා නැති chat messages පමණක් පෙරීම
+                if (notif.type === 'message' && notif.actorId && !notif.read) {
+                    const senderId = notif.actorId;
+                    newUnreadCounts[senderId] = (newUnreadCounts[senderId] || 0) + 1;
+                }
+            });
+
+            // ගණන් වෙනස් වී ඇත්නම් ගෝලීය තත්ත්වය යාවත්කාලීන කර පරිශීලක ලැයිස්තුව නැවත Load කරයි
+            if (JSON.stringify(unreadChatCounts) !== JSON.stringify(newUnreadCounts)) {
+                unreadChatCounts = newUnreadCounts;
+                // ලැයිස්තුව නැවත Load කිරීම (රතු ඩොට් එක පෙන්වීමට/සැඟවීමට සහ වර්ග කිරීමට)
+                loadUsers(document.getElementById('user-search-input').value); 
+            }
+        });
+    }
+
+    // 🔥 සංශෝධිත: නිශ්චිත පරිශීලකයෙකුගෙන් පැමිණි සියලුම chat notifications කියවූ බවට සලකුණු කරයි
+    function markChatNotificationsAsRead(partnerId) {
+        if (!currentUser || !partnerId) return;
+
+        notificationsRef.child(currentUser.uid)
+            .orderByChild('actorId')
+            .equalTo(partnerId)
+            .once('value')
+            .then(snapshot => {
+                const updates = {};
+                let marked = false;
+                
+                snapshot.forEach(childSnapshot => {
+                    const notif = childSnapshot.val();
+                    if (notif.type === 'message' && !notif.read) {
+                        updates[`notifications/${currentUser.uid}/${childSnapshot.key}/read`] = true;
+                        marked = true;
+                    }
+                });
+
+                if (marked) {
+                    rtdb.ref().update(updates)
+                        .catch(error => console.error("Error marking chat notifs as read:", error));
+                }
+                
+                // Read කළ පසු වහාම ලැයිස්තුව යාවත්කාලීන කිරීම
+                if (unreadChatCounts[partnerId]) {
+                    delete unreadChatCounts[partnerId];
+                    loadUsers(document.getElementById('user-search-input').value);
+                }
+            })
+            .catch(error => console.error("Error fetching notifs for read:", error));
+    }
+
 
     /* ============================================================
         🔥 Chat Initialization and UI Control
@@ -412,7 +478,8 @@
 
         // Highlight the selected user
         document.querySelectorAll('.user-list-item').forEach(el => {
-            el.classList.remove('border-purple-500', 'bg-purple-100/90', 'scale-105');
+            // Unread highlight class ඉවත් කිරීම
+            el.classList.remove('border-purple-500', 'bg-purple-100/90', 'scale-105', 'border-red-400', 'bg-red-50/70', 'shadow-lg');
             if (el.getAttribute('data-uid') === recipientUid) {
                 el.classList.add('border-purple-500', 'bg-purple-100/90', 'scale-105');
             }
@@ -428,6 +495,9 @@
         // බාහිර බ්ලොක් තත්ත්වය මත අවසාන UI තත්ත්වය සකස් කිරීම
         updateChatUIBasedOnExternalBlockStatus(recipientName); 
         
+        // 🔥 සංශෝධිත: මෙම පරිශීලකයාගෙන් පැමිණි පණිවිඩ කියවූ බවට සලකුණු කිරීම
+        markChatNotificationsAsRead(recipientUid); 
+
         // පණිවිඩ Load කිරීම (පරීක්ෂාවන් දෙකම අසමත් වුවහොත්)
         if (!isPartnerBlocked && !isCurrentUserBlockedByPartner) {
              listenForMessages(recipientUid);
@@ -610,6 +680,16 @@
             .then(() => {
                 inputEl.value = ""; 
                 inputEl.focus();
+                
+                // 🔥 පණිවිඩය යැවූ පසු notification එකක් යැවීම (රතු ඩොට් එක සඳහා)
+                notificationsRef.child(currentChatRecipient).push({
+                    type: 'message', 
+                    actorId: currentUser.uid,
+                    read: false,
+                    timestamp: firebase.database.ServerValue.TIMESTAMP
+                }).catch(error => {
+                    console.error("Error sending chat notification:", error);
+                });
             })
             .catch(error => {
                 console.error("Error sending message:", error);
@@ -784,7 +864,7 @@
     }
     
     /* ============================================================
-        🔥 User List Loading (Retained from previous code)
+        🔥 User List Loading (සංශෝධනය කරන ලදී)
     ============================================================ */
     function loadUsers(query = '') {
         const usersListEl = document.getElementById("usersList");
@@ -803,6 +883,8 @@
             usersListEl.innerHTML = "";
             let foundUsers = false;
             
+            // 🔥 MODIFIED: පරිශීලකයන්ගේ අරාවකට දත්ත එකතු කර ගැනීම
+            const usersArray = [];
             snapshot.forEach(childSnapshot => {
                 const user = childSnapshot.val();
                 const uid = childSnapshot.key;
@@ -811,8 +893,19 @@
                     return;
                 }
                 
-                renderUserListItem(uid, user.name || 'නමක් නැත', user.avatar || '👤');
+                // නව අංගය: unread status එකත් සමඟ අරාවට එක් කිරීම
+                const unreadCount = unreadChatCounts[uid] || 0;
+                usersArray.push({ uid, name: user.name || 'නමක් නැත', avatar: user.avatar || '👤', unreadCount });
                 foundUsers = true;
+            });
+            
+            // 🔥 MODIFIED: Unread status මත පදනම්ව ලැයිස්තුව වර්ග කිරීම
+            // unreadCount වැඩිම පරිශීලකයින් ලැයිස්තුවේ ඉහළටම පැමිණේ.
+            usersArray.sort((a, b) => b.unreadCount - a.unreadCount);
+
+            // වර්ග කළ පරිශීලකයින් ලැයිස්තුවට එක් කිරීම
+            usersArray.forEach(user => {
+                renderUserListItem(user.uid, user.name, user.avatar);
             });
             
             if (!foundUsers) {
@@ -829,13 +922,28 @@
             console.error("Invalid UID:", uid);
             return;
         }
+        
+        // 🔥 MODIFIED: Check for unread messages (unreadChatCounts ගෝලීයව තිබේ)
+        const unreadCount = unreadChatCounts[uid] || 0; 
+        const hasUnread = unreadCount > 0;
 
         const usersListEl = document.getElementById("usersList");
         const div = document.createElement('div');
-        div.className = "user-list-item flex items-center space-x-3 p-3 rounded-xl bg-white/70 border-2 border-gray-100 cursor-pointer hover:bg-purple-50 shadow-md";
+        
+        // 🔥 MODIFIED: Added highlight class for unread messages
+        const highlightClass = hasUnread ? 'border-red-400 bg-red-50/70 shadow-lg' : ''; 
+        
+        div.className = `user-list-item flex items-center space-x-3 p-3 rounded-xl bg-white/70 border-2 border-gray-100 cursor-pointer hover:bg-purple-50 shadow-md relative ${highlightClass}`; 
         div.setAttribute('data-uid', uid);
         div.id = `user-list-item-${uid}`;
         div.onclick = () => startChat(uid, name);
+
+        // දැනට තෝරාගත් පරිශීලකයා highlight කිරීම
+        if (uid === currentChatRecipient) {
+             div.classList.add('border-purple-500', 'bg-purple-100/90', 'scale-105');
+             div.classList.remove('border-red-400', 'bg-red-50/70', 'shadow-lg'); // තෝරාගත් පසු unread highlight එක ඉවත් කරයි
+        }
+
 
         div.innerHTML = `
             <div class="w-10 h-10 bg-gradient-to-br from-blue-400 to-purple-400 rounded-full flex items-center justify-center text-xl shadow-lg shrink-0">
@@ -844,6 +952,11 @@
             <div class="flex-1 overflow-hidden">
                 <p class="font-bold text-gray-800 truncate">${name}</p>
             </div>
+            ${hasUnread ? // 🔥 MODIFIED: Red dot indicator එක count එක සමඟ පෙන්වීම
+                // Red dot/count - රතු තිත (count එක)
+                `<div class="absolute top-2 right-2 w-5 h-5 bg-red-500 rounded-full shadow-lg flex items-center justify-center text-xs text-white font-bold animate-pulse" title="${unreadCount} unread messages">${unreadCount > 9 ? '9+' : unreadCount}</div>` : 
+                ''
+            }
         `;
         usersListEl.appendChild(div);
     }
