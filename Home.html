@@ -830,147 +830,150 @@
             window.location.href = `comment.html?postId=${id}`;
         }
 
-       function downloadPost(postId) {
-        postsRef.child(postId).once("value").then(snap => {
-            const post = snap.val();
-            if (!post) return;
+      // ... (existing code above)
+function downloadPost(postId) {
+    postsRef.child(postId).once("value").then(snap => {
+        const post = snap.val();
+        if (!post) return;
 
-            const themeName = localStorage.getItem("appTheme") || "default";
-            const theme = THEMES[themeName] || THEMES.default;
+        const themeName = localStorage.getItem("appTheme") || "default";
+        const theme = THEMES[themeName] || THEMES.default;
 
-            const wrapper = document.createElement("div");
-            wrapper.style.cssText = `
-                width: 800px;
-                height: 760px;
-                position: fixed;
-                top: -9999px;
-                left: -9999px;
-                font-family: system-ui, -apple-system, sans-serif;
-            `;
+        const wrapper = document.createElement("div");
+        wrapper.style.cssText = `
+            /* Increase height to allow for longer content. Width can remain fixed. */
+            width: 800px;
+            /* Set to auto to accommodate long text, or a generous fixed height like 1000px if preferred */
+            height: fit-content; 
+            min-height: 760px; /* Ensure minimum size */
+            position: fixed;
+            top: -9999px;
+            left: -9999px;
+            font-family: system-ui, -apple-system, sans-serif;
+        `;
 
-            wrapper.innerHTML = `
+        wrapper.innerHTML = `
+            <div style="
+                width: 100%;
+                height: 100%; /* Use 100% since wrapper height is now dynamic/fit-content */
+                background: ${theme.download};
+                border-radius: 30px;
+                padding: 50px;
+                box-sizing: border-box;
+                display: flex;
+                flex-direction: column;
+            ">
                 <div style="
-                    width: 100%;
+                    background: white;
+                    border-radius: 25px;
+                    padding: 45px;
                     height: 100%;
-                    background: ${theme.download};
-                    border-radius: 30px;
-                    padding: 50px;
-                    box-sizing: border-box;
+                    box-shadow: 0 20px 60px rgba(0,0,0,0.15);
                     display: flex;
                     flex-direction: column;
+                    position: relative;
                 ">
                     <div style="
-                        background: white;
-                        border-radius: 25px;
-                        padding: 45px;
-                        height: 100%;
-                        box-shadow: 0 20px 60px rgba(0,0,0,0.15);
                         display: flex;
-                        flex-direction: column;
-                        position: relative;
+                        align-items: center;
+                        margin-bottom: 35px;
+                        padding-bottom: 25px;
+                        border-bottom: 3px solid #f3f4f6;
                     ">
                         <div style="
-                            display: flex;
-                            align-items: center;
-                            margin-bottom: 35px;
-                            padding-bottom: 25px;
-                            border-bottom: 3px solid #f3f4f6;
-                        ">
-                            <div style="
-                                width: 70px;
-                                height: 70px;
-                                background: ${theme.download};
-                                border-radius: 50%;
-                                display: flex;
-                                align-items: center;
-                                justify-content: center;
-                                font-size: 38px;
-                                margin-right: 20px;
-                                box-shadow: 0 8px 20px rgba(0,0,0,0.12);
-                            ">${post.avatar || '❓'}</div>
-                            
-                            <div style="flex: 1;">
-                                <h2 style="
-                                    font-size: 32px;
-                                    font-weight: 700;
-                                    color: #1f2937;
-                                    margin: 0 0 5px 0;
-                                    letter-spacing: -0.5px;
-                                ">${post.author || 'නමක් නැත'}</h2>
-                                <p style="
-                                    font-size: 16px;
-                                    color: #9ca3af;
-                                    margin: 0;
-                                    font-weight: 500;
-                                ">PostKinaa Member</p>
-                            </div>
-                        </div>
-
-                        <div style="
-                            flex: 1;
-                            display: flex;
-                            align-items: center;
-                            overflow: hidden;
-                            margin-bottom: 30px;
-                        ">
-                            <p style="
-                                font-size: 26px;
-                                line-height: 1.7;
-                                color: #374151;
-                                margin: 0;
-                                white-space: pre-line;
-                                font-weight: 400;
-                            ">${post.content || 'Content not found'}</p>
-                        </div>
-
-                        <div style="
-                            padding-top: 25px;
-                            border-top: 3px solid #f3f4f6;
-                            display: flex;
-                            justify-content: flex-end; 
-                            align-items: center;
-                        ">
-                            <span style="
-                                font-size: 18px;
-                                color: #9ca3af;
-                                font-weight: 600;
-                            ">PostKinaa.com</span>
-                        </div>
-
-                        <div style="
-                            position: absolute;
-                            top: 0;
-                            right: 0;
-                            width: 120px;
-                            height: 120px;
+                            width: 70px;
+                            height: 70px;
                             background: ${theme.download};
-                            opacity: 0.08;
-                            border-radius: 0 25px 0 100%;
-                        "></div>
+                            border-radius: 50%;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            font-size: 38px;
+                            margin-right: 20px;
+                            box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+                        ">${post.avatar || '❓'}</div>
+                        
+                        <div style="flex: 1;">
+                            <h2 style="
+                                font-size: 32px;
+                                font-weight: 700;
+                                color: #1f2937;
+                                margin: 0 0 5px 0;
+                                letter-spacing: -0.5px;
+                            ">${post.author || 'නමක් නැත'}</h2>
+                            <p style="
+                                font-size: 16px;
+                                color: #9ca3af;
+                                margin: 0;
+                                font-weight: 500;
+                            ">PostKinaa Member</p>
+                        </div>
                     </div>
+
+                    <div style="
+                        /* flex: 1, align-items: center, සහ overflow: hidden ඉවත් කරන ලදි */
+                        margin-bottom: 30px;
+                        flex-grow: 1; /* ඉතිරි ඉඩ ලබා ගැනීමට */
+                    ">
+                        <p style="
+                            font-size: 26px;
+                            line-height: 1.7;
+                            color: #374151;
+                            margin: 0;
+                            white-space: pre-line; /* Pre-line wrapping තබා ගන්නා ලදි */
+                            font-weight: 400;
+                        ">${post.content || 'Content not found'}</p>
+                    </div>
+
+                    <div style="
+                        padding-top: 25px;
+                        border-top: 3px solid #f3f4f6;
+                        display: flex;
+                        justify-content: flex-end; 
+                        align-items: center;
+                    ">
+                        <span style="
+                            font-size: 18px;
+                            color: #9ca3af;
+                            font-weight: 600;
+                        ">PostKinaa.com</span>
+                    </div>
+
+                    <div style="
+                        position: absolute;
+                        top: 0;
+                        right: 0;
+                        width: 120px;
+                        height: 120px;
+                        background: ${theme.download};
+                        opacity: 0.08;
+                        border-radius: 0 25px 0 100%;
+                    "></div>
                 </div>
-            `;
+            </div>
+        `;
 
-            document.body.appendChild(wrapper);
+        document.body.appendChild(wrapper);
 
-            html2canvas(wrapper, { 
-                scale: 3,
-                backgroundColor: null,
-                logging: false
-            }).then(canvas => {
-                const link = document.createElement("a");
-                link.download = `PostKinaa_${post.author}_${Date.now()}.png`;
-                link.href = canvas.toDataURL("image/png", 1.0);
-                link.click();
-                wrapper.remove();
-                notifyUser("PostKinaa", "⬇️ Download සාර්ථකයි!"); // 🔥 Modified
-            }).catch(err => {
-                console.error(err);
-                wrapper.remove();
-                notifyUser("PostKinaa Error", "Download error ❌"); // 🔥 Modified
-            });
+        // ... (rest of the function remains the same)
+        html2canvas(wrapper, { 
+            scale: 3,
+            backgroundColor: null,
+            logging: false
+        }).then(canvas => {
+            const link = document.createElement("a");
+            link.download = `PostKinaa_${post.author}_${Date.now()}.png`;
+            link.href = canvas.toDataURL("image/png", 1.0);
+            link.click();
+            wrapper.remove();
+            notifyUser("PostKinaa", "⬇️ Download සාර්ථකයි!"); // 🔥 Modified
+        }).catch(err => {
+            console.error(err);
+            wrapper.remove();
+            notifyUser("PostKinaa Error", "Download error ❌"); // 🔥 Modified
         });
-    }
+    });
+}
         /* ============================================================
             🔥 Helpers (MODIFIED: Popup removed, new notification function added)
         ============================================================ */
@@ -1269,3 +1272,4 @@
     </script>
 </body>
 </html>
+
