@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PostKinaa - Social Media Home</title>
+    <title>PostKina - Social Media Home</title>
 
     <script src="https://cdn.tailwindcss.com"></script>
 
@@ -72,7 +72,7 @@
 
     <header class="sticky top-0 z-50 p-4 sm:p-5 bg-white/90 backdrop-blur-lg shadow-lg border-b border-gray-100">
         <div class="max-w-4xl mx-auto flex items-center justify-between">
-            <h1 id="headerTitle" class="text-3xl sm:text-4xl font-black bg-clip-text text-transparent float pulse-animation bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600">PostKinaa</h1>
+            <h1 id="headerTitle" class="text-3xl sm:text-4xl font-black bg-clip-text text-transparent float pulse-animation bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600">PostKina</h1>
             
             <div class="flex items-center space-x-3 sm:space-x-4">
                 
@@ -414,7 +414,7 @@
 
         function signOutUser() {
             auth.signOut().then(() => {
-                notifyUser("PostKinaa", "ලොග් අවුට් වීම සාර්ථකයි."); // 🔥 Modified
+                notifyUser("PostKina", "ලොග් අවුට් වීම සාර්ථකයි."); // 🔥 Modified
                 window.location.href = "index.html";
             });
         }
@@ -455,7 +455,7 @@
             }).catch(err => {
                 console.error("Error loading posts:", err);
                 loading.style.display = "none";
-                notifyUser("PostKinaa Error", "පෝස්ට් ලෝඩ් කිරීමේ දෝෂයක් ❌"); // 🔥 Modified
+                notifyUser("PostKina Error", "පෝස්ට් ලෝඩ් කිරීමේ දෝෂයක් ❌"); // 🔥 Modified
             });
 
             postsRef.on("child_added", (snapshot) => {
@@ -466,7 +466,7 @@
                 
                 if (!existingPost) {
                     feed.insertBefore(createPostElement(newPost), feed.firstChild);
-                    notifyUser("PostKinaa", "නව පෝස්ට් එකක් එකතු වුනා! 🎉"); // 🔥 Modified
+                    notifyUser("PostKina", "නව පෝස්ට් එකක් එකතු වුනා! 🎉"); // 🔥 Modified
                 }
             });
 
@@ -611,7 +611,7 @@
 
         function openPostModal() {
             if (!currentUser) {
-                notifyUser("PostKinaa", "මුලින්ම පිවිසෙන්න."); // 🔥 Modified
+                notifyUser("PostKina", "මුලින්ම පිවිසෙන්න."); // 🔥 Modified
                 return;
             }
             
@@ -706,7 +706,7 @@
         ============================================================ */
         function createPost() {
             if (!currentUser) {
-                notifyUser("PostKinaa", "මුලින්ම පිවිසෙන්න."); // 🔥 Modified
+                notifyUser("PostKina", "මුලින්ම පිවිසෙන්න."); // 🔥 Modified
                 return;
             }
 
@@ -715,7 +715,7 @@
             const content = document.getElementById("postContent").value.trim();
 
             if (!authorName || !content) {
-                notifyUser("PostKinaa", "නම සහ අන්තර්ගතය පුරවන්න."); // 🔥 Modified
+                notifyUser("PostKina", "නම සහ අන්තර්ගතය පුරවන්න."); // 🔥 Modified
                 return;
             }
             
@@ -740,11 +740,11 @@
                     document.getElementById("postContent").value = "";
                     selectedFeeling = null; 
                     selectFeeling(defaultFeeling);
-                    notifyUser("PostKinaa", "Post එක සාර්ථකයි! 🎉"); // 🔥 Modified
+                    notifyUser("PostKina", "Post එක සාර්ථකයි! 🎉"); // 🔥 Modified
                 })
                 .catch(error => {
                     console.error("Error pushing post:", error);
-                    notifyUser("PostKinaa Error", "Post කිරීමේ දෝෂයක් ❌"); // 🔥 Modified
+                    notifyUser("PostKina Error", "Post කිරීමේ දෝෂයක් ❌"); // 🔥 Modified
                 });
         }
 
@@ -806,11 +806,11 @@
             if (!confirm("මෙම පෝස්ට් එක මකන්නද?")) return;
             postsRef.child(id).once("value").then(s => {
                 if (s.val().authorId !== currentUser.uid) {
-                    notifyUser("PostKinaa", "ඔබට මෙය මැකීමට අවසර නැහැ"); // 🔥 Modified
+                    notifyUser("PostKina", "ඔබට මෙය මැකීමට අවසර නැහැ"); // 🔥 Modified
                     return;
                 }
                 postsRef.child(id).remove();
-                notifyUser("PostKinaa", "පෝස්ට් එක මකන ලදී 🗑️"); // 🔥 Modified
+                notifyUser("PostKina", "පෝස්ට් එක මකන ලදී 🗑️"); // 🔥 Modified
             });
         }
 
@@ -822,7 +822,7 @@
                 content: newText,
                 edited: true
             });
-            notifyUser("PostKinaa", "සංස්කරණය සාර්ථකයි ✏️"); // 🔥 Modified
+            notifyUser("PostKina", "සංස්කරණය සාර්ථකයි ✏️"); // 🔥 Modified
         }
 
         function commentPost(id) {
@@ -906,7 +906,7 @@ function downloadPost(postId) {
                                 color: #9ca3af;
                                 margin: 0;
                                 font-weight: 500;
-                            ">PostKinaa Member</p>
+                            ">PostKina Member</p>
                         </div>
                     </div>
 
@@ -936,7 +936,7 @@ function downloadPost(postId) {
                             font-size: 18px;
                             color: #9ca3af;
                             font-weight: 600;
-                        ">PostKinaa.com</span>
+                        ">PostKina.com</span>
                     </div>
 
                     <div style="
@@ -962,15 +962,15 @@ function downloadPost(postId) {
             logging: false
         }).then(canvas => {
             const link = document.createElement("a");
-            link.download = `PostKinaa_${post.author}_${Date.now()}.png`;
+            link.download = `PostKina_${post.author}_${Date.now()}.png`;
             link.href = canvas.toDataURL("image/png", 1.0);
             link.click();
             wrapper.remove();
-            notifyUser("PostKinaa", "⬇️ Download සාර්ථකයි!"); // 🔥 Modified
+            notifyUser("PostKina", "⬇️ Download සාර්ථකයි!"); // 🔥 Modified
         }).catch(err => {
             console.error(err);
             wrapper.remove();
-            notifyUser("PostKinaa Error", "Download error ❌"); // 🔥 Modified
+            notifyUser("PostKina Error", "Download error ❌"); // 🔥 Modified
         });
     });
 }
@@ -1272,4 +1272,5 @@ function downloadPost(postId) {
     </script>
 </body>
 </html>
+
 
