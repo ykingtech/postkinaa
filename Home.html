@@ -14,6 +14,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
     <style>
         /* ============================================================
@@ -57,7 +58,7 @@
             scrollbar-width: none;  /* Firefox */
         }
         
-        /* 🔥 NEW: Modal Enter/Exit Animations */
+        /* 🔥 Modal Enter/Exit Animations */
         .modal-enter { opacity: 0; transform: translateY(20px); }
         .modal-enter-active { opacity: 1; transform: translateY(0); transition: opacity 0.3s, transform 0.3s; }
         .modal-exit { opacity: 1; transform: translateY(0); }
@@ -112,11 +113,24 @@
             <p class="text-gray-500 mt-2">පළමු Post එක දාන්න.</p>
         </div>
 
+        <div id="trendingPostContainer" class="mb-8">
+            <p id="trendingLoading" class="text-center text-sm text-gray-500">Trending Post Searching...</p>
+        </div>
+
         <div id="postsFeed" class="space-y-8">
             </div>
 
     </main>
     
+    <button onclick="goToKingBook()" 
+            class="fixed bottom-36 right-5 sm:bottom-24 sm:right-8 z-40 
+                   w-14 h-14 sm:w-16 sm:h-16 
+                   bg-gradient-to-r from-teal-500 to-blue-600 text-white 
+                   rounded-full shadow-2xl hover:scale-105 transition-transform duration-300 
+                   flex items-center justify-center text-2xl font-bold ring-4 ring-white ring-opacity-50">
+        📖
+    </button>
+
     <button onclick="openPostModal()" 
             class="fixed bottom-20 right-5 sm:bottom-8 sm:right-8 z-40 
                    w-14 h-14 sm:w-16 sm:h-16 
@@ -169,8 +183,7 @@
             
         </div>
     </div>
-
-
+    
     <div id="notificationPanel" 
          class="fixed top-0 right-0 w-full md:w-96 h-full bg-white/90 backdrop-blur-xl shadow-2xl z-[1001] transform translate-x-full transition-transform duration-300 ease-in-out flex flex-col border-l border-gray-100">
         
@@ -219,7 +232,7 @@
         let currentUserAvatar = '👤'; 
 
         /* ============================================================
-            🔥 Navigation
+            🔥 Navigation (NEW: goToKingBook added)
         ============================================================ */
         function goToChat() {
             window.location.href = "chat.html";
@@ -231,6 +244,10 @@
 
         function goToProfile(uid) {
             window.location.href = `profile.html?uid=${uid}`; 
+        }
+        
+        function goToKingBook() {
+            window.location.href = "kingbook.html";
         }
 
         /* ============================================================
@@ -422,7 +439,94 @@
         }
 
         /* ============================================================
-            🔥 Post Loading and Rendering (UNCHANGED LOGIC)
+            🔥 Trending Post Logic (NEW)
+        ============================================================ */
+        function calculateTodayTrendingPost(allPosts) {
+            const todayStart = new Date();
+            todayStart.setHours(0, 0, 0, 0);
+            const todayTimestamp = todayStart.getTime();
+
+            let trendingPost = null;
+            let maxReactions = -1;
+
+            allPosts.forEach(post => {
+                // Only consider posts made today
+                if (post.timestamp >= todayTimestamp) {
+                    const totalReactions = (post.reactionCounts?.like || 0) + 
+                                         (post.reactionCounts?.laugh || 0) + 
+                                         (post.reactionCounts?.fire || 0) +
+                                         (post.reactionCounts?.heart || 0) + 
+                                         (post.reactionCounts?.sad || 0);
+
+                    if (totalReactions > maxReactions) {
+                        maxReactions = totalReactions;
+                        trendingPost = post;
+                    }
+                }
+            });
+
+            return trendingPost;
+        }
+        
+        function renderTrendingPost(post) {
+            const container = document.getElementById("trendingPostContainer");
+            const loadingEl = document.getElementById("trendingLoading");
+            
+            if(loadingEl) loadingEl.style.display = 'none';
+
+            if (!post || (post.reactionCounts?.like || 0) + (post.reactionCounts?.laugh || 0) + (post.reactionCounts?.fire || 0) + (post.reactionCounts?.heart || 0) + (post.reactionCounts?.sad || 0) === 0) {
+                 container.innerHTML = `<p class="text-center text-sm text-gray-500">❌ No Trending Post Today</p>`;
+                 return;
+            }
+
+            const postFeeling = post.feeling; 
+            const feelingDisplayHTML = postFeeling ? 
+                `<span class="ml-2 px-2 py-0.5 bg-gradient-to-r from-yellow-50 to-pink-50 text-gray-700 rounded-full text-xs font-bold shadow-sm inline-flex items-center mt-1 sm:mt-0">
+                    <span class="mr-1 text-base">${postFeeling.emoji}</span> is feeling ${postFeeling.text}
+                </span>`
+                : '';
+                
+            const totalReactions = (post.reactionCounts?.like || 0) + (post.reactionCounts?.laugh || 0) + (post.reactionCounts?.fire || 0) + (post.reactionCounts?.heart || 0) + (post.reactionCounts?.sad || 0);
+
+            container.innerHTML = `
+                <div class="glass-effect rounded-3xl shadow-2xl border-2 border-purple-400/60 p-5 sm:p-7 transition-all duration-500 fade-in border-dashed">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-red-600 to-yellow-600 flex items-center space-x-2">
+                            <span>🔥 TODAY'S TRENDING POST</span>
+                        </h2>
+                        <span class="text-3xl text-red-500 animate-bounce">⭐</span>
+                    </div>
+                    <div class="flex items-start justify-between mb-4 sm:mb-5 flex-wrap">
+                        <div class="flex items-center space-x-3 sm:space-x-4">
+                            <div class="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br ${post.gradient} rounded-xl sm:rounded-2xl flex items-center justify-center text-2xl sm:text-3xl shadow-xl shrink-0">
+                                ${post.avatar || '❓'}
+                            </div>
+                            <div>
+                                <div class="flex items-start flex-wrap">
+                                    <h3 class="font-bold text-gray-800 text-lg sm:text-xl">
+                                        <a onclick="goToProfile('${post.authorId}')" 
+                                           class="cursor-pointer text-gray-800 hover:text-purple-600 transition-colors duration-200">
+                                            ${post.author || 'නමක් නැත'}
+                                        </a>
+                                    </h3>
+                                    ${feelingDisplayHTML}
+                                </div>
+                                <p class="text-xs sm:text-sm text-gray-500 mt-1">${getTimeAgo(post.timestamp)}</p>
+                            </div>
+                        </div>
+                        <div class="text-center pt-2">
+                            <p class="text-sm font-bold text-gray-700">Reactions</p>
+                            <p class="text-xl font-black text-red-600">${totalReactions}</p>
+                        </div>
+                    </div>
+                    
+                    <p onclick="commentPost('${post.id}')" class="cursor-pointer text-gray-700 text-base sm:text-lg mb-4 sm:mb-6 whitespace-pre-line border-l-4 border-purple-500 pl-3 hover:bg-purple-50 transition-colors duration-200">${unescapeText(post.content).substring(0, 150) + (unescapeText(post.content).length > 150 ? '...' : '')}</p>
+                </div>
+            `;
+        }
+
+        /* ============================================================
+            🔥 Post Loading and Rendering (Updated Logic)
         ============================================================ */
         function loadPosts() {
             const feed = document.getElementById("postsFeed");
@@ -440,6 +544,7 @@
                 if (!snap.exists()) {
                     feed.style.display = "none";
                     noPosts.style.display = "block";
+                    renderTrendingPost(null); // No posts, no trend
                     return;
                 }
 
@@ -447,6 +552,10 @@
                 snap.forEach(s => {
                     posts.push({ id: s.key, ...s.val() });
                 });
+                
+                // Calculate and Render Trending Post
+                const trendingPost = calculateTodayTrendingPost(posts);
+                renderTrendingPost(trendingPost);
                 
                 posts.reverse(); 
 
@@ -469,6 +578,12 @@
                 if (!existingPost) {
                     feed.insertBefore(createPostElement(newPost), feed.firstChild);
                     notifyUser("PostKina", "නව පෝස්ට් එකක් එකතු වුනා! 🎉"); // 🔥 Modified
+                    // Re-calculate trending post after adding a new one (Optional: can be optimized)
+                    postsRef.once("value").then(snap => {
+                        const allPosts = [];
+                        snap.forEach(s => allPosts.push({ id: s.key, ...s.val() }));
+                        renderTrendingPost(calculateTodayTrendingPost(allPosts));
+                    });
                 }
             });
 
@@ -480,6 +595,13 @@
                     const newElement = createPostElement(updatedPost);
                     postElement.replaceWith(newElement);
                 }
+                
+                // Re-calculate trending post after a change (like a new reaction)
+                postsRef.once("value").then(snap => {
+                    const allPosts = [];
+                    snap.forEach(s => allPosts.push({ id: s.key, ...s.val() }));
+                    renderTrendingPost(calculateTodayTrendingPost(allPosts));
+                });
             });
 
             postsRef.on("child_removed", (snapshot) => {
@@ -492,6 +614,13 @@
                     feed.style.display = "none";
                     noPosts.style.display = "block";
                 }
+                
+                // Re-calculate trending post after removal
+                postsRef.once("value").then(snap => {
+                    const allPosts = [];
+                    snap.forEach(s => allPosts.push({ id: s.key, ...s.val() }));
+                    renderTrendingPost(calculateTodayTrendingPost(allPosts));
+                });
             });
         }
 
@@ -589,6 +718,11 @@
                             <span class="text-lg sm:text-2xl">💬</span> 
                             <span class="font-bold text-sm sm:text-lg comment-count">${post.commentsCount || 0}</span>
                         </button>
+                        
+                        <button onclick="sharePost('${post.id}')" class="flex items-center space-x-1 px-2 py-1.5 sm:px-5 sm:py-3 rounded-xl sm:rounded-2xl hover:bg-gradient-to-r hover:from-cyan-50 hover:to-blue-50 text-gray-700 transition-all duration-300 hover:scale-110 text-xs sm:text-base">
+                            <span class="text-lg sm:text-2xl">🔗</span>
+                        </button>
+
                         <button onclick="downloadPost('${post.id}')" class="flex items-center space-x-1 px-2 py-1.5 sm:px-5 sm:py-3 rounded-xl sm:rounded-2xl hover:bg-gradient-to-r hover:from-green-50 hover:to-teal-50 text-gray-700 transition-all duration-300 hover:scale-110 hover:rotate-12 text-xs sm:text-base">
                             <span class="text-lg sm:text-2xl">⬇️</span>
                         </button>
@@ -605,7 +739,7 @@
         }
 
         /* ============================================================
-            🔥 Modal Logic (NEW)
+            🔥 Modal Logic (UNCHANGED)
         ============================================================ */
         const postModalOverlay = document.getElementById('postModalOverlay');
         const postModalCard = document.getElementById('postCreationCard');
@@ -645,6 +779,68 @@
                 postModalCard.classList.remove('modal-exit-active');
                 postModalCard.classList.add('modal-enter'); 
             }, 300);
+        }
+        
+        /* ============================================================
+            🔥 Share Post Logic (MODIFIED for Native Share and Copy Link)
+        ============================================================ */
+        
+        /**
+         * Fallback to copying the link to the clipboard if the Web Share API is not available.
+         * @param {string} link The URL to copy.
+         */
+        function fallbackCopyLink(link) {
+            const tempInput = document.createElement('input');
+            document.body.appendChild(tempInput);
+            tempInput.value = link;
+            tempInput.select();
+            tempInput.setSelectionRange(0, 99999); // For mobile devices
+            
+            try {
+                // Use the modern clipboard API if available
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(link);
+                    notifyUser("PostKina", "Link එක Copy කළා! ✅");
+                } else {
+                    document.execCommand('copy');
+                    notifyUser("PostKina", "Link එක Copy කළා! ✅");
+                }
+            } catch (err) {
+                console.error('Could not copy text: ', err);
+                notifyUser("PostKina Error", "Link එක Copy කිරීමේ දෝෂයක්. ❌");
+            }
+            
+            document.body.removeChild(tempInput);
+        }
+
+        /**
+         * Shares the post using the Native Web Share API or falls back to copying the link.
+         * @param {string} postId The ID of the post to share.
+         */
+        function sharePost(postId) {
+            const postLink = `${window.location.origin}/comment.html?postId=${postId}`;
+            
+            const shareData = {
+                title: 'PostKina Post',
+                text: 'Check out this post on PostKina!',
+                url: postLink,
+            };
+
+            if (navigator.share) {
+                // Use Web Share API (shows native sharing sheet - app list)
+                navigator.share(shareData)
+                    .then(() => console.log('Successful share'))
+                    .catch((error) => {
+                        // User cancelled, or specific error occurred (e.g., sharing not supported for some data)
+                        if (error.name !== "AbortError") {
+                            console.error('Error sharing, falling back to copy:', error);
+                            fallbackCopyLink(postLink);
+                        }
+                    });
+            } else {
+                // Fallback for browsers that don't support Web Share API
+                fallbackCopyLink(postLink);
+            }
         }
 
         /* ============================================================
@@ -832,7 +1028,7 @@
             window.location.href = `comment.html?postId=${id}`;
         }
 
-      // ... (existing code above)
+      // 🔥 Download Post (QR Code is included here, as requested)
 function downloadPost(postId) {
     postsRef.child(postId).once("value").then(snap => {
         const post = snap.val();
@@ -840,6 +1036,9 @@ function downloadPost(postId) {
 
         const themeName = localStorage.getItem("appTheme") || "default";
         const theme = THEMES[themeName] || THEMES.default;
+        
+        // Define the URL for redirection - This is the link for the QR code
+        const redirectURL = `${window.location.origin}/comment.html?postId=${postId}`;
 
         const wrapper = document.createElement("div");
         wrapper.style.cssText = `
@@ -865,7 +1064,7 @@ function downloadPost(postId) {
                 display: flex;
                 flex-direction: column;
             ">
-                <div style="
+                <div id="postCardToCapture" style="
                     background: white;
                     border-radius: 25px;
                     padding: 45px;
@@ -931,9 +1130,11 @@ function downloadPost(postId) {
                         padding-top: 25px;
                         border-top: 3px solid #f3f4f6;
                         display: flex;
-                        justify-content: flex-end; 
+                        justify-content: space-between; /* To separate QR and Text */
                         align-items: center;
                     ">
+                        <div id="qrcode" style="width: 50px; height: 50px;"></div>
+                        
                         <span style="
                             font-size: 18px;
                             color: #9ca3af;
@@ -956,9 +1157,18 @@ function downloadPost(postId) {
         `;
 
         document.body.appendChild(wrapper);
+        
+        // Generate QR Code *after* appending to body
+        new QRCode(document.getElementById("qrcode"), {
+            text: redirectURL,
+            width: 50,
+            height: 50,
+            colorDark : "#000000",
+            colorLight : "#ffffff",
+            correctLevel : QRCode.CorrectLevel.H
+        });
 
-        // ... (rest of the function remains the same)
-        html2canvas(wrapper, { 
+        html2canvas(document.getElementById("postCardToCapture"), { 
             scale: 3,
             backgroundColor: null,
             logging: false
@@ -1274,9 +1484,3 @@ function downloadPost(postId) {
     </script>
 </body>
 </html>
-
-
-
-
-
-
