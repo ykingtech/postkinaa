@@ -1,0 +1,1268 @@
+<!DOCTYPE html>
+<html lang="si">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KingBook - Story Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .line-clamp-2 {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        #storyContentArea .prose {
+            font-family: serif;
+            font-size: 1.125rem;
+        }
+        .loading-spinner {
+            border: 3px solid #f3f4f6;
+            border-top: 3px solid #9333ea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <nav id="navbar" class="bg-white shadow-md hidden fixed top-0 left-0 w-full z-10">
+        <div class="max-w-7xl mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center cursor-pointer" onclick="showHome()">
+                    <i class="fas fa-book-open text-3xl text-purple-600 mr-2"></i>
+                    <h1 class="text-2xl font-bold text-gray-800">KingBook</h1>
+                </div>
+                <div class="flex items-center space-x-4 md:space-x-6">
+                    <div class="flex items-center text-yellow-600 font-medium text-sm md:text-base">
+                        <i class="fas fa-coins mr-1"></i>
+                        <span id="userCoins">0</span>
+                    </div>
+                    <button id="dashboardBtn" onclick="showDashboard()" class="hidden text-gray-700 hover:text-purple-600 font-medium text-sm md:text-base">
+                        Dashboard
+                    </button>
+                    <button id="adminBtn" onclick="showAdmin()" class="hidden bg-red-500 text-white px-3 py-1 md:px-4 md:py-2 rounded-lg hover:bg-red-600 transition-colors font-medium text-sm md:text-base">
+                        <i class="fas fa-shield-alt mr-1"></i>Admin
+                    </button>
+                    <button onclick="showBuyCoins()" class="bg-yellow-500 text-white px-3 py-1 md:px-4 md:py-2 rounded-lg hover:bg-yellow-600 transition-colors font-medium text-sm md:text-base">
+                        Buy Coins
+                    </button>
+                    <button onclick="logout()" class="text-gray-700 hover:text-red-600">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div id="authForm" class="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center p-4">
+        <div class="bg-white rounded-lg shadow-2xl p-8 max-w-md w-full">
+            <div class="flex items-center justify-center mb-6">
+                <i class="fas fa-book-open text-5xl text-purple-600 mr-3"></i>
+                <h1 class="text-3xl font-bold text-gray-800">KingBook</h1>
+            </div>
+            
+            <button onclick="signInWithGoogle()" class="w-full bg-white border-2 border-gray-300 text-gray-700 py-3 rounded-lg hover:bg-gray-50 transition-colors font-medium flex items-center justify-center mb-4">
+                <svg class="w-6 h-6 mr-2" viewBox="0 0 24 24">
+                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                </svg>
+                Sign in with Google
+            </button>
+
+            <div class="relative my-6">
+                <div class="absolute inset-0 flex items-center">
+                    <div class="w-full border-t border-gray-300"></div>
+                </div>
+                <div class="relative flex justify-center text-sm">
+                    <span class="px-2 bg-white text-gray-500">Or continue with email</span>
+                </div>
+            </div>
+            
+            <form id="loginForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                    <input type="email" id="authEmail" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:outline-none" required>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                    <input type="password" id="authPassword" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:outline-none" required>
+                </div>
+
+                <div id="signupFields" class="hidden space-y-4">
+                    <div class="flex items-center space-x-2">
+                        <input type="checkbox" id="isWriter" class="w-4 h-4 text-purple-600 rounded">
+                        <label for="isWriter" class="text-sm font-medium text-gray-700">Register as Writer</label>
+                    </div>
+                    <div id="writerNameField" class="hidden">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Writer Name</label>
+                        <input type="text" id="writerName" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:outline-none">
+                    </div>
+                </div>
+
+                <p id="authError" class="text-red-500 text-sm hidden"></p>
+                <p id="authSuccess" class="text-green-500 text-sm hidden"></p>
+
+                <button type="submit" id="authSubmitBtn" class="w-full bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700 transition-colors font-medium">
+                    <span id="authButtonText">Login</span>
+                </button>
+
+                <button type="button" onclick="toggleAuthMode()" class="w-full text-purple-600 text-sm hover:underline">
+                    <span id="authToggleText">Don't have an account? Sign Up</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div id="mainContent" class="hidden pt-20"> 
+        <div id="homePage" class="max-w-6xl mx-auto p-4">
+            <div class="mb-6">
+                <div class="flex items-center bg-white rounded-lg shadow-md p-2">
+                    <i class="fas fa-search text-gray-400 ml-2"></i>
+                    <input type="text" id="searchInput" placeholder="Search stories or writers..." class="flex-1 px-4 py-2 focus:outline-none" oninput="filterStories()">
+                </div>
+            </div>
+
+            <div class="mb-8">
+                <div class="flex items-center mb-4">
+                    <i class="fas fa-fire text-2xl text-red-500 mr-2"></i>
+                    <h2 class="text-2xl font-bold text-gray-800">Trending Stories</h2>
+                </div>
+                <div id="trendingStories" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="text-center py-8 text-gray-500 col-span-2">
+                        <div class="loading-spinner mx-auto"></div>
+                        <p class="mt-4">Loading stories...</p>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <div class="flex items-center mb-4">
+                    <i class="fas fa-clock text-2xl text-blue-500 mr-2"></i>
+                    <h2 class="text-2xl font-bold text-gray-800">Recent Stories</h2>
+                </div>
+                <div id="recentStories" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="text-center py-8 text-gray-500 col-span-2">
+                        <div class="loading-spinner mx-auto"></div>
+                        <p class="mt-4">Loading stories...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="storyView" class="hidden max-w-4xl mx-auto p-4">
+            <button onclick="showHome()" class="mb-4 text-purple-600 hover:underline">
+                <i class="fas fa-arrow-left mr-2"></i>Back to Home
+            </button>
+            <div class="bg-white rounded-lg shadow-lg p-8">
+                <h1 id="storyTitle" class="text-3xl font-bold text-gray-800 mb-4"></h1>
+                <div class="flex items-center justify-between mb-6 pb-4 border-b">
+                    <span id="storyAuthor" class="text-purple-600 font-medium cursor-pointer hover:underline"></span>
+                    <span id="storyDate" class="text-gray-500 text-sm"></span>
+                </div>
+                <div id="storyContentArea"></div>
+            </div>
+        </div>
+
+        <div id="writerDashboard" class="hidden max-w-6xl mx-auto p-4">
+            <h1 class="text-3xl font-bold text-gray-800 mb-6">Writer Dashboard</h1>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                <div class="bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-lg shadow-lg p-6 text-white">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-yellow-100 text-sm">Total Coins Earned</p>
+                            <p id="writerCoins" class="text-3xl font-bold">0</p>
+                        </div>
+                        <i class="fas fa-coins text-5xl opacity-80"></i>
+                    </div>
+                </div>
+
+                <div class="bg-gradient-to-br from-purple-500 to-purple-700 rounded-lg shadow-lg p-6 text-white">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-purple-100 text-sm">Total Stories</p>
+                            <p id="writerStoriesCount" class="text-3xl font-bold">0</p>
+                        </div>
+                        <i class="fas fa-book text-5xl opacity-80"></i>
+                    </div>
+                </div>
+
+                <div class="bg-gradient-to-br from-blue-500 to-blue-700 rounded-lg shadow-lg p-6 text-white">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-blue-100 text-sm">Total Views</p>
+                            <p id="writerViews" class="text-3xl font-bold">0</p>
+                        </div>
+                        <i class="fas fa-eye text-5xl opacity-80"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">Request Coin Withdrawal</h2>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Coins to Withdraw (Current: <span id="currentWriterCoins">0</span>)</label>
+                        <input type="number" id="withdrawalCoinAmount" min="10" value="0" oninput="updateWithdrawalPrice()" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-none" required>
+                    </div>
+                    <p class="text-gray-600 text-sm mt-2">Value: Rs. <span id="withdrawalPriceRs">0</span> (Rs. 10 per coin)</p>
+                    <button onclick="requestWithdraw()" class="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition-colors font-medium">
+                        <i class="fas fa-money-bill-wave mr-2"></i>Submit Withdrawal Request
+                    </button>
+                    <p id="withdrawalError" class="text-red-500 text-sm hidden"></p>
+                </div>
+            </div>
+            <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">Publish New Story</h2>
+                <form id="publishStoryForm" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Title</label>
+                        <input type="text" id="storyTitleInput" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:outline-none" required>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                        <input type="text" id="storyDescription" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:outline-none" required>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Content</label>
+                        <textarea id="storyContentInput" rows="10" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:outline-none" required></textarea>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Price (King Coins, 0 for free)</label>
+                        <input type="number" id="storyPrice" min="0" value="0" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:outline-none" required>
+                    </div>
+
+                    <button type="submit" class="w-full bg-purple-600 text-white py-3 rounded-lg hover:bg-purple-700 transition-colors font-medium">
+                        <i class="fas fa-paper-plane mr-2"></i>Publish Story
+                    </button>
+                </form>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">My Stories</h2>
+                <div id="myStoriesList" class="space-y-4">
+                    <div class="text-center py-4 text-gray-500">Loading stories...</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="writerProfile" class="hidden max-w-6xl mx-auto p-4">
+            <button onclick="showHome()" class="mb-4 text-purple-600 hover:underline">
+                <i class="fas fa-arrow-left mr-2"></i>Back to Home
+            </button>
+
+            <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+                <div class="flex items-center mb-4">
+                    <div id="profileAvatar" class="w-16 h-16 bg-purple-600 rounded-full flex items-center justify-center text-white text-2xl font-bold mr-4"></div>
+                    <div>
+                        <h1 id="profileWriterName" class="text-3xl font-bold text-gray-800"></h1>
+                        <p id="profileStoriesCount" class="text-gray-600">0 Stories</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">Stories</h2>
+                <div id="profileStoriesList" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+            </div>
+        </div>
+
+        <div id="buyCoinsPage" class="hidden max-w-2xl mx-auto p-4">
+            <button onclick="showHome()" class="mb-4 text-purple-600 hover:underline">
+                <i class="fas fa-arrow-left mr-2"></i>Back to Home
+            </button>
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6">Buy King Coins</h2>
+                
+                <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded mb-6">
+                    <p class="text-sm font-medium text-blue-800 mb-2">Bank Details:</p>
+                    <div class="text-sm text-blue-700 space-y-1">
+                        <p><strong>Bank:</strong> Commercial Bank</p>
+                        <p><strong>Account:</strong> 1234567890</p>
+                        <p><strong>Name:</strong> KingBook Admin</p>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Number of Coins (Rs. 10 per coin)</label>
+                    <input type="number" id="coinAmount" min="10" value="10" oninput="updateCoinPrice()" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:outline-none">
+                    <p class="text-gray-600 text-sm mt-2">Total: Rs. <span id="totalPrice">100</span></p>
+                </div>
+
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Upload Payment Receipt</label>
+                    <input type="file" id="receiptUpload" accept="image/*" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
+                    <p id="receiptStatus" class="text-green-600 text-sm mt-2 hidden">✓ Receipt uploaded</p>
+                </div>
+
+                <button onclick="submitCoinRequest()" class="w-full bg-yellow-500 text-white py-3 rounded-lg hover:bg-yellow-600 transition-colors font-medium">
+                    <i class="fas fa-paper-plane mr-2"></i>Submit Request
+                </button>
+            </div>
+        </div>
+
+        <div id="adminPanel" class="hidden max-w-7xl mx-auto p-4">
+            <h1 class="text-3xl font-bold text-gray-800 mb-6 flex items-center">
+                <i class="fas fa-shield-alt text-red-600 mr-2"></i>
+                Admin Panel
+            </h1>
+            
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+                <div class="bg-gradient-to-br from-blue-500 to-blue-700 rounded-lg shadow-lg p-6 text-white">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-blue-100 text-sm">Total Users</p>
+                            <p id="adminTotalUsers" class="text-3xl font-bold">0</p>
+                        </div>
+                        <i class="fas fa-users text-5xl opacity-80"></i>
+                    </div>
+                </div>
+
+                <div class="bg-gradient-to-br from-purple-500 to-purple-700 rounded-lg shadow-lg p-6 text-white">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-purple-100 text-sm">Total Writers</p>
+                            <p id="adminTotalWriters" class="text-3xl font-bold">0</p>
+                        </div>
+                        <i class="fas fa-pen text-5xl opacity-80"></i>
+                    </div>
+                </div>
+
+                <div class="bg-gradient-to-br from-green-500 to-green-700 rounded-lg shadow-lg p-6 text-white">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-green-100 text-sm">Total Stories</p>
+                            <p id="adminTotalStories" class="text-3xl font-bold">0</p>
+                        </div>
+                        <i class="fas fa-book text-5xl opacity-80"></i>
+                    </div>
+                </div>
+
+                <div class="bg-gradient-to-br from-yellow-500 to-yellow-700 rounded-lg shadow-lg p-6 text-white">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-yellow-100 text-sm">Total Coins</p>
+                            <p id="adminTotalCoins" class="text-3xl font-bold">0</p>
+                        </div>
+                        <i class="fas fa-coins text-5xl opacity-80"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4 flex items-center">
+                    <i class="fas fa-shopping-cart text-yellow-600 mr-2"></i>
+                    Coin Purchase Requests
+                </h2>
+                <div id="adminCoinRequestsList" class="space-y-4">
+                    <div class="text-center py-4 text-gray-500">Loading...</div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4 flex items-center">
+                    <i class="fas fa-money-bill-wave text-green-600 mr-2"></i>
+                    Withdrawal Requests
+                </h2>
+                <div id="adminWithdrawalRequestsList" class="space-y-4">
+                    <div class="text-center py-4 text-gray-500">Loading...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="receiptModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-lg max-w-2xl w-full p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-xl font-bold text-gray-800">Payment Receipt</h3>
+                <button onclick="closeReceiptModal()" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times text-2xl"></i>
+                </button>
+            </div>
+            <img id="receiptImage" src="" alt="Receipt" class="w-full rounded-lg">
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+        import { getDatabase, ref, set, get, push, update, onValue, serverTimestamp, query, orderByChild } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBRYRK87zku4avh2D9IFMDnAHunX6Eele4", 
+            authDomain: "kingbook-eca39.firebaseapp.com",
+            databaseURL: "https://kingbook-eca39-default-rtdb.firebaseio.com",
+            projectId: "kingbook-eca39",
+            storageBucket: "kingbook-eca39.firebasestorage.app",
+            messagingSenderId: "223307818196",
+            appId: "1:223307818196:web:2d395e02c3e88dbe0bc741",
+            measurementId: "G-XTLQH912LT"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const database = getDatabase(app);
+        const googleProvider = new GoogleAuthProvider();
+
+        const ADMIN_EMAIL = 'yasodhasandeepa@gmail.com';
+
+        window.auth = auth;
+        window.database = database;
+        window.currentUser = null;
+        window.userProfile = null;
+        window.allStories = [];
+        window.currentStory = null;
+        window.selectedWriterId = null;
+        window.receiptData = null;
+        window.isSignupMode = false;
+        window.isAdmin = false;
+
+        // Google Sign In
+        window.signInWithGoogle = async function() {
+            try {
+                const result = await signInWithPopup(auth, googleProvider);
+                const user = result.user;
+                
+                const userRef = ref(database, `users/${user.uid}`);
+                const snapshot = await get(userRef);
+                
+                if (!snapshot.exists()) {
+                    await set(userRef, {
+                        email: user.email,
+                        coins: 0,
+                        isWriter: false,
+                        writerName: user.displayName || user.email.split('@')[0],
+                        unlockedStories: {},
+                        createdAt: Date.now()
+                    });
+                }
+            } catch (error) {
+                console.error('Google sign in error:', error);
+                document.getElementById('authError').textContent = error.message;
+                document.getElementById('authError').classList.remove('hidden');
+            }
+        };
+
+        window.toggleAuthMode = function() {
+            window.isSignupMode = !window.isSignupMode;
+            document.getElementById('authButtonText').textContent = window.isSignupMode ? 'Sign Up' : 'Login';
+            document.getElementById('authToggleText').textContent = window.isSignupMode ? 'Already have an account? Login' : "Don't have an account? Sign Up";
+            document.getElementById('signupFields').classList.toggle('hidden', !window.isSignupMode);
+            document.getElementById('authEmail').value = '';
+            document.getElementById('authPassword').value = '';
+            document.getElementById('authError').classList.add('hidden');
+            document.getElementById('authSuccess').classList.add('hidden');
+        };
+
+        window.logout = function() {
+            signOut(auth);
+            window.userProfile = null;
+            window.allStories = [];
+            window.currentStory = null;
+            window.location.reload();
+        };
+
+        onAuthStateChanged(auth, async (user) => {
+            window.currentUser = user;
+            
+            if (user) {
+                try {
+                    const profileRef = ref(database, `users/${user.uid}`);
+                    const snapshot = await get(profileRef);
+                    
+                    if (snapshot.exists()) {
+                        window.userProfile = snapshot.val();
+                        window.isAdmin = user.email === ADMIN_EMAIL;
+                        
+                        document.getElementById('authForm').classList.add('hidden');
+                        document.getElementById('mainContent').classList.remove('hidden');
+                        document.getElementById('navbar').classList.remove('hidden');
+                        
+                        updateUI();
+                        loadStories();
+                    } else {
+                        await signOut(auth);
+                    }
+                } catch (error) {
+                    console.error('Error loading user profile:', error);
+                    await signOut(auth);
+                }
+            } else {
+                document.getElementById('authForm').classList.remove('hidden');
+                document.getElementById('mainContent').classList.add('hidden');
+                document.getElementById('navbar').classList.add('hidden');
+            }
+        });
+
+        function updateUI() {
+            document.getElementById('userCoins').textContent = window.userProfile?.coins || 0;
+            
+            if (window.userProfile?.isWriter) {
+                document.getElementById('dashboardBtn').classList.remove('hidden');
+            } else {
+                document.getElementById('dashboardBtn').classList.add('hidden');
+            }
+            
+            if (window.isAdmin) {
+                document.getElementById('adminBtn').classList.remove('hidden');
+            } else {
+                document.getElementById('adminBtn').classList.add('hidden');
+            }
+        }
+
+        function loadStories() {
+            const storiesRef = ref(database, 'stories');
+            onValue(storiesRef, (snapshot) => {
+                if (snapshot.exists()) {
+                    const data = snapshot.val();
+                    window.allStories = Object.keys(data).map(key => ({
+                        id: key,
+                        ...data[key]
+                    })).sort((a, b) => b.timestamp - a.timestamp);
+                    displayStories();
+                    
+                    if (window.userProfile?.isWriter && !document.getElementById('writerDashboard').classList.contains('hidden')) {
+                        window.showDashboard();
+                    }
+                } else {
+                    window.allStories = [];
+                    document.getElementById('trendingStories').innerHTML = '<div class="col-span-2 text-center py-8 text-gray-500">No stories yet</div>';
+                    document.getElementById('recentStories').innerHTML = '<div class="col-span-2 text-center py-8 text-gray-500">No stories yet</div>';
+                }
+            });
+        }
+
+        function displayStories(filterText = '') {
+            const normalizedFilter = filterText.toLowerCase();
+            const filteredStories = window.allStories.filter(story => 
+                story.title.toLowerCase().includes(normalizedFilter) || 
+                story.authorName.toLowerCase().includes(normalizedFilter)
+            );
+
+            const trending = filteredStories.slice(0, 10);
+            const trendingHTML = trending.length > 0 ? trending.map(createStoryCard).join('') : '<div class="col-span-2 text-center py-8 text-gray-500">No stories found</div>';
+            
+            const recentHTML = filteredStories.length > 0 ? filteredStories.map(createStoryCard).join('') : '<div class="col-span-2 text-center py-8 text-gray-500">No stories found</div>';
+            
+            document.getElementById('trendingStories').innerHTML = trendingHTML;
+            document.getElementById('recentStories').innerHTML = recentHTML;
+        }
+
+        window.filterStories = function() {
+            const searchInput = document.getElementById('searchInput').value;
+            displayStories(searchInput);
+        }
+
+        function createStoryCard(story) {
+            const isUnlocked = window.userProfile?.unlockedStories?.[story.id] || story.price === 0 || story.authorId === window.currentUser?.uid;
+            const lockIcon = isUnlocked ? '<i class="fas fa-unlock text-green-600 mr-1"></i>' : '<i class="fas fa-lock text-red-600 mr-1"></i>';
+            
+            return `
+                <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-xl transition-shadow">
+                    <div class="flex items-start justify-between mb-3">
+                        <h3 class="text-xl font-bold text-gray-800 cursor-pointer hover:text-purple-600 flex-1" onclick="openStory('${story.id}')">
+                            ${story.title}
+                        </h3>
+                        <button onclick="shareStory('${story.id}', event)" class="text-gray-500 hover:text-purple-600 ml-2">
+                            <i class="fas fa-share-alt"></i>
+                        </button>
+                    </div>
+                    <p class="text-gray-600 text-sm mb-4 line-clamp-2">${story.description}</p>
+                    <div class="flex items-center justify-between text-sm">
+                        <span class="text-purple-600 font-medium cursor-pointer hover:underline" onclick="viewWriter('${story.authorId}')">
+                            ${story.authorName}
+                        </span>
+                        <div class="flex items-center space-x-3">
+                            ${story.price > 0 ? `<div class="flex items-center text-yellow-600">${lockIcon}<span class="font-medium">${story.price} coins</span></div>` : '<span class="text-green-600 font-medium">Free</span>'}
+                            <span class="text-gray-500"><i class="fas fa-eye mr-1"></i>${story.views || 0}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        window.openStory = function(storyId) {
+            const story = window.allStories.find(s => s.id === storyId);
+            if (story) {
+                window.currentStory = story;
+                displayStory(story);
+            }
+        }
+
+        async function displayStory(story) {
+            window.showHome();
+            document.getElementById('homePage').classList.add('hidden');
+            document.getElementById('storyView').classList.remove('hidden');
+
+            document.getElementById('storyTitle').textContent = story.title;
+            document.getElementById('storyAuthor').textContent = `By ${story.authorName}`;
+            document.getElementById('storyAuthor').onclick = () => viewWriter(story.authorId);
+            document.getElementById('storyDate').textContent = story.timestamp ? new Date(story.timestamp).toLocaleDateString() : 'N/A';
+
+            const isUnlocked = window.userProfile?.unlockedStories?.[story.id] || story.price === 0 || story.authorId === window.currentUser?.uid;
+
+            if (isUnlocked) {
+                document.getElementById('storyContentArea').innerHTML = `
+                    <div class="prose max-w-none">
+                        <p class="text-gray-700 whitespace-pre-wrap leading-relaxed">${story.content}</p>
+                    </div>
+                `;
+                
+                if (story.authorId !== window.currentUser?.uid) {
+                    const storyRef = ref(database, `stories/${story.id}`);
+                    const snapshot = await get(storyRef);
+                    if (snapshot.exists()) {
+                        const currentViews = snapshot.val().views || 0;
+                        await update(storyRef, { views: currentViews + 1 });
+                    }
+                }
+            } else {
+                document.getElementById('storyContentArea').innerHTML = `
+                    <div class="text-center py-12">
+                        <i class="fas fa-lock text-6xl text-gray-400 mb-4"></i>
+                        <h3 class="text-xl font-bold text-gray-800 mb-2">This story is locked</h3>
+                        <p class="text-gray-600 mb-6">Unlock with ${story.price} King Coins to read. You currently have ${window.userProfile?.coins || 0} coins.</p>
+                        <button onclick="unlockStory('${story.id}')" class="bg-yellow-500 text-white px-6 py-3 rounded-lg hover:bg-yellow-600 transition-colors font-medium">
+                            <i class="fas fa-unlock mr-2"></i>Unlock for ${story.price} Coins
+                        </button>
+                    </div>
+                `;
+            }
+        }
+
+        window.unlockStory = async function(storyId) {
+            // FIX: Use the storyId to find the story in window.allStories for robustness
+            const story = window.allStories.find(s => s.id === storyId);
+            if (!story) {
+                alert('Story not found.');
+                return;
+            }
+
+            if (window.userProfile.coins < story.price) {
+                alert('Not enough coins! Please buy more coins.');
+                return;
+            }
+
+            if (confirm(`Do you want to spend ${story.price} coins to unlock "${story.title}"?`)) {
+                try {
+                    const authorCoinsSnapshot = await get(ref(database, `users/${story.authorId}/coins`));
+                    const authorCoins = authorCoinsSnapshot.val() || 0;
+                    
+                    const updates = {};
+                    updates[`users/${window.currentUser.uid}/coins`] = (window.userProfile.coins || 0) - story.price;
+                    updates[`users/${window.currentUser.uid}/unlockedStories/${storyId}`] = true;
+                    updates[`users/${story.authorId}/coins`] = authorCoins + story.price;
+
+                    await update(ref(database), updates);
+                    
+                    window.userProfile.coins -= story.price;
+                    if (!window.userProfile.unlockedStories) window.userProfile.unlockedStories = {};
+                    window.userProfile.unlockedStories[storyId] = true;
+                    
+                    updateUI();
+                    displayStory(story);
+                    alert('Story unlocked successfully!');
+                } catch (error) {
+                    console.error('Error unlocking story:', error);
+                    alert('Error unlocking story. Please try again.');
+                }
+            }
+        }
+
+        window.showDashboard = function() {
+            if (!window.userProfile?.isWriter) return;
+
+            document.getElementById('homePage').classList.add('hidden');
+            document.getElementById('storyView').classList.add('hidden');
+            document.getElementById('writerDashboard').classList.remove('hidden');
+            document.getElementById('writerProfile').classList.add('hidden');
+            document.getElementById('buyCoinsPage').classList.add('hidden');
+            document.getElementById('adminPanel').classList.add('hidden');
+
+            const myStories = window.allStories.filter(s => s.authorId === window.currentUser.uid);
+            const totalViews = myStories.reduce((acc, s) => acc + (s.views || 0), 0);
+
+            // FIXED: Update current coins in the withdrawal form
+            document.getElementById('writerCoins').textContent = window.userProfile.coins || 0;
+            document.getElementById('currentWriterCoins').textContent = window.userProfile.coins || 0;
+            document.getElementById('writerStoriesCount').textContent = myStories.length;
+            document.getElementById('writerViews').textContent = totalViews;
+            
+            window.updateWithdrawalPrice(); // Initialize withdrawal price display
+
+            const myStoriesListContainer = document.getElementById('myStoriesList');
+            if (myStories.length > 0) {
+                myStoriesListContainer.innerHTML = myStories.map(story => `
+                    <div class="flex items-center justify-between bg-gray-50 p-4 rounded-lg border border-gray-200">
+                        <div class="flex-1 min-w-0 mr-4">
+                            <p class="text-lg font-semibold text-gray-800 truncate">${story.title}</p>
+                            <p class="text-sm text-gray-500">
+                                ${story.price > 0 ? `<i class="fas fa-coins text-yellow-500 mr-1"></i>${story.price} Coins` : '<i class="fas fa-money-bill-alt text-green-500 mr-1"></i>Free'} |
+                                <i class="fas fa-eye text-blue-500 mr-1"></i>${story.views || 0} Views
+                            </p>
+                        </div>
+                        <button onclick="openStory('${story.id}')" class="text-purple-600 hover:text-purple-800 font-medium">
+                            View
+                        </button>
+                    </div>
+                `).join('');
+            } else {
+                myStoriesListContainer.innerHTML = '<div class="text-center py-4 text-gray-500">No stories yet</div>';
+            }
+        }
+
+        document.getElementById('publishStoryForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const title = document.getElementById('storyTitleInput').value;
+            const description = document.getElementById('storyDescription').value;
+            const content = document.getElementById('storyContentInput').value;
+            const price = parseInt(document.getElementById('storyPrice').value) || 0;
+
+            if (!window.userProfile?.isWriter) {
+                alert('You must be registered as a writer to publish stories.');
+                return;
+            }
+
+            const newStoryRef = push(ref(database, 'stories'));
+            const storyData = {
+                title: title,
+                description: description,
+                content: content,
+                price: price,
+                authorId: window.currentUser.uid,
+                authorName: window.userProfile.writerName,
+                timestamp: Date.now(),
+                views: 0
+            };
+
+            try {
+                await set(newStoryRef, storyData);
+                alert('Story published successfully!');
+                document.getElementById('publishStoryForm').reset();
+                
+                if (!window.userProfile.unlockedStories) window.userProfile.unlockedStories = {};
+                window.userProfile.unlockedStories[newStoryRef.key] = true;
+                window.showDashboard();
+            } catch (error) {
+                console.error('Error publishing story:', error);
+                alert('Error publishing story. Please try again.');
+            }
+        });
+        
+        // FIXED: New function to update withdrawal price display
+        window.updateWithdrawalPrice = function() {
+            const coins = parseInt(document.getElementById('withdrawalCoinAmount').value) || 0;
+            const price = coins * 10;
+            document.getElementById('withdrawalPriceRs').textContent = price.toLocaleString('en-US');
+        }
+
+        // FIXED: Updated requestWithdraw function to accept amount
+        window.requestWithdraw = async function() {
+            const coinsToWithdraw = parseInt(document.getElementById('withdrawalCoinAmount').value);
+            const currentCoins = window.userProfile?.coins || 0;
+            const priceRs = coinsToWithdraw * 10;
+            const errorElement = document.getElementById('withdrawalError');
+            errorElement.classList.add('hidden');
+            
+            if (isNaN(coinsToWithdraw) || coinsToWithdraw <= 0) {
+                errorElement.textContent = 'Please enter a valid amount of coins.';
+                errorElement.classList.remove('hidden');
+                return;
+            }
+
+            if (coinsToWithdraw > currentCoins) {
+                errorElement.textContent = `You only have ${currentCoins} coins. You cannot withdraw ${coinsToWithdraw}.`;
+                errorElement.classList.remove('hidden');
+                return;
+            }
+            
+            const bankDetails = prompt('Enter your bank details:\n(Bank Name, Account Number, Account Name)');
+            if (!bankDetails) return;
+            
+            try {
+                const withdrawalData = {
+                    userId: window.currentUser.uid,
+                    writerName: window.userProfile.writerName,
+                    amount: coinsToWithdraw,      // Requested coin amount
+                    amountRs: priceRs,            // Calculated Rupee value
+                    bankDetails: bankDetails,
+                    status: 'pending',
+                    timestamp: Date.now()
+                };
+                
+                await push(ref(database, 'withdrawRequests'), withdrawalData);
+                alert(`Withdrawal request submitted for ${coinsToWithdraw} coins (Rs. ${priceRs}). Admin will process it soon.`);
+                document.getElementById('withdrawalCoinAmount').value = 0;
+                window.updateWithdrawalPrice();
+            } catch (error) {
+                console.error('Error submitting withdrawal:', error);
+                errorElement.textContent = 'Error submitting withdrawal request.';
+                errorElement.classList.remove('hidden');
+            }
+        }
+
+        window.viewWriter = async function(authorId) {
+            window.selectedWriterId = authorId;
+            
+            try {
+                const writerRef = ref(database, `users/${authorId}`);
+                const snapshot = await get(writerRef);
+                
+                if (snapshot.exists()) {
+                    const writerData = snapshot.val();
+                    const writerStories = window.allStories.filter(s => s.authorId === authorId);
+                    
+                    window.showHome();
+                    document.getElementById('homePage').classList.add('hidden');
+                    document.getElementById('writerProfile').classList.remove('hidden');
+
+                    document.getElementById('profileAvatar').textContent = writerData.writerName.charAt(0).toUpperCase();
+                    document.getElementById('profileWriterName').textContent = writerData.writerName;
+                    document.getElementById('profileStoriesCount').textContent = `${writerStories.length} Stories`;
+                    document.getElementById('profileStoriesList').innerHTML = writerStories.length > 0 ? 
+                        writerStories.map(createStoryCard).join('') : 
+                        '<div class="col-span-2 text-center py-8 text-gray-500">No stories yet</div>';
+                } else {
+                    alert('Writer profile not found.');
+                }
+            } catch (error) {
+                console.error('Error loading writer profile:', error);
+            }
+        }
+
+        window.showBuyCoins = function() {
+            window.showHome();
+            document.getElementById('homePage').classList.add('hidden');
+            document.getElementById('buyCoinsPage').classList.remove('hidden');
+            updateCoinPrice();
+            document.getElementById('receiptUpload').value = '';
+            window.receiptData = null;
+            document.getElementById('receiptStatus').classList.add('hidden');
+        }
+
+        window.updateCoinPrice = function() {
+            const coins = parseInt(document.getElementById('coinAmount').value) || 0;
+            const price = coins * 10;
+            document.getElementById('totalPrice').textContent = price;
+        }
+
+        document.getElementById('receiptUpload').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onloadend = function() {
+                    window.receiptData = reader.result;
+                    document.getElementById('receiptStatus').classList.remove('hidden');
+                    document.getElementById('receiptStatus').textContent = `✓ Receipt uploaded: ${file.name}`;
+                };
+                reader.readAsDataURL(file);
+            } else {
+                document.getElementById('receiptStatus').classList.add('hidden');
+                window.receiptData = null;
+            }
+        });
+
+        window.submitCoinRequest = async function() {
+            const coinAmount = parseInt(document.getElementById('coinAmount').value);
+            const totalPrice = coinAmount * 10;
+            
+            if (coinAmount <= 0) {
+                alert('Please enter a valid coin amount.');
+                return;
+            }
+
+            if (!window.receiptData) {
+                alert('Please upload the payment receipt.');
+                return;
+            }
+
+            const requestData = {
+                userId: window.currentUser.uid,
+                username: window.userProfile.writerName || window.currentUser.email,
+                requestedCoins: coinAmount,
+                amountPaid: totalPrice,
+                receiptURL: window.receiptData,
+                status: 'Pending',
+                requestedAt: Date.now()
+            };
+
+            try {
+                await push(ref(database, 'coinRequests'), requestData);
+                alert(`Coin request submitted for ${coinAmount} coins (Rs. ${totalPrice}). It will be processed shortly.`);
+                window.showHome();
+            } catch (error) {
+                console.error('Error submitting coin request:', error);
+                alert('Failed to submit request. Please try again.');
+            }
+        }
+
+        window.showAdmin = function() {
+            if (!window.isAdmin) return;
+            
+            document.getElementById('homePage').classList.add('hidden');
+            document.getElementById('storyView').classList.add('hidden');
+            document.getElementById('writerDashboard').classList.add('hidden');
+            document.getElementById('writerProfile').classList.add('hidden');
+            document.getElementById('buyCoinsPage').classList.add('hidden');
+            document.getElementById('adminPanel').classList.remove('hidden');
+            
+            loadAdminStats();
+            loadAdminCoinRequests();
+            loadAdminWithdrawals();
+        }
+
+        async function loadAdminStats() {
+            const usersRef = ref(database, 'users');
+            const storiesRef = ref(database, 'stories');
+            
+            const usersSnapshot = await get(usersRef);
+            const storiesSnapshot = await get(storiesRef);
+            
+            let totalUsers = 0;
+            let totalWriters = 0;
+            let totalCoins = 0;
+            
+            if (usersSnapshot.exists()) {
+                const users = usersSnapshot.val();
+                totalUsers = Object.keys(users).length;
+                
+                Object.values(users).forEach(user => {
+                    if (user.isWriter) totalWriters++;
+                    totalCoins += user.coins || 0;
+                });
+            }
+            
+            const totalStories = storiesSnapshot.exists() ? Object.keys(storiesSnapshot.val()).length : 0;
+            
+            document.getElementById('adminTotalUsers').textContent = totalUsers;
+            document.getElementById('adminTotalWriters').textContent = totalWriters;
+            document.getElementById('adminTotalStories').textContent = totalStories;
+            document.getElementById('adminTotalCoins').textContent = totalCoins;
+        }
+
+        function loadAdminCoinRequests() {
+            const coinRequestsRef = ref(database, 'coinRequests');
+            onValue(coinRequestsRef, (snapshot) => {
+                const container = document.getElementById('adminCoinRequestsList');
+                
+                if (!snapshot.exists()) {
+                    container.innerHTML = '<p class="text-gray-500 text-center py-4">No coin requests</p>';
+                    return;
+                }
+                
+                const data = snapshot.val();
+                const requests = Object.keys(data).map(key => ({
+                    id: key,
+                    ...data[key]
+                })).sort((a, b) => b.requestedAt - a.requestedAt);
+                
+                container.innerHTML = requests.map(req => {
+                    const statusColor = req.status.toLowerCase() === 'approved' ? 'green' : req.status.toLowerCase() === 'rejected' ? 'red' : 'yellow';
+                    const statusIcon = req.status.toLowerCase() === 'approved' ? 'check-circle' : req.status.toLowerCase() === 'rejected' ? 'times-circle' : 'clock';
+                    
+                    return `
+                        <div class="border border-gray-200 rounded-lg p-4">
+                            <div class="flex items-start justify-between">
+                                <div class="flex-1">
+                                    <div class="flex items-center mb-2">
+                                        <i class="fas fa-user text-purple-600 mr-2"></i>
+                                        <span class="font-medium text-gray-800">${req.username || req.userId}</span>
+                                        <span class="ml-3 px-2 py-1 text-xs rounded-full bg-${statusColor}-100 text-${statusColor}-700">
+                                            <i class="fas fa-${statusIcon} mr-1"></i>${req.status}
+                                        </span>
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-4 text-sm text-gray-600 mb-2">
+                                        <div><i class="fas fa-coins text-yellow-600 mr-1"></i>Coins: ${req.requestedCoins}</div>
+                                        <div><i class="fas fa-rupee-sign text-green-600 mr-1"></i>Amount: Rs. ${req.amountPaid}</div>
+                                    </div>
+                                    <div class="text-xs text-gray-500">
+                                        <i class="fas fa-clock mr-1"></i>${new Date(req.requestedAt).toLocaleString()}
+                                    </div>
+                                </div>
+                                <div class="flex flex-col space-y-2 ml-4">
+                                    <button onclick="viewReceipt('${req.receiptURL}')" class="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 text-sm">
+                                        <i class="fas fa-eye mr-1"></i>View Receipt
+                                    </button>
+                                    ${req.status.toLowerCase() === 'pending' ? `
+                                        <button onclick="approveCoinRequest('${req.id}', '${req.userId}', ${req.requestedCoins})" class="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600 text-sm">
+                                            <i class="fas fa-check mr-1"></i>Approve
+                                        </button>
+                                        <button onclick="rejectCoinRequest('${req.id}')" class="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 text-sm">
+                                            <i class="fas fa-times mr-1"></i>Reject
+                                        </button>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            });
+        }
+
+        function loadAdminWithdrawals() {
+            const withdrawalRequestsRef = ref(database, 'withdrawRequests');
+            onValue(withdrawalRequestsRef, (snapshot) => {
+                const container = document.getElementById('adminWithdrawalRequestsList');
+                
+                if (!snapshot.exists()) {
+                    container.innerHTML = '<p class="text-gray-500 text-center py-4">No withdrawal requests</p>';
+                    return;
+                }
+                
+                const data = snapshot.val();
+                const requests = Object.keys(data).map(key => ({
+                    id: key,
+                    ...data[key]
+                })).sort((a, b) => b.timestamp - a.timestamp);
+                
+                container.innerHTML = requests.map(req => {
+                    const statusColor = req.status.toLowerCase() === 'approved' ? 'green' : req.status.toLowerCase() === 'rejected' ? 'red' : 'yellow';
+                    const statusIcon = req.status.toLowerCase() === 'approved' ? 'check-circle' : req.status.toLowerCase() === 'rejected' ? 'times-circle' : 'clock';
+                    
+                    // FIXED: Display both Coin amount and Rupee value
+                    const amountRs = req.amountRs || (req.amount * 10);
+
+                    return `
+                        <div class="border border-gray-200 rounded-lg p-4">
+                            <div class="flex items-start justify-between">
+                                <div class="flex-1">
+                                    <div class="flex items-center mb-2">
+                                        <i class="fas fa-pen text-purple-600 mr-2"></i>
+                                        <span class="font-medium text-gray-800">${req.writerName || req.userId}</span>
+                                        <span class="ml-3 px-2 py-1 text-xs rounded-full bg-${statusColor}-100 text-${statusColor}-700">
+                                            <i class="fas fa-${statusIcon} mr-1"></i>${req.status}
+                                        </span>
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-4 text-sm text-gray-600 mb-2">
+                                        <div><i class="fas fa-coins text-yellow-600 mr-1"></i>Coins: ${req.amount}</div>
+                                        <div><i class="fas fa-rupee-sign text-green-600 mr-1"></i>Value: Rs. ${amountRs}</div>
+                                    </div>
+                                    <div class="text-sm text-gray-600 mb-2 bg-gray-50 p-2 rounded">
+                                        <i class="fas fa-university mr-1"></i>
+                                        <strong>Bank Details:</strong><br>
+                                        <pre class="mt-1 text-xs whitespace-pre-wrap">${req.bankDetails}</pre>
+                                    </div>
+                                    <div class="text-xs text-gray-500">
+                                        <i class="fas fa-clock mr-1"></i>${new Date(req.timestamp).toLocaleString()}
+                                    </div>
+                                </div>
+                                <div class="flex flex-col space-y-2 ml-4">
+                                    ${req.status.toLowerCase() === 'pending' ? `
+                                        <button onclick="approveWithdrawal('${req.id}', '${req.userId}', ${req.amount})" class="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600 text-sm">
+                                            <i class="fas fa-check mr-1"></i>Approve
+                                        </button>
+                                        <button onclick="rejectWithdrawal('${req.id}', '${req.userId}', ${req.amount})" class="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 text-sm">
+                                            <i class="fas fa-times mr-1"></i>Reject
+                                        </button>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            });
+        }
+
+        window.viewReceipt = function(receiptData) {
+            document.getElementById('receiptImage').src = receiptData;
+            document.getElementById('receiptModal').classList.remove('hidden');
+        }
+
+        window.closeReceiptModal = function() {
+            document.getElementById('receiptModal').classList.add('hidden');
+        }
+
+        // ------------------------------------------------------------------
+        // FIXED: Admin Panel Request Approval/Rejection Functions (No Admin UID Check)
+        // ------------------------------------------------------------------
+
+        window.approveCoinRequest = async function(requestId, userId, coinAmount) {
+            if (!confirm('Approve this coin purchase request?')) return;
+            
+            // FIX: Ensure coinAmount is a number
+            const coins = parseInt(coinAmount); 
+            if (isNaN(coins)) {
+                alert('Invalid coin amount.');
+                return;
+            }
+
+            try {
+                const userCoinsRef = ref(database, `users/${userId}/coins`);
+                const userCoinsSnapshot = await get(userCoinsRef);
+                const currentCoins = userCoinsSnapshot.val() || 0;
+                
+                const updates = {};
+                // FIX: Add coins to user's account and DELETE the request from the list
+                updates[`users/${userId}/coins`] = currentCoins + coins;
+                updates[`coinRequests/${requestId}`] = null; // Delete the request
+                
+                await update(ref(database), updates);
+
+                if (window.currentUser.uid === userId) {
+                    window.userProfile.coins = currentCoins + coins;
+                    updateUI();
+                }
+
+                alert('Request approved and user coins updated!');
+            } catch (error) {
+                alert('Error approving request: ' + error.message);
+                console.error(error);
+            }
+        }
+
+        window.rejectCoinRequest = async function(requestId) {
+            if (!confirm('Reject this coin purchase request?')) return;
+            
+            try {
+                const updates = {};
+                // FIX: Delete the request upon rejection
+                updates[`coinRequests/${requestId}`] = null; // Delete the request
+                
+                await update(ref(database), updates);
+                alert('Request rejected and removed.');
+            } catch (error) {
+                alert('Error rejecting request: ' + error.message);
+                console.error(error);
+            }
+        }
+
+        window.approveWithdrawal = async function(requestId, userId, amount) {
+            if (!confirm('Approve this withdrawal request? Make sure you have completed the bank transfer.')) return;
+            
+            // FIX: Ensure amount is an integer number
+            const withdrawalAmount = parseInt(amount);
+            if (isNaN(withdrawalAmount)) {
+                alert('Invalid withdrawal amount.');
+                return;
+            }
+
+            try {
+                const userCoinsRef = ref(database, `users/${userId}/coins`);
+                const userCoinsSnapshot = await get(userCoinsRef);
+                const currentCoins = userCoinsSnapshot.val() || 0;
+                
+                const updates = {};
+                updates[`withdrawRequests/${requestId}/status`] = 'approved';
+                // Deduct the exact amount requested for withdrawal, ensuring it doesn't go below zero.
+                updates[`users/${userId}/coins`] = Math.max(0, currentCoins - withdrawalAmount); 
+                
+                await update(ref(database), updates);
+                alert('Withdrawal approved!');
+            } catch (error) {
+                alert('Error approving withdrawal: ' + error.message);
+                console.error(error);
+            }
+        }
+
+        window.rejectWithdrawal = async function(requestId, userId, amount) {
+            if (!confirm('Reject this withdrawal request?')) return;
+            
+            try {
+                const updates = {};
+                updates[`withdrawRequests/${requestId}/status`] = 'rejected';
+                // Note: Rejected withdrawals keep the coins in the user's account.
+                
+                await update(ref(database), updates);
+                alert('Withdrawal rejected!');
+            } catch (error) {
+                alert('Error rejecting withdrawal: ' + error.message);
+                console.error(error);
+            }
+        }
+        
+        // ------------------------------------------------------------------
+        // End of FIXED Admin Panel Request Approval/Rejection Functions
+        // ------------------------------------------------------------------
+
+
+        window.showHome = function() {
+            document.getElementById('homePage').classList.remove('hidden');
+            document.getElementById('storyView').classList.add('hidden');
+            document.getElementById('writerDashboard').classList.add('hidden');
+            document.getElementById('writerProfile').classList.add('hidden');
+            document.getElementById('buyCoinsPage').classList.add('hidden');
+            document.getElementById('adminPanel').classList.add('hidden');
+            document.getElementById('searchInput').value = '';
+            displayStories();
+        }
+        
+        window.shareStory = function(storyId, event) {
+            event.stopPropagation();
+            const shareUrl = `${window.location.origin}${window.location.pathname}?story=${storyId}`;
+            
+            if (navigator.share) {
+                navigator.share({
+                    title: 'KingBook Story',
+                    text: 'Check out this story on KingBook!',
+                    url: shareUrl,
+                }).then(() => console.log('Successful share'))
+                  .catch((error) => console.log('Error sharing', error));
+            } else {
+                navigator.clipboard.writeText(shareUrl).then(() => {
+                    alert(`Share URL copied to clipboard!`);
+                });
+            }
+        }
+
+        document.getElementById('isWriter').addEventListener('change', function() {
+            document.getElementById('writerNameField').classList.toggle('hidden', !this.checked);
+            document.getElementById('writerName').required = this.checked;
+        });
+
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const email = document.getElementById('authEmail').value;
+            const password = document.getElementById('authPassword').value;
+
+            document.getElementById('authError').classList.add('hidden');
+            document.getElementById('authSuccess').classList.add('hidden');
+
+            try {
+                if (window.isSignupMode) {
+                    const isWriter = document.getElementById('isWriter').checked;
+                    const writerName = document.getElementById('writerName').value;
+
+                    if (isWriter && !writerName) {
+                        document.getElementById('authError').textContent = 'Please enter a Writer Name.';
+                        document.getElementById('authError').classList.remove('hidden');
+                        return;
+                    }
+
+                    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                    const user = userCredential.user;
+                    
+                    await set(ref(database, 'users/' + user.uid), {
+                        email: user.email,
+                        coins: 0,
+                        isWriter: isWriter,
+                        writerName: isWriter ? writerName : user.email.split('@')[0],
+                        unlockedStories: {},
+                        createdAt: Date.now()
+                    });
+                    
+                    document.getElementById('authSuccess').textContent = 'Account created! Logging in...';
+                    document.getElementById('authSuccess').classList.remove('hidden');
+                } else {
+                    await signInWithEmailAndPassword(auth, email, password);
+                }
+            } catch (error) {
+                document.getElementById('authError').textContent = error.message;
+                document.getElementById('authError').classList.remove('hidden');
+            }
+        });
+    </script>
+</body>
+</html>
