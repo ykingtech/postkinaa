@@ -9,6 +9,9 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <style>
+        /* ============================================================
+            STYLES
+        ============================================================ */
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .fade-in { animation: fadeIn 0.5s ease-out; }
 
@@ -26,6 +29,13 @@
             background: rgba(255, 255, 255, 0.9);
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .reaction-btn {
+            background-color: #f3f4f6; /* Default gray background for unreacted */
+        }
+        .reaction-btn:hover {
+            opacity: 0.9;
         }
     </style>
 </head>
@@ -62,7 +72,7 @@
             </div>
         </div>
 
-        <div class="bg-white/90 backdrop-blur-lg rounded-3xl shadow-xl border border-pink-100 p-6 mb-8">
+        <div id="commentInputSection" class="bg-white/90 backdrop-blur-lg rounded-3xl shadow-xl border border-pink-100 p-6 mb-8">
             <h3 class="text-xl font-bold text-gray-700 mb-4" id="commentInputHeader">ඔබේ කමෙන්ටුව</h3>
             <textarea
                 id="commentInput"
@@ -94,8 +104,6 @@
         let currentUser = null;
         let currentPostId = null;
         let currentPostAuthorId = null; 
-
-        // 🔥 NEW: Edit/Delete variables
         let isEditingComment = false;
         let editingCommentKey = null;
 
@@ -115,8 +123,9 @@
         const database = firebase.database();
         const postsRef = database.ref("posts");
         const usersRef = database.ref("users");
+        const notificationsRef = database.ref("notifications"); 
 
-        // Theme Definitions (Copied from Home.html for consistency)
+        // Theme Definitions (unchanged)
         const THEMES = {
             default: {
                 bg: 'bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50',
@@ -164,7 +173,7 @@
                 bg: 'bg-gradient-to-br from-teal-50 via-cyan-50 to-blue-50',
                 header: 'from-teal-600 via-cyan-600 to-blue-600',
                 button: 'from-teal-500 to-cyan-500',
-                buttonHover: 'hover:from-teal-600 hover:to-cyan-600',
+                buttonHover: 'hover:from-teal-600 hover:to-cyan-500',
                 settingBackBG: '#14b8a6',
             }
         };
@@ -179,7 +188,8 @@
             const commentButton = document.getElementById('commentButton');
 
             // 1. Update Header Title
-            headerTitle.classList.remove('text-transparent', 'text-white', 'bg-gradient-to-r', 'from-purple-600', 'via-pink-600', 'to-blue-600');
+            headerTitle.classList.remove('text-transparent', 'text-white');
+            headerTitle.className = headerTitle.className.replace(/bg-gradient-to-r from-.*?to-.*?/g, ''); 
             
             if (themeName === 'dark') {
                 headerTitle.classList.add('text-white');
@@ -207,13 +217,254 @@
 
 
         function goBackToHome() {
-            // Signal Home.html to refresh this post
             localStorage.setItem(`refreshPost_${currentPostId}`, 'true');
-            // Redirect to Home.html
             window.location.href = `Home.html?highlightPost=${currentPostId}`;
         }
+        
+        function scrollToCommentInput() {
+            const inputSection = document.getElementById('commentInputSection');
+            inputSection.scrollIntoView({ behavior: 'smooth' });
+            document.getElementById('commentInput').focus();
+        }
 
-        // 🔥 MODIFIED: Now accepts the full comment object including the key
+        // Notification Utility
+        function showNotification(message) {
+            const notification = document.createElement('div');
+            notification.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-2xl shadow-2xl z-50 fade-in';
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                notification.style.transform = 'translateY(10px)';
+                notification.addEventListener('transitionend', () => notification.remove());
+            }, 3000);
+        }
+
+        // 🔥 REACTION LOGIC (UNCHANGED)
+        function createNotification(type, recipientId, postId, content = null) {
+            if (!currentUser || currentUser.uid === recipientId) {
+                return; 
+            }
+
+            const newNotificationKey = notificationsRef.child(recipientId).push().key;
+
+            const notificationData = {
+                type: type, 
+                actorId: currentUser.uid,
+                postId: postId,
+                timestamp: firebase.database.ServerValue.TIMESTAMP,
+                read: false
+            };
+
+            if (content) {
+                notificationData.content = content.substring(0, 100); 
+            }
+
+            const updates = {};
+            updates[`/notifications/${recipientId}/${newNotificationKey}`] = notificationData;
+
+            database.ref().update(updates)
+                .catch(error => console.error("Error creating notification:", error));
+        }
+
+        function toggleSingleReaction(postId, newReactionType) {
+            if (!currentUser) {
+                showNotification("Like/Reaction කිරීමට පිවිසෙන්න.");
+                return;
+            }
+
+            const uid = currentUser.uid;
+            const postReactionsRef = postsRef.child(postId).child("reactions");
+            const userReactionRef = postReactionsRef.child(uid);
+            const countsRef = postsRef.child(postId).child("reactionCounts");
+
+            // Fetch current reaction
+            userReactionRef.once("value").then(snap => {
+                const currentReaction = snap.val();
+                const updates = {};
+
+                if (currentReaction === newReactionType) {
+                    // 1. Remove Reaction
+                    updates[`posts/${postId}/reactions/${uid}`] = null;
+                    
+                    // 2. Decrement count using transaction
+                    countsRef.child(newReactionType).transaction(count => (count || 1) - 1);
+                    showNotification(`'${newReactionType}' ඉවත් කරන ලදි. 💔`);
+                } else {
+                    // 1. If existing reaction is present, decrement its count
+                    if (currentReaction) {
+                        countsRef.child(currentReaction).transaction(count => (count || 1) - 1);
+                    }
+
+                    // 2. Set new reaction
+                    updates[`posts/${postId}/reactions/${uid}`] = newReactionType;
+                    
+                    // 3. Increment count for new reaction
+                    countsRef.child(newReactionType).transaction(count => (count || 0) + 1);
+
+                    // 4. Send Notification
+                    showNotification(`'${newReactionType}' එකතු කරන ලදි! 🎉`);
+                    createNotification(newReactionType, currentPostAuthorId, postId);
+                }
+                
+                // Perform the updates (setting/removing reaction entry)
+                return database.ref().update(updates);
+            }).catch(error => {
+                 console.error("Reaction Error:", error);
+                 showNotification("ප්‍රතිචාර දැක්වීමේ දෝෂයක්. ❌");
+            });
+        }
+        
+        // 🔥 NEW: Function to dynamically update DOM elements for reactions
+        function updateReactionDOM(postId, reactionCounts, myReaction) {
+            const postContainer = document.getElementById('mainPostContent');
+            if (!postContainer) return;
+
+            // Define reaction types and their active colors
+            const reactionMap = [
+                { type: 'heart', active: 'from-pink-200 to-red-200 text-red-600' },
+                { type: 'like', active: 'from-red-100 to-pink-100 text-pink-600' },
+                { type: 'laugh', active: 'from-yellow-100 to-orange-100 text-yellow-600' },
+                { type: 'sad', active: 'from-blue-100 to-indigo-100 text-blue-600' },
+                { type: 'fire', active: 'from-orange-100 to-red-100 text-red-600' }
+            ];
+            
+            const inactiveClass = 'bg-gray-100';
+            const activeClassesBase = 'bg-gradient-to-r shadow-lg scale-105';
+
+            reactionMap.forEach(r => {
+                const count = reactionCounts[r.type] || 0;
+                
+                // Find the button using the onclick attribute
+                const button = postContainer.querySelector(`[onclick="toggleSingleReaction('${postId}', '${r.type}')"]`);
+                if (button) {
+                    // 1. Update Count
+                    const countSpan = button.querySelector('.reaction-count');
+                    if (countSpan) {
+                        countSpan.textContent = count;
+                    }
+
+                    // 2. Update Style (Active/Inactive)
+                    // Remove all specific active classes first
+                    button.classList.remove('from-pink-200', 'to-red-200', 'text-red-600', 'from-red-100', 'to-pink-100', 'text-pink-600', 'from-yellow-100', 'to-orange-100', 'text-yellow-600', 'from-blue-100', 'to-indigo-100', 'text-blue-600', 'from-orange-100', 'to-red-100');
+                    button.classList.remove('bg-gradient-to-r', 'shadow-lg', 'scale-105');
+                    button.classList.add(inactiveClass); // Default to inactive
+                    
+                    if (myReaction === r.type) {
+                        button.classList.remove(inactiveClass);
+                        button.classList.add(...activeClassesBase.split(' '));
+                        button.classList.add(...r.active.split(' '));
+                    }
+                }
+            });
+        }
+        
+        // 🔥 NEW: Function to set up real-time listeners for reactions
+        function setupPostReactionListener(postId) {
+            if (!currentUser) return;
+
+            let currentReactionCounts = {};
+            let currentUserReaction = null;
+
+            // Listener for Counts
+            const countsRef = postsRef.child(postId).child('reactionCounts');
+            countsRef.on('value', countsSnap => {
+                currentReactionCounts = countsSnap.val() || {};
+                updateReactionDOM(postId, currentReactionCounts, currentUserReaction);
+            });
+
+            // Listener for Current User's Reaction
+            const userReactionRef = postsRef.child(postId).child('reactions').child(currentUser.uid);
+            userReactionRef.on('value', reactionSnap => {
+                currentUserReaction = reactionSnap.val();
+                // Fetch counts one last time or rely on the other listener to fire (for robustness, we rely on the two listeners)
+                updateReactionDOM(postId, currentReactionCounts, currentUserReaction);
+            });
+        }
+        
+        // 🔥 MODIFIED: loadPostAndComments to call the new listener
+        function loadPostAndComments(postId) {
+            const postContainer = document.getElementById('mainPostContent');
+
+            // Load main post details
+            postsRef.child(postId).once('value', snapshot => {
+                const post = snapshot.val();
+                
+                if (!post) {
+                    postContainer.innerHTML = '<p class="text-red-500 text-center text-xl font-bold">පෝස්ට් එක සොයාගත නොහැක 😔</p>';
+                    return;
+                }
+
+                currentPostAuthorId = post.authorId; 
+                
+                // --- Get INITIAL Reaction Data for first render ---
+                const reactionCounts = post.reactionCounts || {};
+                const reactions = post.reactions || {};
+                const myReaction = currentUser ? (reactions[currentUser.uid] || null) : null;
+                
+                const heartCount = reactionCounts.heart || 0;
+                const likeCount = reactionCounts.like || 0;
+                const laughCount = reactionCounts.laugh || 0;
+                const sadCount = reactionCounts.sad || 0;
+                const fireCount = reactionCounts.fire || 0;
+                const commentsCount = post.commentsCount || 0;
+                // --------------------------
+
+                // Display post content and reactions HTML (Initial state)
+                postContainer.innerHTML = `
+                    <div class="flex items-start space-x-4 mb-4">
+                        <div class="w-10 h-10 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center text-xl shadow-xl shrink-0">
+                            ${post.avatar || '👤'}
+                        </div>
+                        <div>
+                            <p class="font-bold text-lg text-gray-800">${post.author || 'නොදන්නා පරිශීලකයෙක්'}</p>
+                            <p class="text-xs text-gray-500">${getTimeAgo(post.timestamp)}</p>
+                        </div>
+                    </div>
+                    <p class="text-lg text-gray-700 whitespace-pre-line pl-14 mb-4">${post.content || ''}</p>
+                    
+                    <div class="flex items-center justify-start border-t border-gray-100 pt-3 mt-3">
+                        <div class="flex flex-wrap gap-2"> 
+                            
+                            <button onclick="toggleSingleReaction('${postId}', 'heart')" class="reaction-btn flex items-center space-x-1 px-2 py-1.5 sm:px-3 sm:py-2 rounded-xl sm:rounded-xl hover:bg-gradient-to-r hover:from-red-100 hover:to-pink-100 text-gray-700 transition-all duration-300 hover:scale-110 text-xs sm:text-sm ${myReaction === 'heart' ? 'bg-gradient-to-r from-pink-200 to-red-200 text-red-600 shadow-lg scale-105' : 'bg-gray-100'}">
+                                <span class="text-lg sm:text-xl">❤️</span>
+                                <span class="reaction-count font-bold text-sm">${heartCount}</span>
+                            </button>
+                            
+                            <button onclick="toggleSingleReaction('${postId}', 'like')" class="reaction-btn flex items-center space-x-1 px-2 py-1.5 sm:px-3 sm:py-2 rounded-xl sm:rounded-xl hover:bg-gradient-to-r hover:from-red-50 hover:to-pink-50 text-gray-700 transition-all duration-300 hover:scale-110 text-xs sm:text-sm ${myReaction === 'like' ? 'bg-gradient-to-r from-red-100 to-pink-100 text-pink-600 shadow-lg scale-105' : 'bg-gray-100'}">
+                                <span class="text-lg sm:text-xl">👍</span> 
+                                <span class="reaction-count font-bold text-sm">${likeCount}</span>
+                            </button>
+                            
+                            <button onclick="toggleSingleReaction('${postId}', 'laugh')" class="reaction-btn flex items-center space-x-1 px-2 py-1.5 sm:px-3 sm:py-2 rounded-xl sm:rounded-xl hover:bg-gradient-to-r hover:from-yellow-50 hover:to-orange-50 text-gray-700 transition-all duration-300 hover:scale-110 text-xs sm:text-sm ${myReaction === 'laugh' ? 'bg-gradient-to-r from-yellow-100 to-orange-100 text-yellow-600 shadow-lg scale-105' : 'bg-gray-100'}">
+                                <span class="text-lg sm:text-xl">😂</span> 
+                                <span class="reaction-count font-bold text-sm">${laughCount}</span>
+                            </button>
+
+                            <button onclick="toggleSingleReaction('${postId}', 'sad')" class="reaction-btn flex items-center space-x-1 px-2 py-1.5 sm:px-3 sm:py-2 rounded-xl sm:rounded-xl hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 text-gray-700 transition-all duration-300 hover:scale-110 text-xs sm:text-sm ${myReaction === 'sad' ? 'bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-600 shadow-lg scale-105' : 'bg-gray-100'}">
+                                <span class="text-lg sm:text-xl">😢</span>
+                                <span class="reaction-count font-bold text-sm">${sadCount}</span>
+                            </button>
+
+                            <button onclick="toggleSingleReaction('${postId}', 'fire')" class="reaction-btn flex items-center space-x-1 px-2 py-1.5 sm:px-3 sm:py-2 rounded-xl sm:rounded-xl hover:bg-gradient-to-r hover:from-orange-50 hover:to-red-50 text-gray-700 transition-all duration-300 hover:scale-110 text-xs sm:text-sm ${myReaction === 'fire' ? 'bg-gradient-to-r from-orange-100 to-red-100 text-red-600 shadow-lg scale-105' : 'bg-gray-100'}">
+                                <span class="text-lg sm:text-xl">🔥</span> 
+                                <span class="reaction-count font-bold text-sm">${fireCount}</span>
+                            </button>
+                                                   </div>
+                    </div>
+                `;
+                
+                // 🔥 NEW: Setup real-time listeners for reactions
+                setupPostReactionListener(postId);
+
+                loadComments(postId);
+            });
+        }
+
+
+        // ... (Other functions like createCommentElement, showCommentContextMenu, etc. are omitted for brevity, but remain the same) ...
+
         function createCommentElement(comment) {
             const commentDiv = document.createElement('div');
             commentDiv.className = 'comment-card bg-white/90 backdrop-blur-sm rounded-xl p-4 shadow-sm border border-gray-100 fade-in';
@@ -226,7 +477,6 @@
                 editMark = '<span class="text-xs ml-1 text-gray-400">(edited)</span>';
             }
 
-            // Note: The comment object may contain 'author' for display.
             const displayAuthor = comment.author || comment.authorName || 'පරිශීලකයා';
 
             commentDiv.innerHTML = `
@@ -243,12 +493,10 @@
                 <p class="text-gray-700 ml-11 whitespace-pre-line comment-content">${comment.content}</p>
             `;
             
-            // 🔥 Add event listeners for Edit/Delete if the user is the author
             if (isAuthor) {
-                commentDiv.classList.add('cursor-pointer'); // Indicate it's clickable
+                commentDiv.classList.add('cursor-pointer'); 
                 commentDiv.addEventListener('contextmenu', (e) => showCommentContextMenu(comment.key, e));
                 
-                // For mobile: use click/tap to trigger context menu
                 commentDiv.addEventListener('click', (e) => { 
                     if (window.innerWidth < 768) {
                         e.preventDefault(); 
@@ -259,30 +507,25 @@
 
             return commentDiv;
         }
-        
-        // 🔥 NEW: Context Menu Logic
+
         function showCommentContextMenu(commentKey, event) {
             event.preventDefault(); 
             
             editingCommentKey = commentKey;
             const menu = document.getElementById('comment-context-menu');
             
-            // Position the menu
             menu.style.top = `${event.clientY}px`;
             menu.style.left = `${event.clientX}px`;
             menu.classList.remove('hidden');
 
             document.removeEventListener('click', hideContextMenu); 
-            // Listen once to hide the menu when clicking anywhere else
             document.addEventListener('click', hideContextMenu, { once: true });
         }
         
-        // 🔥 NEW: Hide Context Menu
         function hideContextMenu() {
             document.getElementById('comment-context-menu').classList.add('hidden');
         }
 
-        // 🔥 NEW: Edit Action
         function editCommentAction() {
             if (!editingCommentKey) return;
             
@@ -301,7 +544,6 @@
             showNotification("සංස්කරණ මාදිලියට මාරු විය.");
         }
 
-        // 🔥 NEW: Delete Action
         function deleteCommentAction() {
             if (editingCommentKey) {
                 if (confirm("ඔබට මෙම කමෙන්ටුව මැකීමට අවශ්‍යද?")) {
@@ -309,7 +551,6 @@
                     
                     commentRef.remove()
                         .then(() => {
-                            // Decrement comment count on the post
                             postsRef.child(currentPostId).child('commentsCount').transaction(count => {
                                 return (count > 0) ? count - 1 : 0;
                             });
@@ -325,75 +566,11 @@
             hideContextMenu();
         }
 
-        // 🔥 NEW: Reset Input Mode
         function resetInputMode() {
             document.getElementById('commentInput').value = '';
             document.getElementById('commentButton').innerHTML = `💬 කමෙන්ට් කරන්න`;
             isEditingComment = false;
             editingCommentKey = null;
-        }
-
-        // 🔥 NEW: Notification Creator (Same as Home.html)
-        function createNotification(type, recipientId, postId, content = null) {
-            if (!currentUser || currentUser.uid === recipientId) {
-                return; // Don't notify self
-            }
-
-            const newNotificationKey = database.ref().child('notifications').child(recipientId).push().key;
-
-            const notificationData = {
-                type: type, // 'like' or 'comment'
-                actorId: currentUser.uid,
-                postId: postId,
-                timestamp: firebase.database.ServerValue.TIMESTAMP,
-                read: false
-            };
-
-            if (content) {
-                notificationData.content = content.substring(0, 100); // Max 100 chars for snippet
-            }
-
-            const updates = {};
-            updates[`/notifications/${recipientId}/${newNotificationKey}`] = notificationData;
-
-            database.ref().update(updates)
-                .catch(error => console.error("Error creating notification:", error));
-        }
-
-        // ... (rest of the functions: loadPostAndComments)
-
-        function loadPostAndComments(postId) {
-            const postContainer = document.getElementById('mainPostContent');
-
-            // Load main post details
-            postsRef.child(postId).once('value', snapshot => {
-                const post = snapshot.val();
-                
-                if (!post) {
-                    postContainer.innerHTML = '<p class="text-red-500 text-center text-xl font-bold">පෝස්ට් එක සොයාගත නොහැක 😔</p>';
-                    return;
-                }
-
-                // Set Post Author ID
-                currentPostAuthorId = post.authorId; 
-                
-                // Display post content
-                postContainer.innerHTML = `
-                    <div class="flex items-start space-x-4 mb-4">
-                        <div class="w-10 h-10 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center text-xl shadow-xl shrink-0">
-                            ${post.avatar || '👤'}
-                        </div>
-                        <div>
-                            <p class="font-bold text-lg text-gray-800">${post.author || 'නොදන්නා පරිශීලකයෙක්'}</p>
-                            <p class="text-xs text-gray-500">${getTimeAgo(post.timestamp)}</p>
-                        </div>
-                    </div>
-                    <p class="text-lg text-gray-700 whitespace-pre-line pl-14">${post.content || ''}</p>
-                `;
-
-                // Load comments for this post
-                loadComments(postId);
-            });
         }
 
         function loadComments(postId) {
@@ -404,7 +581,6 @@
             commentsFeed.innerHTML = '';
             noCommentsMessage.style.display = 'none';
 
-            // Use 'value' listener for live updates
             commentsRef.on('value', snapshot => {
                 commentsFeed.innerHTML = '';
                 if (!snapshot.exists()) {
@@ -416,11 +592,10 @@
 
                 const commentsData = [];
                 snapshot.forEach(s => {
-                    // 🔥 MODIFIED: Store the key along with the comment data
                     commentsData.push({ key: s.key, ...s.val() });
                 });
                 
-                commentsData.reverse(); // Newest comment at the top
+                commentsData.reverse(); 
 
                 const userPromises = commentsData.map(comment => 
                     usersRef.child(comment.authorId).once('value')
@@ -431,7 +606,6 @@
                     
                     commentsData.forEach((comment, index) => {
                         const userData = userSnaps[index].val();
-                        // Use user data if available, otherwise fallback to stored comment data
                         comment.author = userData ? userData.name : comment.author; 
                         comment.avatar = userData ? userData.avatar : comment.avatar;
                         
@@ -442,7 +616,6 @@
             });
         }
 
-        // 🔥 FIX: Added 'authorName' and 'postId' to satisfy Firebase Rules Validation
         function handleCommentSubmission() {
             if (!currentUser) {
                 showNotification("කමෙන්ට් කිරීමට පිවිසෙන්න.");
@@ -477,50 +650,45 @@
                     console.error("Edit error:", error);
                     showNotification("සංස්කරණ දෝෂයක්. ❌");
                     commentButton.disabled = false;
-                    commentButton.innerHTML = `💾 Save Edit`; // Keep button text as save
+                    commentButton.innerHTML = `💾 Save Edit`; 
                  });
                  return;
             }
 
-            // --- NEW COMMENT LOGIC (FIXED ASYNCHRONOUS ERROR HANDLING) ---
-            usersRef.child(currentUser.uid).once('value') // Use promise style to catch all errors
+            // --- NEW COMMENT LOGIC ---
+            usersRef.child(currentUser.uid).once('value') 
                 .then(snap => {
                     const userData = snap.val() || {};
                     const authorName = userData.name || 'පරිශීලකයා';
 
-                    // 🔥 NEW KEYS ADDED HERE to satisfy Firebase Rules
                     const commentData = {
-                        author: authorName, // Kept for display purposes
-                        authorName: authorName, // **ADDED: Required by Rules**
+                        author: authorName, 
+                        authorName: authorName, 
                         authorId: currentUser.uid,
                         avatar: userData.avatar || '👤',
                         content: commentText,
                         timestamp: firebase.database.ServerValue.TIMESTAMP,
                         edited: false,
-                        postId: currentPostId // **ADDED: Required by Rules**
+                        postId: currentPostId 
                     };
 
                     const commentsRef = postsRef.child(currentPostId).child('comments');
                     
                     return commentsRef.push(commentData)
                         .then(() => {
-                            // Update comment count on the post
                             postsRef.child(currentPostId).child('commentsCount').transaction(count => (count || 0) + 1);
 
                             showNotification("කමෙන්ටුව සාර්ථකයි! 🎉");
                             commentInput.value = '';
                             
-                            // NOTIFICATION CREATION
                             createNotification('comment', currentPostAuthorId, currentPostId, commentText); 
                         });
                 })
                 .then(() => {
-                    // Final Success: Reset button state
                     commentButton.disabled = false;
                     commentButton.innerHTML = `💬 කමෙන්ට් කරන්න`;
                 })
                 .catch((error) => {
-                    // Final Failure: Reset button state and notify user
                     console.error('Error in comment submission flow:', error);
                     commentButton.disabled = false;
                     commentButton.innerHTML = `💬 කමෙන්ට් කරන්න`;
@@ -544,25 +712,10 @@
             return 'දැන්';
         }
 
-        // Notification Utility
-        function showNotification(message) {
-            const notification = document.createElement('div');
-            notification.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-2xl shadow-2xl z-50 fade-in';
-            notification.textContent = message;
-            document.body.appendChild(notification);
-            
-            setTimeout(() => {
-                notification.style.opacity = '0';
-                notification.style.transform = 'translateY(10px)';
-                notification.addEventListener('transitionend', () => notification.remove());
-            }, 3000);
-        }
-
         // Initialization
         document.addEventListener('DOMContentLoaded', () => {
             applyTheme();
 
-            // Setup Context Menu actions
             document.getElementById('edit-comment-btn').addEventListener('click', editCommentAction);
             document.getElementById('delete-comment-btn').addEventListener('click', deleteCommentAction);
 
@@ -570,12 +723,10 @@
                 if (user) {
                     currentUser = user;
                 } else {
-                    // If not logged in, redirect to login page
                     window.location.replace("index.html");
                     return;
                 }
                 
-                // Get postId from URL
                 const urlParams = new URLSearchParams(window.location.search);
                 const postId = urlParams.get('postId');
                 
