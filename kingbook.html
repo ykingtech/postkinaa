@@ -365,14 +365,27 @@
         // --- SUBMISSION ---
         function openPayModal(id, data, type) {
             pendingAction = { id, data, type };
+            
+            // Title & Price Logic
             document.getElementById('pay-title').innerText = type==='publish_fee' ? 'PUBLISH FEE' : (type==='replace' ? 'REPLACE CONTENT' : 'UNLOCK BOOK');
             document.getElementById('pay-price').innerText = `Rs. ${type==='publish_fee' ? 500 : (type==='replace' ? 0 : data.price)}`;
-            document.getElementById('pay-holder').innerText = data.bankHolder || 'Admin';
-            document.getElementById('pay-bank').innerText = data.bankName || 'Commercial';
-            document.getElementById('pay-acc').innerText = data.bankAcc || '8025211913';
-            document.getElementById('pay-branch').innerText = data.bankBranch || 'Kurunegala';
             
-            // Hide receipt for Replace mode (it's free updates)
+            // --- BANK DETAILS LOGIC ---
+            if (type === 'publish_fee') {
+                // මෙතනට ඇඩ්මින්ගේ බැංකු විස්තර දාන්න (Admin Bank Details)
+                document.getElementById('pay-holder').innerText = 'K.M.H.Y.S Kariyawasam'; // ගිණුම් හිමියාගේ නම
+                document.getElementById('pay-bank').innerText = 'Commercial Bank';       // බැංකුවේ නම
+                document.getElementById('pay-acc').innerText = '8025211913';             // ගිණුම් අංකය
+                document.getElementById('pay-branch').innerText = 'Kurunegala';          // ශාඛාව
+            } else {
+                // මේකෙන් පොතේ අයිතිකරුගේ විස්තර පෙන්වයි (Creator Details)
+                document.getElementById('pay-holder').innerText = data.bankHolder || 'Unknown';
+                document.getElementById('pay-bank').innerText = data.bankName || 'Unknown';
+                document.getElementById('pay-acc').innerText = data.bankAcc || 'Contact Admin';
+                document.getElementById('pay-branch').innerText = data.bankBranch || '';
+            }
+            
+            // Hide receipt for Replace mode
             if(type === 'replace') {
                 document.getElementById('pay-receipt').classList.add('hidden');
                 document.getElementById('pay-btn').innerText = "UPDATE BOOK CONTENT";
@@ -382,77 +395,6 @@
             }
             document.getElementById('pay-modal').classList.remove('hidden');
         }
-
-        const compressImage = (file) => {
-            return new Promise((resolve) => {
-                const reader = new FileReader(); reader.readAsDataURL(file);
-                reader.onload = (e) => {
-                    const img = new Image(); img.src = e.target.result;
-                    img.onload = () => {
-                        const c = document.createElement('canvas');
-                        const s = 800 / img.width; c.width = 800; c.height = img.height * s;
-                        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
-                        resolve(c.toDataURL('image/jpeg', 0.5));
-                    };
-                };
-            });
-        };
-
-        document.getElementById('pay-btn').onclick = async () => {
-            const btn = document.getElementById('pay-btn'); btn.innerText = "Processing...";
-            
-            try {
-                if(pendingAction.type === 'replace') {
-                    // REPLACE LOGIC (SAFE UPDATE)
-                    const batch = writeBatch(db);
-                    // 1. Delete old pages
-                    const oldPages = await getDocs(collection(db, "books", pendingAction.id, "pages"));
-                    oldPages.forEach(doc => batch.delete(doc.ref));
-                    // 2. Add new pages
-                    studioPages.forEach(p => batch.set(doc(db,"books",pendingAction.id,"pages","p"+p.pageNumber), p));
-                    // 3. Update Book Metadata
-                    batch.update(doc(db, "books", pendingAction.id), {
-                         title: document.getElementById('new-book-title').value,
-                         coverUrl: studioPages[0].imageUrl
-                    });
-                    await batch.commit();
-                    alert("Book Content Replaced Successfully!");
-                    window.location.reload();
-
-                } else {
-                    // BUY / PUBLISH LOGIC
-                    const f = document.getElementById('pay-receipt').files[0];
-                    if(!f) throw new Error("Receipt required");
-                    const img = await compressImage(f);
-                    const reqData = {
-                        type: pendingAction.type, email: currentUser.email, userId: currentUser.uid,
-                        receiptImage: img, status: "pending", timestamp: new Date().toISOString()
-                    };
-
-                    if(pendingAction.type === 'buy_book') {
-                        reqData.bookId = pendingAction.id;
-                        reqData.amount = document.getElementById('pay-price').innerText.replace('Rs. ','');
-                        await addDoc(collection(db, "requests"), reqData);
-                        alert("Receipt Sent!");
-                    } else if (pendingAction.type === 'publish_fee') {
-                        const bookData = pendingAction.data;
-                        await setDoc(doc(db, "books", pendingAction.id), {
-                            ...bookData, status: "pending_payment", 
-                            coverUrl: studioPages[0].imageUrl, timestamp: new Date().toISOString(), author: currentUser.uid, buyers: 0 
-                        });
-                        const batch = writeBatch(db);
-                        studioPages.forEach(p => batch.set(doc(db,"books",pendingAction.id,"pages","p"+p.pageNumber), p));
-                        await batch.commit();
-                        reqData.bookId = pendingAction.id; reqData.bookTitle = bookData.title;
-                        await addDoc(collection(db, "requests"), reqData);
-                        alert("Submitted for Review!");
-                        window.location.reload();
-                    }
-                }
-                document.getElementById('pay-modal').classList.add('hidden');
-            } catch(e) { alert(e.message); }
-            btn.innerText = "SUBMIT";
-        };
 
         // --- STUDIO & MY BOOKS ---
         let studioPages = [], currentStudioPageIndex = 0, studioBookId = null;
