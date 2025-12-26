@@ -17,7 +17,7 @@
         body.dark-mode .content-layer img { filter: invert(1) hue-rotate(180deg); mix-blend-mode: screen; }
         body.dark-mode .content-layer div[style*="color"] { color: #e0e0e0 !important; }
 
-        /* --- BACKGROUND STYLES (THE NEW ONES) --- */
+        /* --- BACKGROUND STYLES --- */
         body {
             background-color: var(--bg-body);
             color: #e0e0e0; font-family: 'Inter', sans-serif; height: 100vh; overflow: hidden;
@@ -25,21 +25,14 @@
             background-size: cover; background-position: center;
         }
 
-        /* 1. Mystic (Default) */
+        /* Background Classes */
         body.bg-mystic { background-image: radial-gradient(circle at 50% 50%, #1f2833 0%, #0b0c10 100%); }
-        /* 2. Wood Texture */
         body.bg-wood { background-color: #2c1e12; background-image: url('https://www.transparenttextures.com/patterns/wood-pattern.png'); }
-        /* 3. Minimal (Pitch Black) */
         body.bg-minimal { background-image: none; background-color: #050505; }
-        /* 4. Midnight (Deep Purple/Blue - Relaxing) */
         body.bg-midnight { background-image: linear-gradient(to bottom, #0f2027, #203a43, #2c5364); }
-        /* 5. Forest (Deep Green - Nature) */
         body.bg-forest { background-image: linear-gradient(to bottom, #134e5e, #71b280); }
-        /* 6. Coffee (Warm Brown) */
         body.bg-coffee { background-image: radial-gradient(circle, #3e2723, #1b0000); }
-        /* 7. Slate (Professional Blue-Grey) */
         body.bg-slate { background-color: #263238; background-image: radial-gradient(circle, #37474f, #263238); }
-
 
         /* --- UI ELEMENTS --- */
         .book-scene { perspective: 1500px; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; padding-bottom: 60px; }
@@ -56,9 +49,8 @@
         .content-layer * { pointer-events: auto; }
 
         .glass-panel { background: rgba(20, 20, 20, 0.85); backdrop-filter: blur(12px); border-top: 1px solid rgba(255,255,255,0.08); }
-        .mobile-btn { height: 50px; display: flex; align-items: center; justify-content: center; border-radius: 12px; font-weight: bold; transition: 0.2s; }
         
-        /* BACKGROUND MENU STYLES */
+        /* MENU & MODALS */
         .theme-menu { 
             position: absolute; top: 60px; right: 10px; 
             background: rgba(15, 15, 15, 0.95); 
@@ -82,6 +74,12 @@
         .progress-bar-container { width: 200px; height: 4px; background: #333; margin-top: 20px; border-radius: 2px; overflow: hidden; }
         .progress-bar-fill { height: 100%; background: #d4af37; width: 0%; transition: width 0.3s; }
         #receipt-loading { display: none; margin-top: 10px; font-size: 12px; color: #d4af37; animation: pulse 1s infinite; }
+        
+        /* Policy Content Styles */
+        .policy-content h2 { color: #d4af37; font-family: 'Cinzel', serif; font-size: 1.5rem; margin-top: 2rem; margin-bottom: 1rem; border-bottom: 1px solid #333; padding-bottom: 0.5rem; }
+        .policy-content h3 { color: #fff; font-weight: bold; margin-top: 1.5rem; margin-bottom: 0.5rem; }
+        .policy-content p, .policy-content li { color: #ccc; font-size: 0.9rem; line-height: 1.6; margin-bottom: 0.8rem; }
+        .policy-content ul { list-style-type: disc; padding-left: 1.5rem; }
     </style>
 </head>
 <body class="bg-midnight">
@@ -106,6 +104,10 @@
         <div id="top-bar" class="absolute top-0 w-full p-4 flex justify-between items-center z-50 transition-transform duration-300">
             <div class="bg-black/40 backdrop-blur-md px-3 py-1 rounded-full border border-white/10"><span class="text-[#d4af37] font-[Cinzel] text-xs tracking-widest">MYSTERIUM</span></div>
             <div class="flex gap-2 relative">
+                <button onclick="document.getElementById('policy-view').classList.remove('hidden')" class="w-8 h-8 rounded-full bg-indigo-900/40 border border-indigo-500/30 flex items-center justify-center text-indigo-300" title="Policies & Support">
+                    <i class="fas fa-scale-balanced text-xs"></i>
+                </button>
+                
                 <button onclick="toggleTheme()" class="w-8 h-8 rounded-full bg-black/40 border border-white/10 flex items-center justify-center text-yellow-500"><i id="theme-icon" class="fas fa-sun"></i></button>
                 <button onclick="toggleBgMenu()" class="w-8 h-8 rounded-full bg-black/40 border border-white/10 flex items-center justify-center text-white"><i class="fas fa-paint-brush text-xs"></i></button>
                 <button id="logout-btn" class="w-8 h-8 rounded-full bg-red-900/40 border border-red-500/30 flex items-center justify-center text-red-400"><i class="fas fa-sign-out-alt text-xs"></i></button>
@@ -131,6 +133,85 @@
             <div class="grid grid-cols-2 gap-4 items-center">
                 <button onclick="prevPage()" class="h-12 bg-white/10 rounded-xl text-white hover:bg-white/20"><i class="fas fa-chevron-left"></i> PREV</button>
                 <button onclick="nextPage()" class="h-12 bg-white/10 rounded-xl text-white hover:bg-white/20">NEXT <i class="fas fa-chevron-right"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <div id="policy-view" class="hidden fixed inset-0 z-[950] bg-black/95 overflow-y-auto animate-fade-in">
+        <div class="max-w-2xl mx-auto min-h-screen bg-[#0b0c10] shadow-2xl relative">
+            <div class="sticky top-0 bg-[#0b0c10]/95 backdrop-blur-sm border-b border-gray-800 p-4 flex justify-between items-center z-10">
+                <h1 class="text-[#d4af37] font-[Cinzel] text-xl">LEGAL & SUPPORT</h1>
+                <button onclick="document.getElementById('policy-view').classList.add('hidden')" class="w-8 h-8 rounded-full bg-gray-800 text-white flex items-center justify-center hover:bg-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div class="p-6 pb-32 policy-content">
+                
+                <h2>Refund Policy</h2>
+                <p>Thank you for shopping at MYSTERIUM. We value your satisfaction and strive to provide you with the best online shopping experience possible.</p>
+                <p>If, for any reason, you are not completely satisfied with your purchase, we are here to help.</p>
+                
+                <h3>Returns</h3>
+                <p>We accept returns within 1 day from the date of purchase.</p>
+                
+                <h3>Refunds</h3>
+                <p>We will notify you of the status of your refund. If your return is approved, we will initiate a refund to your original method of payment. Please note that the refund amount will exclude any shipping charges incurred during the initial purchase.</p>
+                
+                <h3>Non-Returnable Items</h3>
+                <ul>
+                    <li>Gift cards</li>
+                    <li>Downloadable software products</li>
+                    <li>Personalized or custom-made items</li>
+                    <li>Perishable goods</li>
+                </ul>
+
+                <h3>Damaged or Defective Items</h3>
+                <p>In the unfortunate event that your item arrives damaged or defective, please contact us immediately. We will arrange for a replacement or issue a refund, depending on your preference and product availability.</p>
+
+                <h2>Privacy Policy</h2>
+                <p>At MYSTERIUM, we are committed to protecting the privacy and security of our customers' personal information. This Privacy Policy outlines how we collect, use, and safeguard your information when you visit or make a purchase on our website.</p>
+                
+                <h3>Information We Collect</h3>
+                <ul>
+                    <li>Personal identification information (such as email address) provided voluntarily by you during the registration or checkout process.</li>
+                    <li>Payment and billing information necessary to process your orders, including credit card details, which are securely handled by trusted third-party payment processors.</li>
+                    <li>Browsing information, such as your IP address, browser type, and device information, collected automatically using cookies and similar technologies.</li>
+                </ul>
+
+                <h3>Use of Information</h3>
+                <ul>
+                    <li>To process and fulfill your orders, including shipping and delivery.</li>
+                    <li>To communicate with you regarding your purchases, provide customer support, and respond to inquiries or requests.</li>
+                    <li>To improve our website, products, and services based on your feedback and browsing patterns.</li>
+                    <li>To detect and prevent fraud, unauthorized activities, and abuse of our website.</li>
+                </ul>
+
+                <h2>Terms and Conditions</h2>
+                <p>Welcome to MYSTERIUM. These Terms and Conditions govern your use of our website and the purchase and sale of products from our platform. By accessing and using our website, you agree to comply with these terms.</p>
+                
+                <h3>Use of the Website</h3>
+                <ul>
+                    <li>You must be at least 15 years old to use our website or make purchases.</li>
+                    <li>You are responsible for maintaining the confidentiality of your account information, including your username and password.</li>
+                    <li>You agree to provide accurate and current information during the registration and checkout process.</li>
+                    <li>You may not use our website for any unlawful or unauthorized purposes.</li>
+                </ul>
+
+                <h3>Intellectual Property</h3>
+                <p>All content and materials on our website, including but not limited to text, images, logos, and graphics, are protected by intellectual property rights and are the property of MYSTERIUM or its licensors.</p>
+            </div>
+
+            <div class="fixed bottom-0 left-0 w-full p-4 bg-gradient-to-t from-black via-black/90 to-transparent flex flex-col items-center gap-3 max-w-2xl mx-auto left-0 right-0">
+                <div class="text-xs text-gray-500 uppercase tracking-widest mb-1">Contact Support</div>
+                <div class="flex gap-3 w-full max-w-sm">
+                    <a href="tel:+94787004239" class="flex-1 bg-green-700 hover:bg-green-600 text-white py-3 rounded-lg flex items-center justify-center gap-2 font-bold transition">
+                        <i class="fas fa-phone"></i> Call / WhatsApp
+                    </a>
+                    <a href="mailto:yasodhasandeepa@gmail.com" class="flex-1 bg-indigo-700 hover:bg-indigo-600 text-white py-3 rounded-lg flex items-center justify-center gap-2 font-bold transition">
+                        <i class="fas fa-envelope"></i> Email Us
+                    </a>
+                </div>
             </div>
         </div>
     </div>
@@ -186,19 +267,16 @@
             }
         });
 
-        // --- BACKGROUND LOGIC (FIXED) ---
+        // --- BACKGROUND LOGIC ---
         const bgClasses = ['bg-mystic', 'bg-wood', 'bg-minimal', 'bg-midnight', 'bg-forest', 'bg-coffee', 'bg-slate'];
         
         window.setBg = (style) => {
-            // Remove ALL previous bg classes
             document.body.classList.remove(...bgClasses);
-            // Add new one
             document.body.classList.add('bg-' + style);
             localStorage.setItem('prefBg', style);
             document.getElementById('bg-menu').classList.remove('show');
         };
 
-        // Load Saved BG or Default to Midnight
         const savedBg = localStorage.getItem('prefBg') || 'midnight';
         window.setBg(savedBg);
 
@@ -207,7 +285,7 @@
             menu.classList.toggle('show');
         }
 
-        // --- OTHER LOGIC REMAINS SAME ---
+        // --- CORE LOGIC ---
         function setupUserListener(uid) {
             statusListener = onSnapshot(doc(db, "users", uid), (docSnap) => {
                 if (docSnap.exists()) {
@@ -423,4 +501,3 @@
     </script>
 </body>
 </html>
-
