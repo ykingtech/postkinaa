@@ -1,503 +1,497 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="si">
 <head>
+    <meta name="norton-safeweb-site-verification" content="RGU6HVJXEU61RM1YE0XLE194MQQRSZGW1BNJYOJ4H-3JDVYY3LMW14R1DQLHT74X17OJ7QSJSXRD9F1LR58AFD2W0MAMJTIP8Y451V6TJIFZ8FSBA4PYC8H7ZGNGAGMT" />
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Archive - Reader</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PostKina - ප්‍රවේශය</title>
+     <link rel="icon" href="ico.png" type="image/png">
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@300;400;600&family=Merriweather:wght@300;400;700&display=swap" rel="stylesheet">
-    
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <style>
-        /* --- THEME VARIABLES --- */
-        :root { --bg-body: #0b0c10; --page-default: #f4e4bc; --gold: #d4af37; }
+        .fade-in { animation: fadeIn 0.6s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
         
-        /* DARK MODE - BOOK PAGES ONLY */
-        body.dark-mode .front, body.dark-mode .back { background-color: #121212 !important; border-color: #333 !important; }
-        body.dark-mode .content-layer img { filter: invert(1) hue-rotate(180deg); mix-blend-mode: screen; }
-        body.dark-mode .content-layer div[style*="color"] { color: #e0e0e0 !important; }
+        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+        .pulse-animation { animation: pulse 2s ease-in-out infinite; }
+        
+        @keyframes float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-15px); } }
+        .float { animation: float 3s ease-in-out infinite; }
+        
+        @keyframes glow { 0%, 100% { box-shadow: 0 0 20px rgba(168, 85, 247, 0.5); } 50% { box-shadow: 0 0 40px rgba(168, 85, 247, 0.9); } }
+        .glow { animation: glow 2s ease-in-out infinite; }
 
-        /* --- BACKGROUND STYLES --- */
-        body {
-            background-color: var(--bg-body);
-            color: #e0e0e0; font-family: 'Inter', sans-serif; height: 100vh; overflow: hidden;
-            transition: background 0.5s ease-in-out; touch-action: none;
-            background-size: cover; background-position: center;
+        .auth-button { transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+        .auth-button:hover { transform: translateY(-5px) scale(1.02); }
+        .auth-button:active { transform: translateY(0) scale(0.98); }
+        
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+            border: 2px solid rgba(255, 255, 255, 0.4);
         }
 
-        /* Background Classes */
-        body.bg-mystic { background-image: radial-gradient(circle at 50% 50%, #1f2833 0%, #0b0c10 100%); }
-        body.bg-wood { background-color: #2c1e12; background-image: url('https://www.transparenttextures.com/patterns/wood-pattern.png'); }
-        body.bg-minimal { background-image: none; background-color: #050505; }
-        body.bg-midnight { background-image: linear-gradient(to bottom, #0f2027, #203a43, #2c5364); }
-        body.bg-forest { background-image: linear-gradient(to bottom, #134e5e, #71b280); }
-        body.bg-coffee { background-image: radial-gradient(circle, #3e2723, #1b0000); }
-        body.bg-slate { background-color: #263238; background-image: radial-gradient(circle, #37474f, #263238); }
-
-        /* --- UI ELEMENTS --- */
-        .book-scene { perspective: 1500px; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; padding-bottom: 60px; }
-        .book { transform-style: preserve-3d; position: relative; box-shadow: 0 20px 50px rgba(0,0,0,0.6); transition: transform 0.5s; aspect-ratio: 2 / 3; width: auto; height: 75vh; max-width: 95vw; }
-        
-        .page { position: absolute; top:0; left:0; width: 100%; height: 100%; transform-origin: left; transition: transform 1.2s cubic-bezier(0.645, 0.045, 0.355, 1); transform-style: preserve-3d; border-radius: 2px 8px 8px 2px; cursor: pointer; background-color: white; }
-        .front, .back { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; -webkit-backface-visibility: hidden; overflow: hidden; background-color: white; }
-        .back { transform: rotateY(180deg); background-color: #f0f0f0; }
-        .flipped { transform: rotateY(-180deg); }
-        .hard-cover .front { border: 4px solid #5c3a21; border-radius: 4px 10px 10px 4px; }
-
-        .content-layer { position: absolute; top: 50%; left: 50%; width: 360px; height: 540px; transform-origin: center center; pointer-events: none; background: white; display: flex; justify-content: center; align-items: center; }
-        .content-layer img { width: 100%; height: 100%; object-fit: cover; }
-        .content-layer * { pointer-events: auto; }
-
-        .glass-panel { background: rgba(20, 20, 20, 0.85); backdrop-filter: blur(12px); border-top: 1px solid rgba(255,255,255,0.08); }
-        
-        /* MENU & MODALS */
-        .theme-menu { 
-            position: absolute; top: 60px; right: 10px; 
-            background: rgba(15, 15, 15, 0.95); 
-            border: 1px solid #333; 
-            padding: 15px; border-radius: 16px; 
-            display: none; 
-            grid-template-columns: repeat(4, 1fr); 
-            gap: 10px; z-index: 100; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        input:focus {
+            transform: scale(1.02);
+            transition: all 0.3s ease;
         }
-        .theme-menu.show { display: grid; }
-        .theme-btn { 
-            width: 36px; height: 36px; border-radius: 50%; 
-            border: 2px solid rgba(255,255,255,0.1); 
-            cursor: pointer; transition: transform 0.2s;
-        }
-        .theme-btn:active { transform: scale(0.9); }
-        .theme-btn.active { border-color: #d4af37; box-shadow: 0 0 10px rgba(212, 175, 55, 0.3); }
 
-        #loading-screen { position: fixed; inset: 0; z-index: 9999; background: #000; color: #d4af37; display: flex; flex-col; align-items: center; justify-content: center; transition: opacity 0.5s; }
-        .progress-bar-container { width: 200px; height: 4px; background: #333; margin-top: 20px; border-radius: 2px; overflow: hidden; }
-        .progress-bar-fill { height: 100%; background: #d4af37; width: 0%; transition: width 0.3s; }
-        #receipt-loading { display: none; margin-top: 10px; font-size: 12px; color: #d4af37; animation: pulse 1s infinite; }
-        
-        /* Policy Content Styles */
-        .policy-content h2 { color: #d4af37; font-family: 'Cinzel', serif; font-size: 1.5rem; margin-top: 2rem; margin-bottom: 1rem; border-bottom: 1px solid #333; padding-bottom: 0.5rem; }
-        .policy-content h3 { color: #fff; font-weight: bold; margin-top: 1.5rem; margin-bottom: 0.5rem; }
-        .policy-content p, .policy-content li { color: #ccc; font-size: 0.9rem; line-height: 1.6; margin-bottom: 0.8rem; }
-        .policy-content ul { list-style-type: disc; padding-left: 1.5rem; }
+        .disabled { opacity: 0.6; pointer-events: none; filter: grayscale(50%); }
+
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+        .slide-down { animation: slideDown 0.4s ease-out; }
+
+        /* Custom Modal Styles */
+        .modal-backdrop {
+            backdrop-filter: blur(8px);
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .modal-content {
+            animation: modalFadeIn 0.3s ease-out;
+        }
     </style>
 </head>
-<body class="bg-midnight">
+<body class="min-h-screen bg-gradient-to-br from-purple-100 via-pink-100 to-blue-100 relative pt-10 pb-10 overflow-y-auto">
 
-    <div id="loading-screen">
-        <i class="fas fa-book-open fa-2x mb-4 animate-pulse"></i>
-        <h2 class="font-[Cinzel] tracking-widest text-lg">OPENING ARCHIVE</h2>
-        <div class="progress-bar-container"><div id="loading-bar" class="progress-bar-fill"></div></div>
-        <p id="loading-text" class="text-xs text-gray-500 mt-2 font-mono">Connecting...</p>
+    <div class="absolute inset-0 overflow-hidden pointer-events-none">
+        <div class="absolute top-10 left-10 w-72 h-72 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-pulse"></div>
+        <div class="absolute top-40 right-10 w-96 h-96 bg-pink-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-pulse" style="animation-delay: 1s;"></div>
+        <div class="absolute -bottom-20 left-1/3 w-80 h-80 bg-blue-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-pulse" style="animation-delay: 2s;"></div>
     </div>
 
-    <div id="auth-section" class="hidden fixed inset-0 z-[900] flex items-center justify-center bg-black/95 p-6">
-        <div class="w-full max-w-sm text-center">
-            <i class="fas fa-dragon text-5xl text-[#d4af37] mb-4"></i>
-            <h1 class="text-3xl font-[Cinzel] text-white tracking-widest mb-8">MYSTERIUM</h1>
-            <button id="google-login" class="w-full bg-white text-black font-bold py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-gray-200 transition"><i class="fab fa-google text-red-600"></i> Login with Google</button>
-            <p id="auth-msg" class="text-red-500 text-xs mt-4"></p>
-        </div>
-    </div>
+    <div class="flex flex-col items-center justify-center">
+        <div class="w-full max-w-md glass-effect rounded-3xl p-10 shadow-2xl fade-in relative z-10 mx-4 my-auto">
+            <div class="text-center mb-8">
+                <div class="text-6xl mb-4 float">🌟</div>
+                <h1 class="text-5xl font-black mb-3 bg-clip-text text-transparent bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 pulse-animation">PostKina</h1>
+                <p class="text-gray-600 font-semibold text-lg">✨ යාළුවෝ එක්ක සම්බන්ධ වෙන්න!</p>
+            </div>
 
-    <div id="book-container" class="hidden w-full h-full relative flex-col">
-        <div id="top-bar" class="absolute top-0 w-full p-4 flex justify-between items-center z-50 transition-transform duration-300">
-            <div class="bg-black/40 backdrop-blur-md px-3 py-1 rounded-full border border-white/10"><span class="text-[#d4af37] font-[Cinzel] text-xs tracking-widest">MYSTERIUM</span></div>
-            <div class="flex gap-2 relative">
-                <button onclick="document.getElementById('policy-view').classList.remove('hidden')" class="w-8 h-8 rounded-full bg-indigo-900/40 border border-indigo-500/30 flex items-center justify-center text-indigo-300" title="Policies & Support">
-                    <i class="fas fa-scale-balanced text-xs"></i>
-                </button>
-                
-                <button onclick="toggleTheme()" class="w-8 h-8 rounded-full bg-black/40 border border-white/10 flex items-center justify-center text-yellow-500"><i id="theme-icon" class="fas fa-sun"></i></button>
-                <button onclick="toggleBgMenu()" class="w-8 h-8 rounded-full bg-black/40 border border-white/10 flex items-center justify-center text-white"><i class="fas fa-paint-brush text-xs"></i></button>
-                <button id="logout-btn" class="w-8 h-8 rounded-full bg-red-900/40 border border-red-500/30 flex items-center justify-center text-red-400"><i class="fas fa-sign-out-alt text-xs"></i></button>
-                
-                <div id="bg-menu" class="theme-menu">
-                    <button onclick="setBg('mystic')" class="theme-btn bg-gradient-to-br from-[#1f2833] to-[#0b0c10]" title="Mystic"></button>
-                    <button onclick="setBg('midnight')" class="theme-btn bg-gradient-to-br from-[#0f2027] to-[#2c5364]" title="Midnight"></button>
-                    <button onclick="setBg('forest')" class="theme-btn bg-gradient-to-br from-[#134e5e] to-[#71b280]" title="Forest"></button>
-                    <button onclick="setBg('coffee')" class="theme-btn bg-[#3e2723]" title="Coffee"></button>
-                    <button onclick="setBg('slate')" class="theme-btn bg-[#37474f]" title="Slate"></button>
-                    <button onclick="setBg('wood')" class="theme-btn bg-[#5c3a21]" title="Wood"></button>
-                    <button onclick="setBg('minimal')" class="theme-btn bg-black border-white" title="Minimal"></button>
+            <div id="notification" class="mb-4 hidden"></div>
+
+            <div id="authContainer">
+                <div id="signInSection">
+                    <h2 class="text-3xl font-bold mb-6 text-gray-800 text-center">🔐 පිවිසෙන්න</h2>
+                    
+                    <button id="googleSignInBtn" class="auth-button w-full flex items-center justify-center space-x-3 bg-white text-gray-700 border-2 border-gray-300 p-4 rounded-2xl font-bold text-lg hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 hover:border-purple-400 focus:outline-none focus:ring-4 focus:ring-purple-300 transition duration-300 mb-6 shadow-lg hover:shadow-xl">
+                        <svg class="w-6 h-6" viewBox="0 0 533.5 544.3" xmlns="http://www.w3.org/2000/svg"><path d="M533.5 244.3c0-14.7-1.2-29.2-3.4-43.2H267.5v82.7h149.3c-6.4 39.8-29.7 73.5-62.8 96.1l-2.6 1.8 69.4 53.7 3.8.3c42.8-39.7 67.5-97 67.5-164.8z" fill="#4285F4"/><path d="M267.5 544.3c71.2 0 131-23.7 174.7-64.4l-73.4-56.9c-20.4 13.6-46.7 22-77.2 22-59 0-109.8-39.9-127.7-93.5l-2.5.3-71.1 55.4-1.7.9c41 81.3 124.9 138.2 229.7 138.2z" fill="#34A853"/><path d="M140.2 329.8c-3.1-9.4-5.2-19.4-5.2-29.8 0-10.4 2.1-20.4 5.1-29.8l-1.9-1.5-73.6-57.2-1.4.7c-21.7 43.1-34.4 92.5-34.4 147.2 0 54.7 12.7 104.1 34.4 147.2l75-58.4z" fill="#FBBC05"/><path d="M267.5 108.3c38.7 0 73.1 13.3 99.9 38.6L437 78.4c-43.7-41-103.5-66.7-169.5-66.7-104.8 0-188.7 56.9-229.7 138.2l75 58.4c17.9-53.6 68.7-93.5 127.7-93.5z" fill="#EA4335"/></svg>
+                        <span>🚀 ගූගල් හරහා පිවිසෙන්න</span>
+                    </button>
+                    
+                    <div class="flex items-center my-6">
+                        <hr class="flex-grow border-gray-300">
+                        <span class="px-4 text-gray-500 text-sm font-semibold">නැතහොත්</span>
+                        <hr class="flex-grow border-gray-300">
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-2">📧 ඊමේල් ලිපිනය</label>
+                            <input type="email" id="authEmail" placeholder="your@email.com" 
+                                class="w-full p-4 border-2 border-gray-300 rounded-2xl focus:outline-none focus:ring-4 focus:ring-purple-300 focus:border-purple-500 transition duration-300 font-medium bg-white/60 backdrop-blur-sm">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-2">🔒 මුරපදය</label>
+                            <input type="password" id="authPassword" placeholder="••••••••" 
+                                class="w-full p-4 border-2 border-gray-300 rounded-2xl focus:outline-none focus:ring-4 focus:ring-purple-300 focus:border-purple-500 transition duration-300 font-medium bg-white/60 backdrop-blur-sm">
+                        </div>
+                    </div>
+                    
+                    <button id="signInBtn" class="auth-button w-full bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 text-white p-4 rounded-2xl font-bold text-lg hover:from-purple-700 hover:via-pink-700 hover:to-blue-700 focus:outline-none focus:ring-4 focus:ring-purple-300 transition duration-300 mt-6 shadow-xl hover:shadow-2xl">
+                        🎯 ඊමේල්/මුරපදයෙන් පිවිසෙන්න
+                    </button>
+                    
+                    <p class="text-center text-gray-600 mt-6 font-medium">
+                        ගිණුමක් නැතිද? 
+                        <button id="toggleAuthBtn" class="text-purple-600 font-bold hover:text-pink-600 transition-colors duration-300 hover:underline">✨ ලියාපදිංචි වෙන්න</button>
+                    </p>
                 </div>
-            </div>
-        </div>
 
-        <div class="book-scene" onclick="toggleControls()">
-            <div id="the-book" class="book"><div id="pages-wrapper"></div></div>
-        </div>
+                <div id="signUpSection" class="hidden">
+                    <h2 class="text-3xl font-bold mb-6 text-gray-800 text-center">🎉 ලියාපදිංචි වන්න</h2>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-2">📧 ඊමේල් ලිපිනය</label>
+                            <input type="email" id="signUpEmail" placeholder="your@email.com" 
+                                class="w-full p-4 border-2 border-gray-300 rounded-2xl focus:outline-none focus:ring-4 focus:ring-pink-300 focus:border-pink-500 transition duration-300 font-medium bg-white/60 backdrop-blur-sm">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-2">👤 පරිශීලක නාමය (Username)</label>
+                            <input type="text" id="displayName" placeholder="අපූරු නමක් තෝරන්න..." 
+                                class="w-full p-4 border-2 border-gray-300 rounded-2xl focus:outline-none focus:ring-4 focus:ring-pink-300 focus:border-pink-500 transition duration-300 font-medium bg-white/60 backdrop-blur-sm">
+                            <p class="text-xs text-gray-500 mt-1 font-medium">⚠️ ඔබගේ නම අන් අයට පෙනෙනු ඇත</p>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-2">🔒 මුරපදය</label>
+                            <input type="password" id="signUpPassword" placeholder="අවම වශයෙන් 6ක්" 
+                                class="w-full p-4 border-2 border-gray-300 rounded-2xl focus:outline-none focus:ring-4 focus:ring-pink-300 focus:border-pink-500 transition duration-300 font-medium bg-white/60 backdrop-blur-sm">
+                        </div>
+                    </div>
+                    
+                    <button id="signUpBtn" class="auth-button w-full bg-gradient-to-r from-pink-600 via-purple-600 to-blue-600 text-white p-4 rounded-2xl font-bold text-lg hover:from-pink-700 hover:via-purple-700 hover:to-blue-700 focus:outline-none focus:ring-4 focus:ring-pink-300 transition duration-300 mt-6 shadow-xl hover:shadow-2xl">
+                        🚀 ලියාපදිංචි වන්න
+                    </button>
 
-        <div id="controls-bar" class="absolute bottom-0 w-full glass-panel p-4 pb-6 z-50 transition-transform duration-300 translate-y-0">
-            <div class="w-full h-1 bg-gray-700 rounded-full mb-4 overflow-hidden"><div id="progress-fill" class="h-full bg-[#d4af37] w-0 transition-all duration-300"></div></div>
-            <div class="grid grid-cols-2 gap-4 items-center">
-                <button onclick="prevPage()" class="h-12 bg-white/10 rounded-xl text-white hover:bg-white/20"><i class="fas fa-chevron-left"></i> PREV</button>
-                <button onclick="nextPage()" class="h-12 bg-white/10 rounded-xl text-white hover:bg-white/20">NEXT <i class="fas fa-chevron-right"></i></button>
-            </div>
-        </div>
-    </div>
-
-    <div id="policy-view" class="hidden fixed inset-0 z-[950] bg-black/95 overflow-y-auto animate-fade-in">
-        <div class="max-w-2xl mx-auto min-h-screen bg-[#0b0c10] shadow-2xl relative">
-            <div class="sticky top-0 bg-[#0b0c10]/95 backdrop-blur-sm border-b border-gray-800 p-4 flex justify-between items-center z-10">
-                <h1 class="text-[#d4af37] font-[Cinzel] text-xl">LEGAL & SUPPORT</h1>
-                <button onclick="document.getElementById('policy-view').classList.add('hidden')" class="w-8 h-8 rounded-full bg-gray-800 text-white flex items-center justify-center hover:bg-gray-700">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-
-            <div class="p-6 pb-32 policy-content">
-                
-                <h2>Refund Policy</h2>
-                <p>Thank you for shopping at MYSTERIUM. We value your satisfaction and strive to provide you with the best online shopping experience possible.</p>
-                <p>If, for any reason, you are not completely satisfied with your purchase, we are here to help.</p>
-                
-                <h3>Returns</h3>
-                <p>We accept returns within 1 day from the date of purchase.</p>
-                
-                <h3>Refunds</h3>
-                <p>We will notify you of the status of your refund. If your return is approved, we will initiate a refund to your original method of payment. Please note that the refund amount will exclude any shipping charges incurred during the initial purchase.</p>
-                
-                <h3>Non-Returnable Items</h3>
-                <ul>
-                    <li>Gift cards</li>
-                    <li>Downloadable software products</li>
-                    <li>Personalized or custom-made items</li>
-                    <li>Perishable goods</li>
-                </ul>
-
-                <h3>Damaged or Defective Items</h3>
-                <p>In the unfortunate event that your item arrives damaged or defective, please contact us immediately. We will arrange for a replacement or issue a refund, depending on your preference and product availability.</p>
-
-                <h2>Privacy Policy</h2>
-                <p>At MYSTERIUM, we are committed to protecting the privacy and security of our customers' personal information. This Privacy Policy outlines how we collect, use, and safeguard your information when you visit or make a purchase on our website.</p>
-                
-                <h3>Information We Collect</h3>
-                <ul>
-                    <li>Personal identification information (such as email address) provided voluntarily by you during the registration or checkout process.</li>
-                    <li>Payment and billing information necessary to process your orders, including credit card details, which are securely handled by trusted third-party payment processors.</li>
-                    <li>Browsing information, such as your IP address, browser type, and device information, collected automatically using cookies and similar technologies.</li>
-                </ul>
-
-                <h3>Use of Information</h3>
-                <ul>
-                    <li>To process and fulfill your orders, including shipping and delivery.</li>
-                    <li>To communicate with you regarding your purchases, provide customer support, and respond to inquiries or requests.</li>
-                    <li>To improve our website, products, and services based on your feedback and browsing patterns.</li>
-                    <li>To detect and prevent fraud, unauthorized activities, and abuse of our website.</li>
-                </ul>
-
-                <h2>Terms and Conditions</h2>
-                <p>Welcome to MYSTERIUM. These Terms and Conditions govern your use of our website and the purchase and sale of products from our platform. By accessing and using our website, you agree to comply with these terms.</p>
-                
-                <h3>Use of the Website</h3>
-                <ul>
-                    <li>You must be at least 15 years old to use our website or make purchases.</li>
-                    <li>You are responsible for maintaining the confidentiality of your account information, including your username and password.</li>
-                    <li>You agree to provide accurate and current information during the registration and checkout process.</li>
-                    <li>You may not use our website for any unlawful or unauthorized purposes.</li>
-                </ul>
-
-                <h3>Intellectual Property</h3>
-                <p>All content and materials on our website, including but not limited to text, images, logos, and graphics, are protected by intellectual property rights and are the property of MYSTERIUM or its licensors.</p>
-            </div>
-
-            <div class="fixed bottom-0 left-0 w-full p-4 bg-gradient-to-t from-black via-black/90 to-transparent flex flex-col items-center gap-3 max-w-2xl mx-auto left-0 right-0">
-                <div class="text-xs text-gray-500 uppercase tracking-widest mb-1">Contact Support</div>
-                <div class="flex gap-3 w-full max-w-sm">
-                    <a href="tel:+94787004239" class="flex-1 bg-green-700 hover:bg-green-600 text-white py-3 rounded-lg flex items-center justify-center gap-2 font-bold transition">
-                        <i class="fas fa-phone"></i> Call / WhatsApp
-                    </a>
-                    <a href="mailto:yasodhasandeepa@gmail.com" class="flex-1 bg-indigo-700 hover:bg-indigo-600 text-white py-3 rounded-lg flex items-center justify-center gap-2 font-bold transition">
-                        <i class="fas fa-envelope"></i> Email Us
-                    </a>
+                    <p class="text-center text-gray-600 mt-6 font-medium">
+                        ගිණුමක් දැනටමත් තිබෙනවද? 
+                        <button id="backToSignIn" class="text-pink-600 font-bold hover:text-purple-600 transition-colors duration-300 hover:underline">🔐 පිවිසෙන්න</button>
+                    </p>
                 </div>
             </div>
         </div>
     </div>
 
-    <div id="pay-modal" class="hidden fixed inset-0 z-[999] flex items-center justify-center bg-black/90 p-4">
-        <div class="w-full max-w-sm bg-[#1a1a1a] border border-[#d4af37] rounded-2xl p-6 text-center">
-            <i class="fas fa-lock text-3xl text-[#d4af37] mb-4"></i>
-            <h3 class="text-white font-[Cinzel] text-lg mb-2">FULL ACCESS LOCKED</h3>
-            <p class="text-gray-400 text-sm mb-4">Upload payment receipt (Rs. 100) <br>8025211913<br>commercial bank<br> Kurunegala <br> K.M.H.Y.S kariyawasam.</p>
-            <input type="file" id="receipt-file" accept="image/*" class="block w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:bg-[#d4af37] file:text-black hover:file:bg-white mb-4">
-            <button id="send-receipt" class="w-full bg-[#d4af37] text-black font-bold py-3 rounded-xl">SUBMIT</button>
-            <p id="receipt-loading">Compressing & Uploading...</p>
-            <button onclick="document.getElementById('pay-modal').classList.add('hidden')" class="text-xs text-gray-500 mt-4 underline">Close</button>
+    <div id="usernameModal" class="fixed inset-0 modal-backdrop hidden items-center justify-center z-50">
+        <div class="modal-content glass-effect rounded-3xl p-8 max-w-md w-full mx-4 shadow-2xl border-2 border-white/40">
+            <div class="text-center mb-6">
+                <div class="text-6xl mb-4">👤</div>
+                <h2 class="text-3xl font-bold text-gray-800 mb-2">පරිශීලක නාමය</h2>
+                <p class="text-gray-600 font-medium">අන් අයට පෙන්වන්න නමක් තෝරන්න</p>
+            </div>
+            
+            <div class="mb-6">
+                <label class="block text-sm font-bold text-gray-700 mb-2">✨ ඔබේ නම</label>
+                <input type="text" id="modalUsername" placeholder="අපූරු නමක් ලියන්න..." 
+                    class="w-full p-4 border-2 border-purple-300 rounded-2xl focus:outline-none focus:ring-4 focus:ring-purple-300 focus:border-purple-500 transition duration-300 font-medium bg-white/80">
+                <p id="usernameError" class="text-red-500 text-sm font-bold mt-2 hidden">❌ මෙම නම දැනටමත් භාවිතා වේ!</p>
+                <p id="usernameSuccess" class="text-green-500 text-sm font-bold mt-2 hidden">✅ මෙම නම භාවිතා කළ හැක!</p>
+            </div>
+            
+            <button id="confirmUsername" class="w-full bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 text-white p-4 rounded-2xl font-bold text-lg hover:from-purple-700 hover:via-pink-700 hover:to-blue-700 focus:outline-none focus:ring-4 focus:ring-purple-300 transition duration-300 shadow-xl hover:shadow-2xl">
+                🚀 තහවුරු කරන්න
+            </button>
         </div>
     </div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-        import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc, collection, getDocs, query, where, orderBy, limit, startAfter, onSnapshot } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
-
+    <script>
         const firebaseConfig = {
-            apiKey: "AIzaSyByyYMFzn1nHOuzxEsX44sQrIIT5AdB3Pc",
-            authDomain: "book-8cd24.firebaseapp.com",
-            projectId: "book-8cd24",
-            storageBucket: "book-8cd24.firebasestorage.app",
-            messagingSenderId: "747560284834",
-            appId: "1:747560284834:web:30f6080e8d4fbf9025ddfb",
-            measurementId: "G-FFFS1HS4GY"
+          apiKey: "AIzaSyAzNJ-P8aAMvTuNWKcQYCjIIHiaL0BpdZ0",
+          authDomain: "game-f1c21.firebaseapp.com",
+          databaseURL: "https://game-f1c21-default-rtdb.firebaseio.com",
+          projectId: "game-f1c21",
+          storageBucket: "game-f1c21.firebasestorage.app",
+          messagingSenderId: "656338565711",
+          appId: "1:656338565711:web:395f9c7f846588b065883a"
         };
 
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-        
-        let user = null;
-        let isUnlocked = false;
-        let lastLoadedPageDoc = null;
-        let isLoadingMore = false;
-        const BATCH_SIZE = 5; 
-        let statusListener = null;
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const auth = firebase.auth();
+        const database = firebase.database();
 
-        onAuthStateChanged(auth, async (u) => {
-            if(u){
-                user = u;
-                document.getElementById('auth-section').classList.add('hidden');
-                updateLoading(10, "Connecting...");
-                setupUserListener(u.uid);
+        // Notification System
+        function showMessage(message, type = 'success') {
+            const notification = document.getElementById('notification');
+            notification.className = 'mb-4 p-4 rounded-2xl font-bold text-center slide-down shadow-lg';
+            
+            if (type === 'error') {
+                notification.className += ' bg-gradient-to-r from-red-400 to-pink-500 text-white';
+            } else if (type === 'success') {
+                notification.className += ' bg-gradient-to-r from-green-400 to-emerald-500 text-white';
             } else {
-                if(statusListener) statusListener();
-                document.getElementById('loading-screen').classList.add('opacity-0', 'pointer-events-none');
-                document.getElementById('auth-section').classList.remove('hidden');
+                notification.className += ' bg-gradient-to-r from-purple-400 to-pink-500 text-white';
             }
-        });
+            
+            notification.textContent = message;
+            notification.classList.remove('hidden');
 
-        // --- BACKGROUND LOGIC ---
-        const bgClasses = ['bg-mystic', 'bg-wood', 'bg-minimal', 'bg-midnight', 'bg-forest', 'bg-coffee', 'bg-slate'];
-        
-        window.setBg = (style) => {
-            document.body.classList.remove(...bgClasses);
-            document.body.classList.add('bg-' + style);
-            localStorage.setItem('prefBg', style);
-            document.getElementById('bg-menu').classList.remove('show');
-        };
-
-        const savedBg = localStorage.getItem('prefBg') || 'midnight';
-        window.setBg(savedBg);
-
-        window.toggleBgMenu = () => {
-            const menu = document.getElementById('bg-menu');
-            menu.classList.toggle('show');
+            clearTimeout(window._notifTimeout);
+            window._notifTimeout = setTimeout(() => {
+                notification.classList.add('hidden');
+            }, 3500);
         }
 
-        // --- CORE LOGIC ---
-        function setupUserListener(uid) {
-            statusListener = onSnapshot(doc(db, "users", uid), (docSnap) => {
-                if (docSnap.exists()) {
-                    const data = docSnap.data();
-                    const newStatus = (data.status === 'approved');
-                    if (!isUnlocked && newStatus) {
-                        isUnlocked = true;
-                        if(document.getElementById('book-container').classList.contains('hidden')) initBookLoad();
-                        else triggerUnlockAnimation();
-                    } else if (!newStatus) {
-                        isUnlocked = false;
-                        if(document.getElementById('book-container').classList.contains('hidden')) initBookLoad();
-                    } else {
-                        if(document.getElementById('book-container').classList.contains('hidden')) initBookLoad();
-                    }
+        // Disable/Enable buttons
+        function disableButtons(disable = true) {
+            const elements = document.querySelectorAll('#authContainer input, #authContainer button, #googleSignInBtn');
+            elements.forEach(el => {
+                if (disable) {
+                    el.classList.add('disabled');
+                    el.disabled = true;
                 } else {
-                    isUnlocked = false;
-                    initBookLoad();
+                    el.classList.remove('disabled');
+                    el.disabled = false;
                 }
             });
         }
 
-        async function initBookLoad() {
-            updateLoading(30, "Fetching Pages...");
-            await loadInitialPages();
-            updateLoading(100, "Ready");
-            setTimeout(() => document.getElementById('loading-screen').classList.add('opacity-0', 'pointer-events-none'), 500);
-            document.getElementById('book-container').classList.remove('hidden');
-            document.getElementById('book-container').style.display='flex';
-            resizeContent();
+        // Toggle Auth Sections
+        document.getElementById('toggleAuthBtn').addEventListener('click', () => {
+            document.getElementById('signInSection').classList.add('hidden');
+            document.getElementById('signUpSection').classList.remove('hidden');
+        });
+        
+        document.getElementById('backToSignIn').addEventListener('click', () => {
+            document.getElementById('signUpSection').classList.add('hidden');
+            document.getElementById('signInSection').classList.remove('hidden');
+        });
+
+        // Check if user already signed in
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                window.location.href = 'Home.html';
+            }
+        });
+
+        // Check if username exists in database
+        async function checkUsernameExists(username) {
+            if (!username || username.trim() === '') return true;
+            
+            const normalizedUsername = username.trim().toLowerCase();
+            const snapshot = await database.ref('usernames').once('value');
+            
+            if (snapshot.exists()) {
+                const usernames = snapshot.val();
+                return Object.values(usernames).some(
+                    name => name.toLowerCase() === normalizedUsername
+                );
+            }
+            return false;
         }
 
-        function triggerUnlockAnimation() {
-            const lockLayer = document.querySelector('.absolute.inset-0.z-20');
-            if(lockLayer) {
-                lockLayer.innerHTML = `<div class="animate-ping text-green-400 text-2xl font-bold">UNLOCKED!</div>`;
-                setTimeout(async () => { await loadInitialPages(); }, 1500);
-            } else { loadInitialPages(); }
+        // Save username to database
+        async function saveUsername(uid, username) {
+            await database.ref('usernames/' + uid).set(username);
+            await database.ref('users/' + uid + '/name').set(username);
         }
 
-        function updateLoading(percent, text) {
-            document.getElementById('loading-bar').style.width = percent + '%';
-            document.getElementById('loading-text').innerText = text;
-        }
-
-        const processImage = (file) => {
+        // Show Username Modal
+        function showUsernameModal(user) {
             return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.readAsDataURL(file);
-                reader.onload = (e) => {
-                    const img = new Image();
-                    img.src = e.target.result;
-                    img.onload = () => {
-                        const canvas = document.createElement('canvas');
-                        let w = img.width; let h = img.height; const MAX = 1000;
-                        if(w > h) { if(w > MAX) { h *= MAX/w; w = MAX; } }
-                        else { if(h > MAX) { w *= MAX/h; h = MAX; } }
-                        canvas.width = w; canvas.height = h;
-                        const ctx = canvas.getContext('2d');
-                        ctx.drawImage(img, 0, 0, w, h);
-                        resolve(canvas.toDataURL('image/jpeg', 0.7));
-                    };
-                    img.onerror = (err) => reject("Image load error");
-                };
-                reader.onerror = (err) => reject("File read error");
-            });
-        };
-
-        document.getElementById('send-receipt').addEventListener('click', async () => {
-            const btn = document.getElementById('send-receipt');
-            const fileInput = document.getElementById('receipt-file');
-            const f = fileInput.files[0];
-            const loadingText = document.getElementById('receipt-loading');
-
-            if(!user) { alert("Please Login First"); return; }
-            if(!f) { alert("Please Select Image"); return; }
-
-            btn.classList.add('hidden');
-            loadingText.style.display = 'block';
-
-            try {
-                const compressedBase64 = await processImage(f);
-                await setDoc(doc(db,"requests",user.uid), {
-                    userId: user.uid, email: user.email, receiptImage: compressedBase64, status: 'pending', timestamp: new Date()
-                });
-                await setDoc(doc(db,"users",user.uid), { status:'pending' }, { merge:true });
-                alert("Receipt Sent!"); document.getElementById('pay-modal').classList.add('hidden');
-            } catch(e) {
-                alert("Upload Failed: " + e.message);
-            } finally {
-                btn.classList.remove('hidden'); loadingText.style.display = 'none'; fileInput.value = '';
-            }
-        });
-
-        async function loadInitialPages() {
-            const wrap = document.getElementById('pages-wrapper');
-            wrap.innerHTML = '';
-            lastLoadedPageDoc = null;
-            if (isUnlocked) {
-                const q = query(collection(db, "pages"), orderBy("pageNumber", "asc"), limit(BATCH_SIZE));
-                const snap = await getDocs(q);
-                if (!snap.empty) {
-                    lastLoadedPageDoc = snap.docs[snap.docs.length - 1];
-                    renderBatch(snap.docs.map(d => d.data()));
-                }
-            } else {
-                const q = query(collection(db, "pages"), where("pageNumber", "==", 0));
-                const snap = await getDocs(q);
-                if(!snap.empty) renderBatch([snap.docs[0].data()]);
-                renderBatch([{pageNumber:1, isDummy:true}, {pageNumber:2, isDummy:true}]);
-            }
-        }
-
-        async function loadMorePages() {
-            if (!isUnlocked || isLoadingMore || !lastLoadedPageDoc) return;
-            isLoadingMore = true;
-            const q = query(collection(db, "pages"), orderBy("pageNumber", "asc"), startAfter(lastLoadedPageDoc), limit(1));
-            const snap = await getDocs(q);
-            if (!snap.empty) {
-                lastLoadedPageDoc = snap.docs[snap.docs.length - 1];
-                renderBatch(snap.docs.map(d => d.data()));
-            } else { lastLoadedPageDoc = null; }
-            isLoadingMore = false;
-        }
-
-        function renderBatch(dataList) {
-            const wrap = document.getElementById('pages-wrapper');
-            dataList.forEach(data => {
-                let zIndex = 1000 - data.pageNumber;
-                if (data.pageNumber === 1000) zIndex = 0;
-                const page = document.createElement('div');
-                page.className = `page shadow-2xl ${data.pageNumber===0||data.pageNumber===1000?'hard-cover':''}`;
-                page.dataset.pn = data.pageNumber; page.style.zIndex = zIndex;
+                const modal = document.getElementById('usernameModal');
+                const input = document.getElementById('modalUsername');
+                const errorMsg = document.getElementById('usernameError');
+                const successMsg = document.getElementById('usernameSuccess');
+                const confirmBtn = document.getElementById('confirmUsername');
                 
-                const front = document.createElement('div'); front.className = 'front';
-                front.style.backgroundColor = data.backgroundColor || '#ffffff';
-                const contentLayer = document.createElement('div'); contentLayer.className = 'content-layer';
-                front.appendChild(contentLayer);
-
-                if(data.elements && !data.isDummy) {
-                    data.elements.forEach(el => {
-                        const div = document.createElement('div');
-                        div.style.position='absolute'; div.style.left=el.left; div.style.top=el.top;
-                        if(el.type==='text'){
-                            div.innerText=el.content; Object.assign(div.style, el.style);
-                            div.style.width='max-content'; div.style.whiteSpace='pre'; 
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                input.value = '';
+                errorMsg.classList.add('hidden');
+                successMsg.classList.add('hidden');
+                
+                // Real-time username validation
+                let checkTimeout;
+                input.addEventListener('input', () => {
+                    clearTimeout(checkTimeout);
+                    errorMsg.classList.add('hidden');
+                    successMsg.classList.add('hidden');
+                    
+                    const username = input.value.trim();
+                    if (username.length < 3) return;
+                    
+                    checkTimeout = setTimeout(async () => {
+                        const exists = await checkUsernameExists(username);
+                        if (exists) {
+                            errorMsg.classList.remove('hidden');
+                            successMsg.classList.add('hidden');
                         } else {
-                            div.innerHTML=`<img src="${el.content}" style="width:100%; height:100%; object-fit: cover; display:block;">`;
-                            div.style.width='100%'; div.style.height='100%';
+                            errorMsg.classList.add('hidden');
+                            successMsg.classList.remove('hidden');
                         }
-                        contentLayer.appendChild(div);
-                    });
-                }
-
-                if(data.pageNumber===0 && !isUnlocked) {
-                    front.innerHTML += `<div class="absolute inset-0 z-20 flex items-end justify-center pb-24"><div class="animate-bounce text-[#d4af37] bg-black/80 px-6 py-3 rounded-full border border-[#d4af37] shadow-lg cursor-pointer"><i class="fas fa-lock mr-2"></i> LOCKED</div></div>`;
-                    front.onclick = () => document.getElementById('pay-modal').classList.remove('hidden');
-                }
-                if(data.isDummy) {
-                    front.innerHTML += `<div class="absolute inset-0 flex items-center justify-center text-gray-300 font-[Cinzel] text-xl border-2 border-gray-100 m-10">LOCKED</div>`;
-                    page.onclick = () => document.getElementById('pay-modal').classList.remove('hidden');
-                }
-
-                const back = document.createElement('div'); back.className = 'back'; 
-                page.appendChild(front); page.appendChild(back);
-                if(!data.isDummy && (isUnlocked || data.pageNumber===0)) {
-                    page.addEventListener('click', (e) => { e.stopPropagation(); if(page.classList.contains('flipped')) unflipEl(page); else flipEl(page); });
-                }
-                wrap.appendChild(page);
+                    }, 500);
+                });
+                
+                confirmBtn.onclick = async () => {
+                    const username = input.value.trim();
+                    
+                    if (!username || username.length < 3) {
+                        showMessage('❌ නම අවම වශයෙන් අකුරු 3ක් විය යුතුයි!', 'error');
+                        return;
+                    }
+                    
+                    const exists = await checkUsernameExists(username);
+                    if (exists) {
+                        showMessage('❌ මෙම නම දැනටමත් භාවිතා වේ! වෙනත් නමක් තෝරන්න.', 'error');
+                        return;
+                    }
+                    
+                    try {
+                        await user.updateProfile({ displayName: username });
+                        await saveUsername(user.uid, username);
+                        
+                        modal.classList.add('hidden');
+                        modal.classList.remove('flex');
+                        resolve(username);
+                    } catch (error) {
+                        reject(error);
+                    }
+                };
             });
-            resizeContent();
         }
 
-        function resizeContent() {
-            const bookEl = document.getElementById('the-book'); if(!bookEl) return;
-            const layers = document.querySelectorAll('.content-layer');
-            const scaleFactor = bookEl.offsetHeight / 540;
-            layers.forEach(layer => { layer.style.transform = `translate(-50%, -50%) scale(${scaleFactor})`; });
+        // Ensure user has valid username
+        async function ensureDisplayName(user) {
+            if (!user) return;
+            
+            // Check if user already has username in database
+            const snapshot = await database.ref('usernames/' + user.uid).once('value');
+            
+            if (!snapshot.exists() || !snapshot.val()) {
+                // Need to set username
+                try {
+                    const username = await showUsernameModal(user);
+                    showMessage(`✅ ආයුබෝවන් ${username}! 🎉`, 'success');
+                } catch (error) {
+                    console.error('Username setup failed:', error);
+                    showMessage('❌ නම සකසන්නේ දෝෂයක්!', 'error');
+                }
+            }
         }
-        window.addEventListener('resize', resizeContent);
 
-        function flipEl(el, instant=false) {
-            el.classList.add('flipped');
-            if(instant) { el.style.transition='none'; el.style.zIndex=1; setTimeout(()=>el.style.transition='',50); }
-            else { setTimeout(() => { el.style.zIndex=1; }, 600); }
-            loadMorePages();
-        }
-        function unflipEl(el, instant=false) {
-            el.classList.remove('flipped');
-            const z = el.dataset.pn == 1000 ? 0 : (1000 - parseInt(el.dataset.pn));
-            if(instant) { el.style.transition='none'; el.style.zIndex=z; setTimeout(()=>el.style.transition='',50); }
-            else { el.style.zIndex=z + 1000; setTimeout(()=>{el.style.zIndex=z;}, 1200); }
-        }
-        window.nextPage = () => { if(!isUnlocked) return document.getElementById('pay-modal').classList.remove('hidden'); const unflipped = document.querySelectorAll('.page:not(.flipped):not([data-pn="undefined"])'); if(unflipped.length > 0) flipEl(unflipped[0]); };
-        window.prevPage = () => { const flipped = document.querySelectorAll('.page.flipped'); if(flipped.length > 0) unflipEl(flipped[flipped.length - 1]); };
+        // Sign Up with Email/Password
+        document.getElementById('signUpBtn').addEventListener('click', async () => {
+            const email = document.getElementById('signUpEmail').value.trim();
+            const password = document.getElementById('signUpPassword').value;
+            const displayName = document.getElementById('displayName').value.trim();
 
-        window.toggleTheme = () => document.body.classList.toggle('dark-mode');
-        window.toggleControls = () => { const t=document.getElementById('top-bar'); const b=document.getElementById('controls-bar'); t.classList.toggle('-translate-y-full'); b.classList.toggle('translate-y-full'); };
+            if (!email || !password || !displayName) {
+                showMessage('❌ කරුණාකර සියලු තොරතුරු පුරවන්න!', 'error');
+                return;
+            }
+            
+            if (displayName.length < 3) {
+                showMessage('❌ නම අවම වශයෙන් අකුරු 3ක් විය යුතුයි!', 'error');
+                return;
+            }
+            
+            if (password.length < 6) {
+                showMessage('❌ මුරපදය අවම වශයෙන් 6ක් විය යුතුයි', 'error');
+                return;
+            }
 
-        document.getElementById('google-login').addEventListener('click', async () => { 
-            try{ 
-                const r=await signInWithPopup(auth,new GoogleAuthProvider()); 
-                const userRef = doc(db,"users",r.user.uid);
-                const snap = await getDoc(userRef);
-                if(!snap.exists()) await setDoc(userRef,{email:r.user.email, status:'pending'});
-            } catch(e){ alert(e.message); } 
+            disableButtons(true);
+            try {
+                // Step 1: Check username existence before creating user
+                const usernameExists = await checkUsernameExists(displayName);
+                if (usernameExists) {
+                    showMessage('❌ මෙම නම දැනටමත් භාවිතා වේ! වෙනත් නමක් තෝරන්න.', 'error');
+                    disableButtons(false);
+                    return;
+                }
+
+                // Step 2: Create User
+                const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+                
+                // Step 3: Save username
+                await userCredential.user.updateProfile({ displayName: displayName });
+                await saveUsername(userCredential.user.uid, displayName);
+                
+                showMessage(`✅ ලියාපදිංචි වීම සාර්ථකයි! ආයුබෝවන් ${displayName}! 🎉`);
+                setTimeout(() => {
+                    window.location.href = 'Home.html';
+                }, 1500);
+            } catch (error) {
+                disableButtons(false);
+                let errorMsg = 'දෝෂයක් සිදු විය!';
+                if (error.code === 'auth/email-already-in-use') {
+                    errorMsg = 'මෙම ඊමේල් ලිපිනය දැනටමත් භාවිතා වේ!';
+                } else if (error.code === 'auth/invalid-email') {
+                    errorMsg = 'වලංගු නොවන ඊමේල් ලිපිනයක්!';
+                } else if (error.code === 'auth/weak-password') {
+                    errorMsg = 'මුරපදය වඩාත් ශක්තිමත් විය යුතුයි!';
+                } else {
+                    // 🔥 දෝෂය හඳුනාගැනීම සඳහා නව වෙනස
+                    errorMsg = `දෝෂයක් සිදු විය! (කේතය: ${error.code})`;
+                }
+                showMessage(`❌ ${errorMsg}`, 'error');
+            }
         });
-        document.getElementById('logout-btn').addEventListener('click', ()=>signOut(auth));
 
-        let ts=0; const bs=document.querySelector('.book-scene');
-        bs.addEventListener('touchstart', e=>ts=e.changedTouches[0].screenX);
-        bs.addEventListener('touchend', e=>{ const te=e.changedTouches[0].screenX; if(te<ts-40) window.nextPage(); if(te>ts+40) window.prevPage(); });
+        // Sign In with Email/Password
+        document.getElementById('signInBtn').addEventListener('click', async () => {
+            const email = document.getElementById('authEmail').value.trim();
+            const password = document.getElementById('authPassword').value;
+            
+            if (!email || !password) {
+                showMessage('❌ කරුණාකර සියලු තොරතුරු පුරවන්න!', 'error');
+                return;
+            }
+
+            disableButtons(true);
+            try {
+                const userCredential = await auth.signInWithEmailAndPassword(email, password);
+                await ensureDisplayName(userCredential.user);
+                
+                showMessage('✅ පිවිසුම සාර්ථකයි! යොමු කරමින්...');
+                setTimeout(() => {
+                    window.location.href = 'Home.html';
+                }, 1500);
+            } catch (error) {
+                disableButtons(false);
+                let errorMsg = 'දෝෂයක් සිදු විය!';
+                if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+                    errorMsg = 'ඊමේල් හෝ මුරපදය වැරදියි! නැතහොත් ගිණුමක් හමු නොවීය.';
+                } else if (error.code === 'auth/invalid-email') {
+                    errorMsg = 'වලංගු නොවන ඊමේල් ලිපිනයක්!';
+                } else {
+                    // 🔥 දෝෂය හඳුනාගැනීම සඳහා නව වෙනස
+                    errorMsg = `දෝෂයක් සිදු විය! (කේතය: ${error.code})`;
+                }
+                showMessage(`❌ ${errorMsg}`, 'error');
+            }
+        });
+
+        // Google Sign-in
+        document.getElementById('googleSignInBtn').addEventListener('click', async () => {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            disableButtons(true);
+            
+            try {
+                const userCredential = await auth.signInWithPopup(provider);
+                await ensureDisplayName(userCredential.user);
+                
+                const displayName = userCredential.user.displayName || 'User';
+                showMessage(`✅ Google හරහා සාර්ථකයි! ආයුබෝවන් ${displayName}! 🎉`);
+                
+                setTimeout(() => {
+                    window.location.href = 'Home.html';
+                }, 1500);
+            } catch (error) {
+                disableButtons(false);
+                let errorMsg = 'Google පිවිසුමේ දෝෂයක්!';
+                if (error.code === 'auth/popup-closed-by-user') {
+                    errorMsg = 'පිවිසුම අවලංගු කරන ලදී.';
+                } else if (error.code === 'auth/popup-blocked') {
+                    errorMsg = 'කරුණාකර popup අවහිර කිරීම අක්‍රිය කරන්න.';
+                } else {
+                    // 🔥 දෝෂය හඳුනාගැනීම සඳහා නව වෙනස
+                    errorMsg = `Google පිවිසුමේ දෝෂයක්! (කේතය: ${error.code})`;
+                }
+                showMessage(`❌ ${errorMsg}`, 'error');
+            }
+        });
+
+        // Enter key support
+        document.getElementById('authPassword').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') document.getElementById('signInBtn').click();
+        });
+        
+        document.getElementById('signUpPassword').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') document.getElementById('signUpBtn').click();
+        });
+        
+        document.getElementById('modalUsername').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') document.getElementById('confirmUsername').click();
+        });
     </script>
 </body>
 </html>
+
+
+
+
+
+
