@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Auto Admin - Ultimate Analytics</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js'></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-gray-900 text-white font-mono p-6">
+    <div class="max-w-7xl mx-auto">
+        <header class="flex justify-between items-center mb-6 border-b border-gray-700 pb-4">
+            <h1 class="text-2xl text-yellow-500 font-bold">MYSTERIUM ADMIN v4.0</h1>
+            <div class="text-xs">Bot: <span class="text-green-500 animate-pulse">ACTIVE</span></div>
+        </header>
+
+        <div class="bg-gray-800 p-4 rounded mb-6 border border-gray-700">
+            <h2 class="text-yellow-500 font-bold mb-4">DAILY INCOME PER BOOK</h2>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs">
+                    <thead class="bg-gray-900 text-gray-400">
+                        <tr>
+                            <th class="p-2">Date</th>
+                            <th class="p-2">Book Title</th>
+                            <th class="p-2">Income (LKR)</th>
+                            <th class="p-2">Sold Count</th>
+                        </tr>
+                    </thead>
+                    <tbody id="income-table" class="divide-y divide-gray-700"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            <div class="lg:col-span-1 bg-black p-4 rounded h-96 overflow-y-auto border border-gray-700 text-[10px]">
+                <div class="text-gray-500 font-bold mb-2">LIVE LOGS</div>
+                <div id="bot-log" class="space-y-1"></div>
+            </div>
+            <div class="lg:col-span-3">
+                <div class="bg-gray-800 rounded border border-gray-700 overflow-hidden h-96 overflow-y-auto">
+                    <table class="w-full text-left text-xs">
+                        <thead class="bg-gray-900 text-gray-400 uppercase sticky top-0">
+                            <tr>
+                                <th class="p-3">Type</th>
+                                <th class="p-3">Details</th>
+                                <th class="p-3">Payment Info</th>
+                                <th class="p-3">Status</th>
+                                <th class="p-3 text-right">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tx-table" class="divide-y divide-gray-700"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div id="img-modal" class="hidden fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4" onclick="this.classList.add('hidden')"><img id="modal-img" class="max-h-[80vh] border-2 border-yellow-500"></div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+        import { getFirestore, collection, doc, updateDoc, setDoc, onSnapshot, query, orderBy, increment, getDoc } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+
+        const firebaseConfig = { apiKey: "AIzaSyByyYMFzn1nHOuzxEsX44sQrIIT5AdB3Pc", authDomain: "book-8cd24.firebaseapp.com", projectId: "book-8cd24", storageBucket: "book-8cd24.firebasestorage.app", messagingSenderId: "747560284834", appId: "1:747560284834:web:30f6080e8d4fbf9025ddfb" };
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const log = (msg) => { const d = document.getElementById('bot-log'); d.innerHTML += `<div class="opacity-80 border-b border-gray-900 pb-1 mb-1">> ${msg}</div>`; d.scrollTop = d.scrollHeight; };
+
+        // Real-time Listener
+        onSnapshot(query(collection(db, "requests"), orderBy("timestamp", "desc")), (snap) => {
+            document.getElementById('tx-table').innerHTML = '';
+            let stats = {};
+
+            snap.docs.forEach(d => {
+                const data = d.data();
+                
+                // Bot Processing
+                if(data.status === 'pending' && !data.autoProcessed) runBot(d.id, data);
+                
+                // Analytics Calculation (Only Approved Sales)
+                if(data.status === 'approved' && data.type === 'buy_book') {
+                    const date = new Date(data.timestamp).toISOString().split('T')[0]; // YYYY-MM-DD
+                    const key = `${date}_${data.bookId}`;
+                    if(!stats[key]) stats[key] = { date, title: data.bookTitle, amount: 0, count: 0 };
+                    stats[key].amount += parseFloat(data.amountPaid || data.amount);
+                    stats[key].count++;
+                }
+
+                renderRow(d.id, data);
+            });
+            renderStats(stats);
+        });
+
+        function renderStats(stats) {
+            const tbody = document.getElementById('income-table'); tbody.innerHTML = '';
+            Object.values(stats).sort((a,b) => b.date.localeCompare(a.date)).forEach(s => {
+                tbody.innerHTML += `<tr><td class="p-2 text-gray-400">${s.date}</td><td class="p-2 text-white">${s.title}</td><td class="p-2 text-green-400 font-bold">Rs. ${s.amount}</td><td class="p-2 text-blue-400">${s.count}</td></tr>`;
+            });
+        }
+
+        async function runBot(reqId, data) {
+            log(`Analyzing: ${reqId.substring(0,5)}...`);
+            await updateDoc(doc(db, "requests", reqId), { autoProcessed: true });
+            try {
+                if(!data.receiptImage) throw new Error("No Image");
+                const res = await Tesseract.recognize(data.receiptImage, 'eng');
+                const text = res.data.text.toLowerCase().replace(/[^a-z0-9]/g, ""); 
+                
+                const today = new Date();
+                const dateOk = text.includes(today.getDate().toString()) || text.includes((today.getMonth()+1).toString());
+                
+                // COUPON LOGIC: Check 'amountPaid' (Discounted Price) instead of full price
+                let targetAmount = data.amountPaid ? data.amountPaid.toString() : (data.amount || "0");
+                if(data.type === 'publish_fee') targetAmount = "500";
+                
+                const amountOk = text.includes(targetAmount);
+                let finalStatus = (dateOk && amountOk) ? 'approved' : 'rejected';
+                if(text.length < 10) finalStatus = 'pending'; 
+
+                log(`Target: ${targetAmount} | OCR: ${amountOk} | Verdict: ${finalStatus}`);
+                if(finalStatus !== 'pending') await executeAction(reqId, finalStatus, data, `Auto: ${finalStatus}`);
+            } catch(e) { log(`Error: ${e.message}`); }
+        }
+
+        window.manualAction = (id, status, type, uid, bid) => executeAction(id, status, {type, userId:uid, bookId:bid}, "Manual Admin");
+
+        async function executeAction(reqId, status, data, reason) {
+            const reqRef = doc(db, "requests", reqId);
+            // Get fresh data to verify coupon info
+            const snap = await getDoc(reqRef);
+            const freshData = snap.data() || data; 
+
+            await updateDoc(reqRef, { status, autoReason: reason });
+
+            if(status === 'approved') {
+                if(freshData.type === 'publish_fee') {
+                    await updateDoc(doc(db, "books", freshData.bookId), { status: "approved" });
+                    log(`Published: ${freshData.bookId}`);
+                } 
+                else if(freshData.type === 'buy_book') {
+                    // Unlock for TARGET USER (might be gift recipient)
+                    const targetUser = freshData.recipientEmail ? freshData.recipientId : freshData.userId; // You'd need to fetch ID by email if gifting, for simplicity using stored ID
+                    // Actually, simpler: in User App we store 'recipientId' if gifted.
+                    
+                    const unlockUid = freshData.giftRecipientId || freshData.userId;
+
+                    await setDoc(doc(db, "users", unlockUid, "purchases", freshData.bookId), { unlockedAt: new Date().toISOString(), bookId: freshData.bookId });
+                    await updateDoc(doc(db, "books", freshData.bookId), { buyers: increment(1) });
+                    log(`Unlocked for: ${unlockUid}`);
+                    
+                    // Mark Coupon as Used if applied
+                    if(freshData.couponId) {
+                         // Logic to mark coupon used (if it's single use). For now, we assume coupons are reusable or handled in user app logic.
+                    }
+                }
+            }
+        }
+
+        function renderRow(id, data) {
+            const isBuy = data.type === 'buy_book';
+            const badge = isBuy ? 'bg-blue-900 text-blue-200' : 'bg-purple-900 text-purple-200';
+            const statusColor = data.status === 'approved' ? 'text-green-400' : (data.status==='rejected'?'text-red-400':'text-yellow-400');
+            
+            let priceDisplay = `Target: Rs. ${data.amountPaid || data.amount || '500'}`;
+            if(data.discount > 0) priceDisplay += ` <span class="text-green-400 text-[9px]">(Coupon: -${data.discount})</span>`;
+            if(data.giftRecipientId) priceDisplay += ` <span class="text-pink-400 text-[9px]">(GIFT)</span>`;
+
+            const html = `
+                <tr class="hover:bg-gray-800 transition border-b border-gray-800">
+                    <td class="p-3"><span class="${badge} px-2 py-1 rounded text-[10px] font-bold uppercase">${data.type.replace('_',' ')}</span></td>
+                    <td class="p-3"><div class="font-bold text-gray-300">${data.email}</div><div class="text-[10px] text-gray-500">${isBuy ? 'ID: '+data.bookId : 'Title: '+data.bookTitle}</div></td>
+                    <td class="p-3 text-[10px] text-gray-400">
+                        ${priceDisplay}<br>
+                        <button onclick="viewImg('${data.receiptImage}')" class="text-yellow-500 underline mt-1">View Receipt</button>
+                    </td>
+                    <td class="p-3"><div class="${statusColor} font-bold uppercase text-[10px]">${data.status}</div><div class="text-[9px] text-gray-500">${data.autoReason || '...'}</div></td>
+                    <td class="p-3 text-right">
+                        <button onclick="manualAction('${id}','approved','${data.type}','${data.userId}','${data.bookId}')" class="text-green-500 hover:bg-green-900 p-1 rounded"><i class="fas fa-check"></i></button>
+                        <button onclick="manualAction('${id}','rejected','${data.type}','${data.userId}','${data.bookId}')" class="text-red-500 hover:bg-red-900 p-1 rounded"><i class="fas fa-times"></i></button>
+                    </td>
+                </tr>`;
+            document.getElementById('tx-table').innerHTML += html;
+        }
+        window.viewImg = (src) => { document.getElementById('modal-img').src=src; document.getElementById('img-modal').classList.remove('hidden'); }
+    </script>
+</body>
+</html>
