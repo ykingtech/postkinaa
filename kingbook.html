@@ -140,7 +140,7 @@
                 <i class="fas fa-arrow-left text-[#d4af37] mr-2"></i><span class="text-[#d4af37] font-[Cinzel] text-xs tracking-widest">LIBRARY</span>
             </div>
             <div class="flex gap-2 relative">
-                <button onclick="openReviewModal()" class="w-9 h-9 rounded-full bg-[#d4af37]/20 border border-[#d4af37] flex items-center justify-center text-[#d4af37] hover:bg-[#d4af37] hover:text-black transition" title="Review Book"><i class="fas fa-pen-nib"></i></button>
+                <button onclick="openReviewModal()" class="w-9 h-9 rounded-full bg-[#d4af37]/20 border border-[#d4af37] flex items-center justify-center text-[#d4af37] hover:bg-[#d4af37] hover:text-black transition" title="Review & Comments"><i class="fas fa-comments"></i></button>
                 <button onclick="toggleMute()" id="mute-btn" class="w-9 h-9 rounded-full bg-black/60 border border-white/20 flex items-center justify-center text-white hover:bg-white hover:text-black transition"><i class="fas fa-volume-up"></i></button>
                 <button onclick="toggleReaderDarkMode()" id="dm-btn" class="w-9 h-9 rounded-full bg-black/60 border border-white/20 flex items-center justify-center text-yellow-500 hover:bg-white hover:text-black transition"><i class="fas fa-moon"></i></button>
                 <button onclick="toggleBgMenu()" class="w-9 h-9 rounded-full bg-black/60 border border-white/20 flex items-center justify-center text-white animate-pulse"><i class="fas fa-swatchbook text-xs"></i></button>
@@ -173,8 +173,11 @@
     </div>
 
     <div id="review-modal" class="hidden fixed inset-0 z-[2000] bg-black/90 flex items-center justify-center p-4">
-        <div class="w-full max-w-sm bg-[#1a1a1a] border border-[#d4af37] rounded-2xl p-6 text-center">
-            <h3 class="text-white font-[Cinzel] text-lg mb-4">RATE THIS BOOK</h3>
+        <div class="w-full max-w-sm bg-[#1a1a1a] border border-[#d4af37] rounded-2xl p-6 text-center overflow-y-auto max-h-[90vh]">
+            <h3 class="text-white font-[Cinzel] text-lg mb-4">REVIEWS & COMMENTS</h3>
+            <div id="comments-list" class="text-left mb-6 space-y-3 max-h-48 overflow-y-auto pr-2 mb-4 border-b border-gray-800">
+                <p class="text-[10px] text-gray-500 text-center">Loading comments...</p>
+            </div>
             <div class="flex justify-center gap-2 mb-4 logo-rating">
                 <i onclick="setRating(1)" class="fas fa-dragon text-2xl cursor-pointer inactive" id="star-1"></i>
                 <i onclick="setRating(2)" class="fas fa-dragon text-2xl cursor-pointer inactive" id="star-2"></i>
@@ -183,8 +186,8 @@
                 <i onclick="setRating(5)" class="fas fa-dragon text-2xl cursor-pointer inactive" id="star-5"></i>
             </div>
             <textarea id="review-text" class="w-full bg-black border border-gray-700 rounded p-2 text-xs text-white mb-4" rows="3" placeholder="Write your thoughts..."></textarea>
-            <button onclick="submitReview()" class="w-full bg-[#d4af37] text-black font-bold py-2 rounded-xl">SUBMIT REVIEW</button>
-            <button onclick="document.getElementById('review-modal').classList.add('hidden')" class="text-xs text-gray-500 mt-4 underline">Cancel</button>
+            <button onclick="submitReview()" class="w-full bg-[#d4af37] text-black font-bold py-2 rounded-xl text-sm">POST REVIEW</button>
+            <button onclick="document.getElementById('review-modal').classList.add('hidden')" class="text-xs text-gray-500 mt-4 underline">Close</button>
         </div>
     </div>
 
@@ -253,7 +256,21 @@
         function playFlip() { if(!audioState.muted && audioState.initialized) { audioState.flip.currentTime=0; audioState.flip.play().catch(()=>{}); } }
 
         onAuthStateChanged(auth, u => {
-            if(u) { currentUser = u; document.getElementById('auth-section').classList.add('hidden'); document.getElementById('main-nav').classList.remove('hidden'); document.getElementById('user-avatar').src = u.photoURL; showView('wall'); } 
+            if(u) { 
+                currentUser = u; 
+                document.getElementById('auth-section').classList.add('hidden'); 
+                document.getElementById('main-nav').classList.remove('hidden'); 
+                document.getElementById('user-avatar').src = u.photoURL; 
+                
+                // CHECK FOR DIRECT LINK
+                const params = new URLSearchParams(window.location.search);
+                const bookIdParam = params.get('bookId');
+                if(bookIdParam) {
+                    loadWall().then(() => checkAndOpenBook(bookIdParam));
+                } else {
+                    showView('wall');
+                }
+            } 
             else { document.getElementById('auth-section').classList.remove('hidden'); document.getElementById('main-nav').classList.add('hidden'); document.getElementById('loading-screen').classList.add('opacity-0', 'pointer-events-none'); }
         });
         document.getElementById('google-login').onclick = () => signInWithPopup(auth, new GoogleAuthProvider());
@@ -271,7 +288,15 @@
                 if(v==='wall') loadWall();
             }
         };
-        window.closeReader = () => { activeBookId = null; document.getElementById('pages-wrapper').innerHTML = ''; showView('wall'); };
+        window.closeReader = () => { 
+            activeBookId = null; 
+            document.getElementById('pages-wrapper').innerHTML = ''; 
+            // Clear bookId from URL when closing
+            const url = new URL(window.location);
+            url.searchParams.delete('bookId');
+            window.history.pushState({}, '', url);
+            showView('wall'); 
+        };
         window.toggleReaderDarkMode = () => document.getElementById('view-reader').classList.toggle('reader-dark-mode');
         window.toggleBgMenu = () => document.getElementById('bg-menu').classList.toggle('hidden');
 
@@ -342,26 +367,36 @@
                 for(let i=0; i<5; i++) { ratingHtml += `<i class="fas fa-dragon text-[8px] ${i<rating ? 'text-[#d4af37]' : 'text-gray-700'}"></i>`; }
 
                 grid.innerHTML += `
-                <div onclick="checkAndOpenBook('${b.id}')" class="book-card cursor-pointer group">
-                    <div class="aspect-[2/3] bg-gray-800 relative mb-2">
+                <div class="book-card cursor-pointer group">
+                    <div onclick="checkAndOpenBook('${b.id}')" class="aspect-[2/3] bg-gray-800 relative mb-2">
                         <img src="${b.coverUrl}" class="w-full h-full object-cover">
                         ${isOwned ? '<div class="absolute top-2 left-2 bg-green-600 text-white text-[9px] font-bold px-2 py-1 rounded"><i class="fas fa-check"></i> OWNED</div>' : ''}
                         <div class="absolute top-2 right-2 bg-black/70 text-[#d4af37] text-[10px] font-bold px-2 py-1 rounded">Rs.${b.price}</div>
                     </div>
-                    <div class="text-sm font-bold truncate text-gray-200 px-2 group-hover:text-[#d4af37]">${b.title}</div>
+                    <div onclick="checkAndOpenBook('${b.id}')" class="text-sm font-bold truncate text-gray-200 px-2 group-hover:text-[#d4af37]">${b.title}</div>
                     <div class="px-2 pb-2 flex justify-between items-center mt-1">
                         <div class="flex gap-0.5">${ratingHtml}</div>
-                        <div class="text-[9px] text-gray-500 font-mono">${b.buyers||0} READERS</div>
+                        <button onclick="shareBook('${b.id}')" class="text-[10px] bg-white/5 hover:bg-white/20 p-1.5 rounded-md text-gray-400"><i class="fas fa-share-alt"></i></button>
                     </div>
                 </div>`;
             });
         }
         document.getElementById('search-input').addEventListener('input', renderBooksGrid);
 
+        window.shareBook = (id) => {
+            const shareUrl = `${window.location.origin}${window.location.pathname}?bookId=${id}`;
+            navigator.clipboard.writeText(shareUrl).then(() => alert("Link Copied! Share with friends. 🐉"));
+        };
+
         window.checkAndOpenBook = async (bookId) => {
             document.getElementById('loading-screen').classList.remove('opacity-0', 'pointer-events-none');
             document.getElementById('loading-text').innerText = "Verifying Access...";
             try {
+                // UPDATE URL
+                const url = new URL(window.location);
+                url.searchParams.set('bookId', bookId);
+                window.history.pushState({}, '', url);
+
                 // INCREMENT CLICK (TRENDING LOGIC)
                 await updateDoc(doc(db, "books", bookId), { clicks: increment(1) });
 
@@ -370,15 +405,12 @@
                 const b = bSnap.data();
                 const isAuthor = b.author === currentUser.uid;
                 
-                // Check if already purchased/owned
                 const pRef = doc(db, "users", currentUser.uid, "purchases", bookId);
                 const pSnap = await getDoc(pRef);
                 const isPurchased = pSnap.exists();
                 const isFree = parseFloat(b.price) === 0;
 
-                // SPECIAL LOGIC FOR FREE BOOKS READER COUNT
                 if(isFree && !isPurchased) {
-                    // Mark as "purchased" (free claim) and increment buyers
                     await setDoc(pRef, { unlockedAt: new Date().toISOString(), bookId: bookId });
                     await updateDoc(doc(db, "books", bookId), { buyers: increment(1) });
                 }
@@ -456,7 +488,38 @@
         };
         async function saveProgress(pageNum) { if(!activeBookId || !currentUser) return; try { await setDoc(doc(db, "users", currentUser.uid, "purchases", activeBookId), { lastReadPage: pageNum }, { merge: true }); } catch(e) {} }
 
-        window.openReviewModal = () => { document.getElementById('review-modal').classList.remove('hidden'); currentRating = 0; updateStars(); };
+        window.openReviewModal = async () => { 
+            document.getElementById('review-modal').classList.remove('hidden'); 
+            currentRating = 0; 
+            updateStars(); 
+            loadComments();
+        };
+
+        async function loadComments() {
+            const list = document.getElementById('comments-list');
+            list.innerHTML = '<p class="text-[10px] text-gray-500 text-center">Loading comments...</p>';
+            try {
+                const q = query(collection(db, "books", activeBookId, "reviews"), orderBy("timestamp", "desc"), limit(10));
+                const snap = await getDocs(q);
+                list.innerHTML = '';
+                if(snap.empty) list.innerHTML = '<p class="text-[10px] text-gray-600 text-center">No comments yet. Be the first!</p>';
+                snap.forEach(d => {
+                    const r = d.data();
+                    let stars = '';
+                    for(let i=0; i<5; i++) stars += `<i class="fas fa-dragon ${i < r.rating ? 'text-[#d4af37]' : 'text-gray-800'} mr-0.5"></i>`;
+                    list.innerHTML += `
+                        <div class="bg-black/30 p-2 rounded-lg border border-white/5">
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="text-[8px] font-bold text-gray-400">READER</span>
+                                <div class="text-[7px]">${stars}</div>
+                            </div>
+                            <p class="text-[10px] text-gray-300 leading-tight">${r.text}</p>
+                        </div>
+                    `;
+                });
+            } catch(e) { list.innerHTML = '<p class="text-red-900 text-[8px]">Failed to load.</p>'; }
+        }
+
         window.setRating = (n) => { currentRating = n; updateStars(); };
         function updateStars() {
             for(let i=1; i<=5; i++) {
@@ -468,6 +531,7 @@
         window.submitReview = async () => {
             if(currentRating === 0) return alert("Select a rating!");
             const txt = document.getElementById('review-text').value;
+            if(!txt.trim()) return alert("Write something!");
             const ref = doc(db, "books", activeBookId);
             try {
                 await addDoc(collection(db, "books", activeBookId, "reviews"), { userId: currentUser.uid, rating: currentRating, text: txt, timestamp: new Date().toISOString() });
@@ -476,8 +540,9 @@
                 const oldCount = bData.ratingCount || 0;
                 const newAvg = ((oldRating * oldCount) + currentRating) / (oldCount + 1);
                 await updateDoc(ref, { avgRating: newAvg, ratingCount: increment(1) });
+                document.getElementById('review-text').value = '';
+                loadComments();
                 alert("Review Submitted! 🐉");
-                document.getElementById('review-modal').classList.add('hidden');
             } catch(e) { alert("Error submitting review"); }
         };
 
