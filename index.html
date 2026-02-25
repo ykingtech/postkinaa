@@ -1,497 +1,141 @@
 <!DOCTYPE html>
-<html lang="si">
+<html lang="en">
 <head>
-    <meta name="norton-safeweb-site-verification" content="RGU6HVJXEU61RM1YE0XLE194MQQRSZGW1BNJYOJ4H-3JDVYY3LMW14R1DQLHT74X17OJ7QSJSXRD9F1LR58AFD2W0MAMJTIP8Y451V6TJIFZ8FSBA4PYC8H7ZGNGAGMT" />
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PostKina - ප්‍රවේශය</title>
-     <link rel="icon" href="ico.png" type="image/png">
+    <title>Golden Hand Caregivers | Professional Care Service</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-    <style>
-        .fade-in { animation: fadeIn 0.6s ease-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
-        
-        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
-        .pulse-animation { animation: pulse 2s ease-in-out infinite; }
-        
-        @keyframes float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-15px); } }
-        .float { animation: float 3s ease-in-out infinite; }
-        
-        @keyframes glow { 0%, 100% { box-shadow: 0 0 20px rgba(168, 85, 247, 0.5); } 50% { box-shadow: 0 0 40px rgba(168, 85, 247, 0.9); } }
-        .glow { animation: glow 2s ease-in-out infinite; }
-
-        .auth-button { transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
-        .auth-button:hover { transform: translateY(-5px) scale(1.02); }
-        .auth-button:active { transform: translateY(0) scale(0.98); }
-        
-        .glass-effect {
-            background: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(20px);
-            border: 2px solid rgba(255, 255, 255, 0.4);
-        }
-
-        input:focus {
-            transform: scale(1.02);
-            transition: all 0.3s ease;
-        }
-
-        .disabled { opacity: 0.6; pointer-events: none; filter: grayscale(50%); }
-
-        @keyframes slideDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
-        .slide-down { animation: slideDown 0.4s ease-out; }
-
-        /* Custom Modal Styles */
-        .modal-backdrop {
-            backdrop-filter: blur(8px);
-            background: rgba(0, 0, 0, 0.5);
-        }
-
-        @keyframes modalFadeIn {
-            from { opacity: 0; transform: scale(0.9); }
-            to { opacity: 1; transform: scale(1); }
-        }
-        .modal-content {
-            animation: modalFadeIn 0.3s ease-out;
-        }
-    </style>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
-<body class="min-h-screen bg-gradient-to-br from-purple-100 via-pink-100 to-blue-100 relative pt-10 pb-10 overflow-y-auto">
+<body class="bg-gray-50 text-gray-800 font-sans">
 
-    <div class="absolute inset-0 overflow-hidden pointer-events-none">
-        <div class="absolute top-10 left-10 w-72 h-72 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-pulse"></div>
-        <div class="absolute top-40 right-10 w-96 h-96 bg-pink-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-pulse" style="animation-delay: 1s;"></div>
-        <div class="absolute -bottom-20 left-1/3 w-80 h-80 bg-blue-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-pulse" style="animation-delay: 2s;"></div>
-    </div>
-
-    <div class="flex flex-col items-center justify-center">
-        <div class="w-full max-w-md glass-effect rounded-3xl p-10 shadow-2xl fade-in relative z-10 mx-4 my-auto">
-            <div class="text-center mb-8">
-                <div class="text-6xl mb-4 float">🌟</div>
-                <h1 class="text-5xl font-black mb-3 bg-clip-text text-transparent bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 pulse-animation">PostKina</h1>
-                <p class="text-gray-600 font-semibold text-lg">✨ යාළුවෝ එක්ක සම්බන්ධ වෙන්න!</p>
-            </div>
-
-            <div id="notification" class="mb-4 hidden"></div>
-
-            <div id="authContainer">
-                <div id="signInSection">
-                    <h2 class="text-3xl font-bold mb-6 text-gray-800 text-center">🔐 පිවිසෙන්න</h2>
-                    
-                    <button id="googleSignInBtn" class="auth-button w-full flex items-center justify-center space-x-3 bg-white text-gray-700 border-2 border-gray-300 p-4 rounded-2xl font-bold text-lg hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 hover:border-purple-400 focus:outline-none focus:ring-4 focus:ring-purple-300 transition duration-300 mb-6 shadow-lg hover:shadow-xl">
-                        <svg class="w-6 h-6" viewBox="0 0 533.5 544.3" xmlns="http://www.w3.org/2000/svg"><path d="M533.5 244.3c0-14.7-1.2-29.2-3.4-43.2H267.5v82.7h149.3c-6.4 39.8-29.7 73.5-62.8 96.1l-2.6 1.8 69.4 53.7 3.8.3c42.8-39.7 67.5-97 67.5-164.8z" fill="#4285F4"/><path d="M267.5 544.3c71.2 0 131-23.7 174.7-64.4l-73.4-56.9c-20.4 13.6-46.7 22-77.2 22-59 0-109.8-39.9-127.7-93.5l-2.5.3-71.1 55.4-1.7.9c41 81.3 124.9 138.2 229.7 138.2z" fill="#34A853"/><path d="M140.2 329.8c-3.1-9.4-5.2-19.4-5.2-29.8 0-10.4 2.1-20.4 5.1-29.8l-1.9-1.5-73.6-57.2-1.4.7c-21.7 43.1-34.4 92.5-34.4 147.2 0 54.7 12.7 104.1 34.4 147.2l75-58.4z" fill="#FBBC05"/><path d="M267.5 108.3c38.7 0 73.1 13.3 99.9 38.6L437 78.4c-43.7-41-103.5-66.7-169.5-66.7-104.8 0-188.7 56.9-229.7 138.2l75 58.4c17.9-53.6 68.7-93.5 127.7-93.5z" fill="#EA4335"/></svg>
-                        <span>🚀 ගූගල් හරහා පිවිසෙන්න</span>
-                    </button>
-                    
-                    <div class="flex items-center my-6">
-                        <hr class="flex-grow border-gray-300">
-                        <span class="px-4 text-gray-500 text-sm font-semibold">නැතහොත්</span>
-                        <hr class="flex-grow border-gray-300">
-                    </div>
-                    
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-sm font-bold text-gray-700 mb-2">📧 ඊමේල් ලිපිනය</label>
-                            <input type="email" id="authEmail" placeholder="your@email.com" 
-                                class="w-full p-4 border-2 border-gray-300 rounded-2xl focus:outline-none focus:ring-4 focus:ring-purple-300 focus:border-purple-500 transition duration-300 font-medium bg-white/60 backdrop-blur-sm">
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm font-bold text-gray-700 mb-2">🔒 මුරපදය</label>
-                            <input type="password" id="authPassword" placeholder="••••••••" 
-                                class="w-full p-4 border-2 border-gray-300 rounded-2xl focus:outline-none focus:ring-4 focus:ring-purple-300 focus:border-purple-500 transition duration-300 font-medium bg-white/60 backdrop-blur-sm">
-                        </div>
-                    </div>
-                    
-                    <button id="signInBtn" class="auth-button w-full bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 text-white p-4 rounded-2xl font-bold text-lg hover:from-purple-700 hover:via-pink-700 hover:to-blue-700 focus:outline-none focus:ring-4 focus:ring-purple-300 transition duration-300 mt-6 shadow-xl hover:shadow-2xl">
-                        🎯 ඊමේල්/මුරපදයෙන් පිවිසෙන්න
-                    </button>
-                    
-                    <p class="text-center text-gray-600 mt-6 font-medium">
-                        ගිණුමක් නැතිද? 
-                        <button id="toggleAuthBtn" class="text-purple-600 font-bold hover:text-pink-600 transition-colors duration-300 hover:underline">✨ ලියාපදිංචි වෙන්න</button>
-                    </p>
+    <nav class="bg-white shadow-md fixed w-full z-10 top-0">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <span class="text-2xl font-bold text-amber-600"><i class="fas fa-hands-holding-circle"></i> GOLDEN HAND</span>
                 </div>
-
-                <div id="signUpSection" class="hidden">
-                    <h2 class="text-3xl font-bold mb-6 text-gray-800 text-center">🎉 ලියාපදිංචි වන්න</h2>
-                    
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-sm font-bold text-gray-700 mb-2">📧 ඊමේල් ලිපිනය</label>
-                            <input type="email" id="signUpEmail" placeholder="your@email.com" 
-                                class="w-full p-4 border-2 border-gray-300 rounded-2xl focus:outline-none focus:ring-4 focus:ring-pink-300 focus:border-pink-500 transition duration-300 font-medium bg-white/60 backdrop-blur-sm">
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm font-bold text-gray-700 mb-2">👤 පරිශීලක නාමය (Username)</label>
-                            <input type="text" id="displayName" placeholder="අපූරු නමක් තෝරන්න..." 
-                                class="w-full p-4 border-2 border-gray-300 rounded-2xl focus:outline-none focus:ring-4 focus:ring-pink-300 focus:border-pink-500 transition duration-300 font-medium bg-white/60 backdrop-blur-sm">
-                            <p class="text-xs text-gray-500 mt-1 font-medium">⚠️ ඔබගේ නම අන් අයට පෙනෙනු ඇත</p>
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm font-bold text-gray-700 mb-2">🔒 මුරපදය</label>
-                            <input type="password" id="signUpPassword" placeholder="අවම වශයෙන් 6ක්" 
-                                class="w-full p-4 border-2 border-gray-300 rounded-2xl focus:outline-none focus:ring-4 focus:ring-pink-300 focus:border-pink-500 transition duration-300 font-medium bg-white/60 backdrop-blur-sm">
-                        </div>
-                    </div>
-                    
-                    <button id="signUpBtn" class="auth-button w-full bg-gradient-to-r from-pink-600 via-purple-600 to-blue-600 text-white p-4 rounded-2xl font-bold text-lg hover:from-pink-700 hover:via-purple-700 hover:to-blue-700 focus:outline-none focus:ring-4 focus:ring-pink-300 transition duration-300 mt-6 shadow-xl hover:shadow-2xl">
-                        🚀 ලියාපදිංචි වන්න
-                    </button>
-
-                    <p class="text-center text-gray-600 mt-6 font-medium">
-                        ගිණුමක් දැනටමත් තිබෙනවද? 
-                        <button id="backToSignIn" class="text-pink-600 font-bold hover:text-purple-600 transition-colors duration-300 hover:underline">🔐 පිවිසෙන්න</button>
-                    </p>
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="#home" class="text-gray-600 hover:text-amber-600">Home</a>
+                    <a href="#services" class="text-gray-600 hover:text-amber-600">Services</a>
+                    <a href="#features" class="text-gray-600 hover:text-amber-600">Why Us</a>
+                    <a href="#contact" class="bg-amber-600 text-white px-4 py-2 rounded-md hover:bg-amber-700">Contact Us</a>
                 </div>
             </div>
         </div>
-    </div>
+    </nav>
 
-    <div id="usernameModal" class="fixed inset-0 modal-backdrop hidden items-center justify-center z-50">
-        <div class="modal-content glass-effect rounded-3xl p-8 max-w-md w-full mx-4 shadow-2xl border-2 border-white/40">
-            <div class="text-center mb-6">
-                <div class="text-6xl mb-4">👤</div>
-                <h2 class="text-3xl font-bold text-gray-800 mb-2">පරිශීලක නාමය</h2>
-                <p class="text-gray-600 font-medium">අන් අයට පෙන්වන්න නමක් තෝරන්න</p>
+    <section id="home" class="pt-24 pb-12 bg-gradient-to-r from-slate-900 to-slate-800 text-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center">
+            <div class="md:w-1/2 mb-8 md:mb-0">
+                <h1 class="text-4xl md:text-5xl font-bold mb-4 leading-tight">Compassionate Care from <br><span class="text-amber-500">Golden Hands</span></h1>
+                <p class="text-lg mb-8 text-gray-300">Professional caregiving platform connecting you with verified caregivers for elderly, patient, and baby care.</p>
+                <div class="flex space-x-4">
+                    <a href="#contact" class="bg-amber-500 text-slate-900 font-bold px-6 py-3 rounded-lg hover:bg-amber-400 transition">Book a Caregiver</a>
+                    <button class="border border-white text-white px-6 py-3 rounded-lg hover:bg-white hover:text-slate-900 transition">Download App</button>
+                </div>
             </div>
-            
-            <div class="mb-6">
-                <label class="block text-sm font-bold text-gray-700 mb-2">✨ ඔබේ නම</label>
-                <input type="text" id="modalUsername" placeholder="අපූරු නමක් ලියන්න..." 
-                    class="w-full p-4 border-2 border-purple-300 rounded-2xl focus:outline-none focus:ring-4 focus:ring-purple-300 focus:border-purple-500 transition duration-300 font-medium bg-white/80">
-                <p id="usernameError" class="text-red-500 text-sm font-bold mt-2 hidden">❌ මෙම නම දැනටමත් භාවිතා වේ!</p>
-                <p id="usernameSuccess" class="text-green-500 text-sm font-bold mt-2 hidden">✅ මෙම නම භාවිතා කළ හැක!</p>
+            <div class="md:w-1/2 text-center">
+                <img src="https://img.freepik.com/free-photo/nurse-measuring-patient-blood-pressure_23-2148962326.jpg" alt="Caregiver Service" class="rounded-lg shadow-2xl mx-auto w-4/5 border-4 border-amber-500">
             </div>
-            
-            <button id="confirmUsername" class="w-full bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 text-white p-4 rounded-2xl font-bold text-lg hover:from-purple-700 hover:via-pink-700 hover:to-blue-700 focus:outline-none focus:ring-4 focus:ring-purple-300 transition duration-300 shadow-xl hover:shadow-2xl">
-                🚀 තහවුරු කරන්න
-            </button>
         </div>
-    </div>
+    </section>
 
-    <script>
-        const firebaseConfig = {
-          apiKey: "AIzaSyAzNJ-P8aAMvTuNWKcQYCjIIHiaL0BpdZ0",
-          authDomain: "game-f1c21.firebaseapp.com",
-          databaseURL: "https://game-f1c21-default-rtdb.firebaseio.com",
-          projectId: "game-f1c21",
-          storageBucket: "game-f1c21.firebasestorage.app",
-          messagingSenderId: "656338565711",
-          appId: "1:656338565711:web:395f9c7f846588b065883a"
-        };
-
-        if (!firebase.apps.length) {
-            firebase.initializeApp(firebaseConfig);
-        }
-        const auth = firebase.auth();
-        const database = firebase.database();
-
-        // Notification System
-        function showMessage(message, type = 'success') {
-            const notification = document.getElementById('notification');
-            notification.className = 'mb-4 p-4 rounded-2xl font-bold text-center slide-down shadow-lg';
+    <section id="services" class="py-16">
+        <div class="max-w-7xl mx-auto px-4 text-center">
+            <h2 class="text-3xl font-bold mb-4 text-slate-800">Our Services</h2>
+            <p class="text-gray-600 mb-12">Select the best care category for your loved ones.</p>
             
-            if (type === 'error') {
-                notification.className += ' bg-gradient-to-r from-red-400 to-pink-500 text-white';
-            } else if (type === 'success') {
-                notification.className += ' bg-gradient-to-r from-green-400 to-emerald-500 text-white';
-            } else {
-                notification.className += ' bg-gradient-to-r from-purple-400 to-pink-500 text-white';
-            }
-            
-            notification.textContent = message;
-            notification.classList.remove('hidden');
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition border-t-4 border-amber-500">
+                    <div class="text-amber-600 text-4xl mb-4"><i class="fas fa-wheelchair"></i></div>
+                    <h3 class="text-xl font-bold mb-2">Elderly Care</h3>
+                    <p class="text-gray-600">Dedicated support for seniors including daily duty summary, medicine reminders, and companionship.</p>
+                </div>
 
-            clearTimeout(window._notifTimeout);
-            window._notifTimeout = setTimeout(() => {
-                notification.classList.add('hidden');
-            }, 3500);
-        }
+                <div class="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition border-t-4 border-amber-500">
+                    <div class="text-amber-600 text-4xl mb-4"><i class="fas fa-user-nurse"></i></div>
+                    <h3 class="text-xl font-bold mb-2">Patient Care</h3>
+                    <p class="text-gray-600">Professional assistance for recovering patients with health monitoring and verified caregivers.</p>
+                </div>
 
-        // Disable/Enable buttons
-        function disableButtons(disable = true) {
-            const elements = document.querySelectorAll('#authContainer input, #authContainer button, #googleSignInBtn');
-            elements.forEach(el => {
-                if (disable) {
-                    el.classList.add('disabled');
-                    el.disabled = true;
-                } else {
-                    el.classList.remove('disabled');
-                    el.disabled = false;
-                }
-            });
-        }
+                <div class="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition border-t-4 border-amber-500">
+                    <div class="text-amber-600 text-4xl mb-4"><i class="fas fa-baby-carriage"></i></div>
+                    <h3 class="text-xl font-bold mb-2">Baby Care</h3>
+                    <p class="text-gray-600">Trusted babysitting services ensuring safety and care for your little ones while you are away.</p>
+                </div>
+            </div>
+        </div>
+    </section>
 
-        // Toggle Auth Sections
-        document.getElementById('toggleAuthBtn').addEventListener('click', () => {
-            document.getElementById('signInSection').classList.add('hidden');
-            document.getElementById('signUpSection').classList.remove('hidden');
-        });
-        
-        document.getElementById('backToSignIn').addEventListener('click', () => {
-            document.getElementById('signUpSection').classList.add('hidden');
-            document.getElementById('signInSection').classList.remove('hidden');
-        });
+    <section id="features" class="py-16 bg-gray-100">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex flex-col md:flex-row items-center gap-12">
+                <div class="md:w-1/2">
+                    <h2 class="text-3xl font-bold mb-6 text-slate-800">Safety & Reliability First</h2>
+                    <ul class="space-y-4">
+                        <li class="flex items-start">
+                            <i class="fas fa-check-circle text-green-500 mt-1 mr-3"></i>
+                            <div>
+                                <h4 class="font-bold">Verified Caregivers</h4>
+                                <p class="text-sm text-gray-600">Strict KYC, NIC verification, and Police Reports are mandatory for all our staff.</p>
+                            </div>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check-circle text-green-500 mt-1 mr-3"></i>
+                            <div>
+                                <h4 class="font-bold">Real-Time Tracking</h4>
+                                <p class="text-sm text-gray-600">Monitor attendance (Check-in/Out) and live location of your assigned caregiver.</p>
+                            </div>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check-circle text-green-500 mt-1 mr-3"></i>
+                            <div>
+                                <h4 class="font-bold">Secure Payments</h4>
+                                <p class="text-sm text-gray-600">Transparent billing, invoice downloads, and secure online payment options via PayHere.</p>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+                <div class="md:w-1/2 bg-white p-8 rounded-lg shadow-md">
+                    <h3 class="text-xl font-bold mb-4 text-center">How It Works</h3>
+                    <div class="flex flex-col space-y-4">
+                        <div class="p-4 bg-amber-50 rounded text-center">1. Register / Login (OTP)</div>
+                        <div class="p-4 bg-amber-100 rounded text-center">2. Select Category & Time</div>
+                        <div class="p-4 bg-amber-50 rounded text-center">3. Secure Payment</div>
+                        <div class="p-4 bg-amber-100 rounded text-center">4. Caregiver Assigned</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
 
-        // Check if user already signed in
-        auth.onAuthStateChanged(user => {
-            if (user) {
-                window.location.href = 'Home.html';
-            }
-        });
+    <footer id="contact" class="bg-slate-900 text-white py-12">
+        <div class="max-w-7xl mx-auto px-4 grid md:grid-cols-3 gap-8">
+            <div>
+                <h3 class="text-xl font-bold mb-4 text-amber-500">GOLDEN HAND CAREGIVERS</h3>
+                <p class="text-gray-400">Providing trusted caregiving services with a focus on safety, professionalism, and compassion.</p>
+            </div>
+            <div>
+                <h3 class="text-xl font-bold mb-4">Contact Us</h3>
+                <ul class="text-gray-400 space-y-2">
+                    <li><i class="fas fa-phone mr-2"></i> +94 76 005 9709</li> <li><i class="fas fa-envelope mr-2"></i>goldenhandcaregivers@gmail.com</li>
+                    <li><i class="fas fa-map-marker-alt mr-2"></i> no 200/108,peradeniya road,kandy </li>
+                </ul>
+            </div>
+            <div>
+                <h3 class="text-xl font-bold mb-4">Legal</h3>
+                <ul class="text-gray-400 space-y-2">
+                    <li><a href="terms.html" class="hover:text-amber-500">Terms & Conditions</a></li>
+                    <li><a href="privacy.html" class="hover:text-amber-500">Privacy Policy</a></li>
+                    <li><a href="refund.html" class="hover:text-amber-500">Refund Policy</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="border-t border-gray-700 mt-8 pt-8 text-center text-gray-500 text-sm">
+            &copy; 2024 Golden Hand Caregivers. All rights reserved.
+        </div>
+    </footer>
 
-        // Check if username exists in database
-        async function checkUsernameExists(username) {
-            if (!username || username.trim() === '') return true;
-            
-            const normalizedUsername = username.trim().toLowerCase();
-            const snapshot = await database.ref('usernames').once('value');
-            
-            if (snapshot.exists()) {
-                const usernames = snapshot.val();
-                return Object.values(usernames).some(
-                    name => name.toLowerCase() === normalizedUsername
-                );
-            }
-            return false;
-        }
-
-        // Save username to database
-        async function saveUsername(uid, username) {
-            await database.ref('usernames/' + uid).set(username);
-            await database.ref('users/' + uid + '/name').set(username);
-        }
-
-        // Show Username Modal
-        function showUsernameModal(user) {
-            return new Promise((resolve, reject) => {
-                const modal = document.getElementById('usernameModal');
-                const input = document.getElementById('modalUsername');
-                const errorMsg = document.getElementById('usernameError');
-                const successMsg = document.getElementById('usernameSuccess');
-                const confirmBtn = document.getElementById('confirmUsername');
-                
-                modal.classList.remove('hidden');
-                modal.classList.add('flex');
-                input.value = '';
-                errorMsg.classList.add('hidden');
-                successMsg.classList.add('hidden');
-                
-                // Real-time username validation
-                let checkTimeout;
-                input.addEventListener('input', () => {
-                    clearTimeout(checkTimeout);
-                    errorMsg.classList.add('hidden');
-                    successMsg.classList.add('hidden');
-                    
-                    const username = input.value.trim();
-                    if (username.length < 3) return;
-                    
-                    checkTimeout = setTimeout(async () => {
-                        const exists = await checkUsernameExists(username);
-                        if (exists) {
-                            errorMsg.classList.remove('hidden');
-                            successMsg.classList.add('hidden');
-                        } else {
-                            errorMsg.classList.add('hidden');
-                            successMsg.classList.remove('hidden');
-                        }
-                    }, 500);
-                });
-                
-                confirmBtn.onclick = async () => {
-                    const username = input.value.trim();
-                    
-                    if (!username || username.length < 3) {
-                        showMessage('❌ නම අවම වශයෙන් අකුරු 3ක් විය යුතුයි!', 'error');
-                        return;
-                    }
-                    
-                    const exists = await checkUsernameExists(username);
-                    if (exists) {
-                        showMessage('❌ මෙම නම දැනටමත් භාවිතා වේ! වෙනත් නමක් තෝරන්න.', 'error');
-                        return;
-                    }
-                    
-                    try {
-                        await user.updateProfile({ displayName: username });
-                        await saveUsername(user.uid, username);
-                        
-                        modal.classList.add('hidden');
-                        modal.classList.remove('flex');
-                        resolve(username);
-                    } catch (error) {
-                        reject(error);
-                    }
-                };
-            });
-        }
-
-        // Ensure user has valid username
-        async function ensureDisplayName(user) {
-            if (!user) return;
-            
-            // Check if user already has username in database
-            const snapshot = await database.ref('usernames/' + user.uid).once('value');
-            
-            if (!snapshot.exists() || !snapshot.val()) {
-                // Need to set username
-                try {
-                    const username = await showUsernameModal(user);
-                    showMessage(`✅ ආයුබෝවන් ${username}! 🎉`, 'success');
-                } catch (error) {
-                    console.error('Username setup failed:', error);
-                    showMessage('❌ නම සකසන්නේ දෝෂයක්!', 'error');
-                }
-            }
-        }
-
-        // Sign Up with Email/Password
-        document.getElementById('signUpBtn').addEventListener('click', async () => {
-            const email = document.getElementById('signUpEmail').value.trim();
-            const password = document.getElementById('signUpPassword').value;
-            const displayName = document.getElementById('displayName').value.trim();
-
-            if (!email || !password || !displayName) {
-                showMessage('❌ කරුණාකර සියලු තොරතුරු පුරවන්න!', 'error');
-                return;
-            }
-            
-            if (displayName.length < 3) {
-                showMessage('❌ නම අවම වශයෙන් අකුරු 3ක් විය යුතුයි!', 'error');
-                return;
-            }
-            
-            if (password.length < 6) {
-                showMessage('❌ මුරපදය අවම වශයෙන් 6ක් විය යුතුයි', 'error');
-                return;
-            }
-
-            disableButtons(true);
-            try {
-                // Step 1: Check username existence before creating user
-                const usernameExists = await checkUsernameExists(displayName);
-                if (usernameExists) {
-                    showMessage('❌ මෙම නම දැනටමත් භාවිතා වේ! වෙනත් නමක් තෝරන්න.', 'error');
-                    disableButtons(false);
-                    return;
-                }
-
-                // Step 2: Create User
-                const userCredential = await auth.createUserWithEmailAndPassword(email, password);
-                
-                // Step 3: Save username
-                await userCredential.user.updateProfile({ displayName: displayName });
-                await saveUsername(userCredential.user.uid, displayName);
-                
-                showMessage(`✅ ලියාපදිංචි වීම සාර්ථකයි! ආයුබෝවන් ${displayName}! 🎉`);
-                setTimeout(() => {
-                    window.location.href = 'Home.html';
-                }, 1500);
-            } catch (error) {
-                disableButtons(false);
-                let errorMsg = 'දෝෂයක් සිදු විය!';
-                if (error.code === 'auth/email-already-in-use') {
-                    errorMsg = 'මෙම ඊමේල් ලිපිනය දැනටමත් භාවිතා වේ!';
-                } else if (error.code === 'auth/invalid-email') {
-                    errorMsg = 'වලංගු නොවන ඊමේල් ලිපිනයක්!';
-                } else if (error.code === 'auth/weak-password') {
-                    errorMsg = 'මුරපදය වඩාත් ශක්තිමත් විය යුතුයි!';
-                } else {
-                    // 🔥 දෝෂය හඳුනාගැනීම සඳහා නව වෙනස
-                    errorMsg = `දෝෂයක් සිදු විය! (කේතය: ${error.code})`;
-                }
-                showMessage(`❌ ${errorMsg}`, 'error');
-            }
-        });
-
-        // Sign In with Email/Password
-        document.getElementById('signInBtn').addEventListener('click', async () => {
-            const email = document.getElementById('authEmail').value.trim();
-            const password = document.getElementById('authPassword').value;
-            
-            if (!email || !password) {
-                showMessage('❌ කරුණාකර සියලු තොරතුරු පුරවන්න!', 'error');
-                return;
-            }
-
-            disableButtons(true);
-            try {
-                const userCredential = await auth.signInWithEmailAndPassword(email, password);
-                await ensureDisplayName(userCredential.user);
-                
-                showMessage('✅ පිවිසුම සාර්ථකයි! යොමු කරමින්...');
-                setTimeout(() => {
-                    window.location.href = 'Home.html';
-                }, 1500);
-            } catch (error) {
-                disableButtons(false);
-                let errorMsg = 'දෝෂයක් සිදු විය!';
-                if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
-                    errorMsg = 'ඊමේල් හෝ මුරපදය වැරදියි! නැතහොත් ගිණුමක් හමු නොවීය.';
-                } else if (error.code === 'auth/invalid-email') {
-                    errorMsg = 'වලංගු නොවන ඊමේල් ලිපිනයක්!';
-                } else {
-                    // 🔥 දෝෂය හඳුනාගැනීම සඳහා නව වෙනස
-                    errorMsg = `දෝෂයක් සිදු විය! (කේතය: ${error.code})`;
-                }
-                showMessage(`❌ ${errorMsg}`, 'error');
-            }
-        });
-
-        // Google Sign-in
-        document.getElementById('googleSignInBtn').addEventListener('click', async () => {
-            const provider = new firebase.auth.GoogleAuthProvider();
-            disableButtons(true);
-            
-            try {
-                const userCredential = await auth.signInWithPopup(provider);
-                await ensureDisplayName(userCredential.user);
-                
-                const displayName = userCredential.user.displayName || 'User';
-                showMessage(`✅ Google හරහා සාර්ථකයි! ආයුබෝවන් ${displayName}! 🎉`);
-                
-                setTimeout(() => {
-                    window.location.href = 'Home.html';
-                }, 1500);
-            } catch (error) {
-                disableButtons(false);
-                let errorMsg = 'Google පිවිසුමේ දෝෂයක්!';
-                if (error.code === 'auth/popup-closed-by-user') {
-                    errorMsg = 'පිවිසුම අවලංගු කරන ලදී.';
-                } else if (error.code === 'auth/popup-blocked') {
-                    errorMsg = 'කරුණාකර popup අවහිර කිරීම අක්‍රිය කරන්න.';
-                } else {
-                    // 🔥 දෝෂය හඳුනාගැනීම සඳහා නව වෙනස
-                    errorMsg = `Google පිවිසුමේ දෝෂයක්! (කේතය: ${error.code})`;
-                }
-                showMessage(`❌ ${errorMsg}`, 'error');
-            }
-        });
-
-        // Enter key support
-        document.getElementById('authPassword').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') document.getElementById('signInBtn').click();
-        });
-        
-        document.getElementById('signUpPassword').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') document.getElementById('signUpBtn').click();
-        });
-        
-        document.getElementById('modalUsername').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') document.getElementById('confirmUsername').click();
-        });
-    </script>
 </body>
 </html>
-
-
-
-
-
-
