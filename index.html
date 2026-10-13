@@ -24,6 +24,7 @@
     <nav class="main-nav" aria-label="Main navigation"><a href="#latest">අලුත්ම ඒවා</a><a href="#trending">Trending</a><a href="#writers">රයිටර්ස්</a><a href="#about">අපි ගැන</a><button class="nav-link" id="savedSeriesBtn">Saved series</button></nav>
     <div class="header-actions"><button class="icon-btn" id="searchFocus" aria-label="Search">⌕</button><button class="saved-top-btn" id="savedItemsBtn">Saved <span>♡</span></button><button class="button button-dark" id="dashboardBtn" hidden>My dashboard ↗</button><button class="button button-dark" id="writerLogin">රයිටර් කෙනෙක් වෙන්න <span>↗</span></button><button class="menu-btn" id="menuBtn" aria-label="Open menu">☰</button></div>
   </header>
+  <div class="mobile-menu" id="mobileMenu" hidden><div class="mobile-menu-head"><span class="eyebrow">POSTKINA MENU</span><button class="modal-close" id="mobileMenuClose" aria-label="Close menu">×</button></div><nav><a href="#latest">අලුත්ම ඒවා</a><a href="#trending">Trending</a><a href="#writers">රයිටර්ස්</a><button id="mobileSavedBtn">Saved posts ♡</button><a href="#about">අපි ගැන</a></nav><button class="button button-dark mobile-menu-writer" id="mobileWriterBtn">රයිටර් කෙනෙක් වෙන්න ↗</button></div>
 
   <main id="top">
     <section class="hero shell">
@@ -35,10 +36,10 @@
 
     <section class="feed shell" id="latest">
       <div class="section-heading"><div><span class="eyebrow">THE DAILY FEED</span><h2>අද කියවන්න <span>✳</span></h2></div><div class="feed-controls"><label class="search-box"><span>⌕</span><input id="searchInput" type="search" placeholder="ලිපි සොයන්න..." /></label><div class="sort-toggle"><button class="sort active" data-sort="latest">අලුත්ම</button><button class="sort" data-sort="trending">Trending</button></div></div></div>
-      <div class="feed-layout"><div class="article-grid" id="articleGrid"></div><aside class="sidebar"><div class="ad-card monetag-card"><span class="ad-label">ADVERTISEMENT</span><div class="monetag-slot" id="monetagSlot"><span>Monetag ad</span><script>(function(s){s.dataset.zone='12013989',s.src='https://nap5k.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script><script src="https://5gvci.com/act/files/tag.min.js?z=12013996" data-cfasync="false" async></script></div></div><div class="ranking-card" id="writers"><div class="card-title"><span>WRITER RANKING</span><span>↗</span></div><p class="muted">මේ සතියේ වැඩිපුරම කියවූ රයිටර්ස්ලා</p><div id="rankingList"></div><button class="outline-button">සියලුම රයිටර්ස්ලා බලන්න</button></div></aside></div>
+      <div class="feed-layout"><div class="article-grid" id="articleGrid"></div><aside class="sidebar"><div class="ranking-card" id="writers"><div class="card-title"><span>WRITER RANKING</span><span>↗</span></div><p class="muted">මේ සතියේ වැඩිපුරම කියවූ රයිටර්ස්ලා</p><div id="rankingList"></div><button class="outline-button">සියලුම රයිටර්ස්ලා බලන්න</button></div></aside></div>
     </section>
 
-    <section class="join-banner shell" id="about"><div><span class="eyebrow">YOUR VOICE MATTERS</span><h2>කියන්න තියන දේ<br /><em>අපිට කියන්න.</em></h2></div><div><p>PostKinaa එකේ publish කරන්න writer කෙනෙක් වෙන්න. </p><button class="button button-accent" id="joinWriter">Writer account එකක් හදන්න <span>↗</span></button></div></section>
+    <section class="join-banner shell" id="about"><div><span class="eyebrow">YOUR VOICE MATTERS</span><h2>කියන්න තියන දේ<br /><em>අපිට කියන්න.</em></h2></div><div><p>PostKinaa එකේ publish කරන්න writer කෙනෙක් වෙන්න. ඔයාගේ voice එකට අපි stage එකක් දෙන්නම්.</p><button class="button button-accent" id="joinWriter">Writer account එකක් හදන්න <span>↗</span></button></div></section>
   </main>
   <footer class="site-footer"><div class="footer-brand"><img src="./assets/postkina-logo.png" alt="postkina" /><p>ජාතියේ කයිය.</p></div><div class="footer-links"><a href="#about">About</a><a href="#latest">Articles</a><a href="#writers">Writers</a><a href="#">Privacy</a></div><div class="footer-end">© 2025 postkina · Made for the island</div></footer>
 

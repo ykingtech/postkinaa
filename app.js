@@ -41,3 +41,10 @@ document.querySelectorAll('.sort').forEach((btn)=>btn.addEventListener('click',(
 $('#searchInput').addEventListener('input',renderPosts);$('#searchFocus').addEventListener('click',()=>$('#searchInput').focus());$('#modalClose').addEventListener('click',closeModal);$('#modalBackdrop').addEventListener('click',(e)=>{if(e.target.id==='modalBackdrop')closeModal();});['#writerLogin','#heroWriter','#joinWriter'].forEach((s)=>$(s).addEventListener('click',writerForm));$('#dashboardBtn').addEventListener('click',()=>showDashboard());$('#savedSeriesBtn').addEventListener('click',showSavedItems);$('#savedItemsBtn').addEventListener('click',showSavedItems);
 document.querySelectorAll('.topic').forEach((btn)=>btn.addEventListener('click',()=>{document.querySelectorAll('.topic').forEach((b)=>b.classList.remove('active'));btn.classList.add('active');const val=btn.textContent.trim();$('#searchInput').value=val==='සියල්ල'?'':val;renderPosts();}));
 onAuthStateChanged(auth,(user)=>{currentUser=user;updateWriterUI();});loadFirebasePosts();
+const mobileMenu=$('#mobileMenu');
+function closeMobileMenu(){if(mobileMenu)mobileMenu.hidden=true;document.body.classList.remove('menu-open');}
+$('#menuBtn')?.addEventListener('click',()=>{mobileMenu.hidden=false;document.body.classList.add('menu-open');});
+$('#mobileMenuClose')?.addEventListener('click',closeMobileMenu);
+$('#mobileSavedBtn')?.addEventListener('click',()=>{closeMobileMenu();showSavedItems();});
+$('#mobileWriterBtn')?.addEventListener('click',()=>{closeMobileMenu();writerForm();});
+mobileMenu?.querySelectorAll('a').forEach((link)=>link.addEventListener('click',closeMobileMenu));
