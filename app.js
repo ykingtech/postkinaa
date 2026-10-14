@@ -1,7 +1,7 @@
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/13.0.0/firebase-app.js';
 import { getAnalytics } from 'https://www.gstatic.com/firebasejs/13.0.0/firebase-analytics.js';
 import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/13.0.0/firebase-auth.js';
-import { getFirestore, collection, getDocs, query, where, limit, addDoc, doc, updateDoc, deleteDoc, getDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/13.0.0/firebase-firestore.js';
+import { getFirestore, collection, getDocs, query, where, limit, addDoc, doc, updateDoc, deleteDoc, getDoc, serverTimestamp, increment } from 'https://www.gstatic.com/firebasejs/13.0.0/firebase-firestore.js';
 
 const firebaseConfig = { apiKey:'AIzaSyAK1W4reUyi6kDyPetwqdqtLCnXF0469tc', authDomain:'postkina.firebaseapp.com', projectId:'postkina', storageBucket:'postkina.firebasestorage.app', messagingSenderId:'594893100682', appId:'1:594893100682:web:799226823a1fee3a447f73', measurementId:'G-DX3P7VCSDN' };
 const app = initializeApp(firebaseConfig); try { getAnalytics(app); } catch (_) {}
@@ -53,6 +53,7 @@ function translateLegacyUi(root=document){const walker=document.createTreeWalker
 translateLegacyUi();
 new MutationObserver(()=>translateLegacyUi()).observe(document.body,{childList:true,subtree:true});
 const mobileMenu=$('#mobileMenu');
+document.addEventListener('click',(event)=>{const card=event.target.closest?.('.article-card');if(!card)return;const post=posts.find((item)=>item.id===card.dataset.id);if(post)updateDoc(doc(db,'posts',post.id),{views:increment(1)}).catch(()=>{});});
 function closeMobileMenu(){if(mobileMenu)mobileMenu.hidden=true;document.body.classList.remove('menu-open');}
 $('#menuBtn')?.addEventListener('click',()=>{mobileMenu.hidden=false;document.body.classList.add('menu-open');});
 $('#mobileMenuClose')?.addEventListener('click',closeMobileMenu);
