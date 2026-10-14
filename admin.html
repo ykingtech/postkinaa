@@ -32,6 +32,8 @@
     generateAiBtn.addEventListener('click',()=>{const user=auth.currentUser;if(user?.email===adminEmail)generateNow(user);});
     document.querySelector('#adminLogin').onclick=async()=>{try{const result=await signInWithPopup(auth,new GoogleAuthProvider());if(result.user.email!==adminEmail){await auth.signOut();alert('Admin access only.');}else{document.querySelector('#adminLogin').textContent='Admin signed in ✓';generateAiBtn.disabled=false;await loadPosts(result.user);await updateMetrics();updateCountdown();}}catch(error){alert(error.message)}};
     onAuthStateChanged(auth,(user)=>{if(user?.email===adminEmail){document.querySelector('#adminLogin').textContent='Admin signed in ✓';generateAiBtn.disabled=false;loadPosts(user).then(()=>updateMetrics()).then(updateCountdown);}});
+    async function loadAllPublishedPosts(user){const snap=await getDocs(query(collection(db,'posts'),limit(500)));const posts=snap.docs.map((d)=>({id:d.id,...d.data()})).filter((p)=>p.status==='published'||p.authorId==='postkina-ai').sort((a,b)=>(b.publishedAt?.seconds||0)-(a.publishedAt?.seconds||0));postsBox.innerHTML=posts.length?posts.map((p)=>{const done=p.facebookStatus==='published';return `<div class="admin-row"><span><strong>${escapeHtml(p.title||'Untitled')}</strong><br/><small>${escapeHtml(p.author||'Writer')} · ${dateLabel(p.publishedAt)}</small></span><span class="button ${done?'button-dark':'button-accent'}">${done?'Facebook published ✓':'Published story'}</span></div>`;}).join(''):'<div class="admin-row"><span>No published posts yet.</span></div>';}
+    onAuthStateChanged(auth,(user)=>{if(user?.email===adminEmail){setTimeout(()=>loadAllPublishedPosts(user),800);}});
   </script>
 </body>
 </html>
