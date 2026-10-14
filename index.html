@@ -1,13 +1,13 @@
 <!doctype html>
-<html lang="si">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>postkina — ජාතියේ කයිය</title>
-  <meta name="description" content="PostKinaa — ජාතියේ කයිය. අදහස්, කතා සහ රසවත් ලිපි කියවන්න, ලියන්න සහ share කරන්න." />
-  <meta name="keywords" content="Sri Lanka articles, Sinhala blog, postkina, ජාතියේ කයිය" />
-  <meta property="og:title" content="postkina — ජාතියේ කයිය" />
-  <meta property="og:description" content="ඔයාගේ කතාවට ඉඩක්. Sri Lankan writers සහ readers එකතු වන community publishing space එක." />
+  <title>postkina — Stories worth sharing</title>
+  <meta name="description" content="PostKina is an independent publishing space for fresh stories, ideas, culture and perspectives from Sri Lanka and beyond." />
+  <meta name="keywords" content="postkina, Sri Lankan stories, independent publishing, culture, ideas, articles" />
+  <meta property="og:title" content="postkina — Stories worth sharing" />
+  <meta property="og:description" content="Read fresh stories, discover new voices and share perspectives from Sri Lanka and beyond." />
   <meta property="og:type" content="website" />
   <meta property="og:image" content="./assets/postkina-logo.png" />
   <meta name="facebook-worker-url" content="https://postkina-facebook-publisher.whatthewithyking.workers.dev" />
@@ -19,31 +19,31 @@
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4503578037855649" crossorigin="anonymous"></script>
 </head>
 <body>
-  <div class="route-loader" id="routeLoader" hidden><div class="route-loader-card"><img src="./assets/postkina-logo.png" alt="postkina"/><span class="spinner"></span><strong>ලිපිය load වෙනවා…</strong><small>PostKinaa එක සූදානම් කරනවා</small></div></div>
-  <div class="topline"><span>අදහස් වලට ඉඩක්.</span><span class="topline-right">සැබෑ කතා · සැබෑ මිනිස්සු · එකම වේදිකාව</span></div>
+  <div class="route-loader" id="routeLoader" hidden><div class="route-loader-card"><img src="./assets/postkina-logo.png" alt="postkina"/><span class="spinner"></span><strong>Loading story…</strong><small>Getting PostKina ready</small></div></div>
+  <div class="topline"><span>Room for ideas.</span><span class="topline-right">Real stories · New voices · One open platform</span></div>
   <header class="site-header">
     <a class="brand" href="#top" aria-label="PostKinaa home"><img src="./assets/postkina-logo.png" alt="postkina — ජාතියේ කයිය" /></a>
-    <nav class="main-nav" aria-label="Main navigation"><a href="#latest">අලුත්ම ඒවා</a><a href="#trending">Trending</a><a href="#writers">රයිටර්ස්</a><a href="#about">අපි ගැන</a><button class="nav-link" id="savedSeriesBtn">Saved series</button></nav>
-    <div class="header-actions"><button class="icon-btn" id="searchFocus" aria-label="Search">⌕</button><button class="saved-top-btn" id="savedItemsBtn">Saved <span>♡</span></button><button class="button button-dark" id="dashboardBtn" hidden>My dashboard ↗</button><button class="button button-dark" id="writerLogin">රයිටර් කෙනෙක් වෙන්න <span>↗</span></button><button class="menu-btn" id="menuBtn" aria-label="Open menu">☰</button></div>
+    <nav class="main-nav" aria-label="Main navigation"><a href="#latest">Latest</a><a href="#trending">Trending</a><a href="#writers">Writers</a><a href="#about">About</a><button class="nav-link" id="savedSeriesBtn">Saved series</button></nav>
+    <div class="header-actions"><button class="icon-btn" id="searchFocus" aria-label="Search">⌕</button><button class="saved-top-btn" id="savedItemsBtn">Saved <span>♡</span></button><button class="button button-dark" id="dashboardBtn" hidden>My dashboard ↗</button><button class="button button-dark" id="writerLogin">Become a writer <span>↗</span></button><button class="menu-btn" id="menuBtn" aria-label="Open menu">☰</button></div>
   </header>
-  <div class="mobile-menu" id="mobileMenu" hidden><div class="mobile-menu-head"><span class="eyebrow">POSTKINA MENU</span><button class="modal-close" id="mobileMenuClose" aria-label="Close menu">×</button></div><nav><a href="#latest">අලුත්ම ඒවා</a><a href="#trending">Trending</a><a href="#writers">රයිටර්ස්</a><button id="mobileSavedBtn">Saved posts ♡</button><a href="#about">අපි ගැන</a></nav><button class="button button-dark mobile-menu-writer" id="mobileWriterBtn">රයිටර් කෙනෙක් වෙන්න ↗</button></div>
+  <div class="mobile-menu" id="mobileMenu" hidden><div class="mobile-menu-head"><span class="eyebrow">POSTKINA MENU</span><button class="modal-close" id="mobileMenuClose" aria-label="Close menu">×</button></div><nav><a href="#latest">Latest</a><a href="#trending">Trending</a><a href="#writers">Writers</a><button id="mobileSavedBtn">Saved posts ♡</button><a href="#about">About</a></nav><button class="button button-dark mobile-menu-writer" id="mobileWriterBtn">Become a writer ↗</button></div>
 
   <main id="top">
     <section class="hero shell">
-      <div class="hero-copy"><span class="eyebrow">POSTKINA / 01</span><h1>කියන්න දෙයක්<br /><em>තියෙනවද?</em></h1><p>ජාතියේ කයිය. ඔයාගේ කතාවට, අදහසට, අත්දැකීමට ඉඩක්. කියවන්න, share කරන්න, ඔයාගේම post එක publish කරන්න.</p><div class="hero-actions"><a href="#latest" class="button button-accent">ලිපි බලන්න <span>↘</span></a><button class="text-link" id="heroWriter">මමත් ලියන්න කැමතියි <span>→</span></button></div></div>
+      <div class="hero-copy"><span class="eyebrow">POSTKINA / 01</span><h1>Have something<br /><em>to say?</em></h1><p>Stories worth sharing. Read sharp ideas, discover new voices and publish your own perspective for a global audience.</p><div class="hero-actions"><a href="#latest" class="button button-accent">Explore stories <span>↘</span></a><button class="text-link" id="heroWriter">I want to write <span>→</span></button></div></div>
       <div class="hero-note brand-panel"><img class="hero-logo" src="./assets/postkina-logo.png" alt="postkina — ජාතියේ කයිය" /></div>
     </section>
 
-    <section class="topic-strip shell"><span class="eyebrow">EXPLORE BY MOOD</span><div class="topic-pills"><button class="topic active">සියල්ල</button><button class="topic">ජීවිතය</button><button class="topic">සමාජය</button><button class="topic">කලා සහ සංස්කෘතිය</button><button class="topic">තාක්ෂණය</button><button class="topic">විනෝදය</button></div></section>
+    <section class="topic-strip shell"><span class="eyebrow">EXPLORE BY TOPIC</span><div class="topic-pills"><button class="topic active">All</button><button class="topic">Life</button><button class="topic">Society</button><button class="topic">Culture</button><button class="topic">Technology</button><button class="topic">Entertainment</button></div></section>
 
     <section class="feed shell" id="latest">
-      <div class="section-heading"><div><span class="eyebrow">THE DAILY FEED</span><h2>අද කියවන්න <span>✳</span></h2></div><div class="feed-controls"><label class="search-box"><span>⌕</span><input id="searchInput" type="search" placeholder="ලිපි සොයන්න..." /></label><div class="sort-toggle"><button class="sort active" data-sort="latest">අලුත්ම</button><button class="sort" data-sort="trending">Trending</button></div></div></div>
-      <div class="feed-layout"><div class="article-grid" id="articleGrid"></div><aside class="sidebar"><div class="ranking-card" id="writers"><div class="card-title"><span>WRITER RANKING</span><span>↗</span></div><p class="muted">මේ සතියේ වැඩිපුරම කියවූ රයිටර්ස්ලා</p><div id="rankingList"></div><button class="outline-button">සියලුම රයිටර්ස්ලා බලන්න</button></div></aside></div>
+      <div class="section-heading"><div><span class="eyebrow">THE DAILY FEED</span><h2>Read something new <span>✳</span></h2></div><div class="feed-controls"><label class="search-box"><span>⌕</span><input id="searchInput" type="search" placeholder="Search stories..." /></label><div class="sort-toggle"><button class="sort active" data-sort="latest">Latest</button><button class="sort" data-sort="trending">Trending</button></div></div></div>
+      <div class="feed-layout"><div class="article-grid" id="articleGrid"></div><aside class="sidebar"><div class="ranking-card" id="writers"><div class="card-title"><span>WRITER RANKING</span><span>↗</span></div><p class="muted">The voices readers are rating highest</p><div id="rankingList"></div><button class="outline-button">View all writers</button></div></aside></div>
     </section>
 
-    <section class="join-banner shell" id="about"><div><span class="eyebrow">YOUR VOICE MATTERS</span><h2>කියන්න තියන දේ<br /><em>අපිට කියන්න.</em></h2></div><div><p>PostKinaa එකේ publish කරන්න writer කෙනෙක් වෙන්න. ඔයාගේ voice එකට අපි stage එකක් දෙන්නම්.</p><button class="button button-accent" id="joinWriter">Writer account එකක් හදන්න <span>↗</span></button></div></section>
+    <section class="join-banner shell" id="about"><div><span class="eyebrow">YOUR VOICE MATTERS</span><h2>Have a story?<br /><em>Make it travel.</em></h2></div><div><p>Join PostKina as a writer and share your ideas, experiences and point of view with readers everywhere.</p><button class="button button-accent" id="joinWriter">Create a writer account <span>↗</span></button></div></section>
   </main>
-  <footer class="site-footer"><div class="footer-brand"><img src="./assets/postkina-logo.png" alt="postkina" /><p>ජාතියේ කයිය.</p></div><div class="footer-links"><a href="#about">About</a><a href="#latest">Articles</a><a href="#writers">Writers</a><a href="#">Privacy</a></div><div class="footer-end">© 2025 postkina · Made for the island</div></footer>
+  <footer class="site-footer"><div class="footer-brand"><img src="./assets/postkina-logo.png" alt="postkina" /><p>Stories worth sharing.</p></div><div class="footer-links"><a href="#about">About</a><a href="#latest">Articles</a><a href="#writers">Writers</a><a href="#">Privacy</a></div><div class="footer-end">© 2026 postkina · Made for curious minds</div></footer>
 
   <div class="modal-backdrop" id="modalBackdrop" hidden><div class="modal" role="dialog" aria-modal="true"><button class="modal-close" id="modalClose">×</button><div id="modalContent"></div></div></div>
   <script type="module" src="./app.js"></script>
