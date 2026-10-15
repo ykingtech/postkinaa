@@ -33,6 +33,7 @@
   <meta name="facebook-worker-url" content="https://postkina-facebook-publisher.whatthewithyking.workers.dev" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="preconnect" href="https://postkina-facebook-publisher.whatthewithyking.workers.dev" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Noto+Sans+Sinhala:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="icon" href="./assets/postkina-logo.png" />
   <link rel="stylesheet" href="./styles.css" />
@@ -58,7 +59,7 @@
 
     <section class="feed shell" id="latest">
       <div class="section-heading"><div><span class="eyebrow">THE DAILY FEED</span><h2>Read something new <span>✳</span></h2></div><div class="feed-controls"><label class="search-box"><span>⌕</span><input id="searchInput" type="search" placeholder="Search stories..." /></label><div class="sort-toggle"><button class="sort active" data-sort="latest">Latest</button><button class="sort" data-sort="trending">Trending</button></div></div></div>
-      <div class="feed-layout"><div class="article-grid" id="articleGrid"></div><aside class="sidebar"><div class="ranking-card" id="writers"><div class="card-title"><span>WRITER RANKING</span><span>↗</span></div><p class="muted">The voices readers are rating highest</p><div id="rankingList"></div><button class="outline-button">View all writers</button></div></aside></div>
+      <div class="feed-layout"><div class="article-grid" id="articleGrid" aria-live="polite"><div class="article-card skeleton-card" aria-hidden="true"><div class="skeleton-visual"></div><span class="skeleton-line short"></span><span class="skeleton-line title"></span><span class="skeleton-line"></span><span class="skeleton-line medium"></span></div><div class="article-card skeleton-card" aria-hidden="true"><div class="skeleton-visual"></div><span class="skeleton-line short"></span><span class="skeleton-line title"></span><span class="skeleton-line"></span><span class="skeleton-line medium"></span></div></div><aside class="sidebar"><div class="ranking-card" id="writers"><div class="card-title"><span>WRITER RANKING</span><span>↗</span></div><p class="muted">The voices readers are rating highest</p><div id="rankingList"><p class="muted">Loading writer scores…</p></div><button class="outline-button">View all writers</button></div></aside></div>
     </section>
 
     <section class="join-banner shell" id="about"><div><span class="eyebrow">YOUR VOICE MATTERS</span><h2>Have a story?<br /><em>Make it travel.</em></h2></div><div><p>Join PostKina as a writer and share your ideas, experiences and point of view with readers everywhere.</p><button class="button button-accent" id="joinWriter">Create a writer account <span>↗</span></button></div></section>
