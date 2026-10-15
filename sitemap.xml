@@ -5,5 +5,12 @@
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
+  <url><loc>https://postkina.online/about.html</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://postkina.online/contact.html</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://postkina.online/editorial-policy.html</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://postkina.online/corrections-policy.html</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://postkina.online/privacy.html</loc><changefreq>yearly</changefreq><priority>0.4</priority></url>
+  <url><loc>https://postkina.online/ai-policy.html</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://postkina.online/authors.html</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
   <url><loc>https://postkina.online/articles/mi5-chief-warns-of-escalating-state-and-ai-threats-to-uk-security-postkina-ai-1792070482378/</loc><lastmod>2026-10-15</lastmod></url>
 </urlset>
