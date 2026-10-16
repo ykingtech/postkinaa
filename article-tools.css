@@ -1,0 +1,91 @@
+.share {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin-top: 38px;
+  padding: 24px 0;
+  border-top: 1px solid #dfe1dc;
+  border-bottom: 1px solid #dfe1dc;
+}
+
+.share::before {
+  content: "Share this story";
+  width: 100%;
+  margin-bottom: 3px;
+  color: #14212d;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.share a {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 9px 14px;
+  border: 1px solid #14212d;
+  border-radius: 999px;
+  background: #fff;
+  color: #14212d;
+  font-size: 13px;
+  font-weight: 750;
+  line-height: 1;
+  text-decoration: none;
+  transition: transform .18s ease, box-shadow .18s ease, background .18s ease, color .18s ease;
+}
+
+.share a::before {
+  display: grid;
+  width: 24px;
+  height: 24px;
+  place-items: center;
+  border-radius: 50%;
+  background: #14212d;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.share a[href*="facebook"]::before { content: "f"; background: #1877f2; }
+.share a[href*="wa.me"]::before { content: "◔"; background: #25d366; }
+.share a[href*="twitter"]::before { content: "X"; background: #111; }
+.share a[href*="linkedin"]::before { content: "in"; background: #0a66c2; font-size: 10px; }
+.share a:hover { transform: translateY(-2px); background: #14212d; color: #fff; box-shadow: 0 8px 18px rgba(20,33,45,.12); }
+
+.postkina-article-tools {
+  display: grid;
+  grid-template-columns: minmax(150px, .42fr) minmax(260px, 1fr);
+  gap: 24px;
+  margin-top: 36px;
+  padding: 26px;
+  border: 1px solid #dfe1dc;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 14px 34px rgba(20,33,45,.06);
+}
+
+.postkina-save-row { display: flex; align-items: flex-start; }
+.postkina-save {
+  width: 100%;
+  border: 1px solid #14212d;
+  border-radius: 6px;
+  background: #ffb000;
+  color: #14212d;
+  padding: 13px 16px;
+  font: 800 13px system-ui, sans-serif;
+  cursor: pointer;
+}
+.postkina-save:hover { background: #14212d; color: #fff; }
+.postkina-rating { display: grid; gap: 7px; }
+.postkina-rating strong { font-size: 16px; }
+.postkina-rating-summary,.postkina-rating-status { min-height: 18px; color: #66717a; font-size: 12px; }
+.postkina-stars { display: flex; gap: 4px; }
+.postkina-stars button { border: 0; background: transparent; color: #c8cbc6; padding: 1px; font-size: 32px; line-height: 1; cursor: pointer; }
+.postkina-stars button:hover,.postkina-stars button.selected { color: #ffb000; }
+.postkina-stars button:disabled { cursor: default; }
+
+@media (max-width: 620px) {
+  .postkina-article-tools { grid-template-columns: 1fr; padding: 20px; }
+  .share a { flex: 1 1 calc(50% - 10px); justify-content: center; }
+}

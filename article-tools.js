@@ -1,6 +1,3 @@
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/13.0.0/firebase-app.js';
-import { getFirestore, collection, addDoc, getDocs, query, where, serverTimestamp } from 'https://www.gstatic.com/firebasejs/13.0.0/firebase-firestore.js';
-
 const firebaseConfig = {
   apiKey: 'AIzaSyAK1W4reUyi6kDyPetwqdqtLCnXF0469tc',
   authDomain: 'postkina.firebaseapp.com',
@@ -15,30 +12,27 @@ const postId = document.querySelector('meta[name="postkina-post-id"]')?.content 
 const article = document.querySelector('article');
 
 if (postId && article) {
-  const db = getFirestore(initializeApp(firebaseConfig));
   const savedKey = 'postkina_saved_posts';
   const ratedKey = 'postkina_rated_posts';
   const savedPosts = new Set(JSON.parse(localStorage.getItem(savedKey) || '[]'));
   const ratedPosts = JSON.parse(localStorage.getItem(ratedKey) || '{}');
-  const tools = document.createElement('section');
-  tools.className = 'postkina-article-tools';
-  tools.innerHTML = `
-    <div class="postkina-save-row"><button type="button" class="postkina-save"></button></div>
-    <div class="postkina-rating">
-      <strong>Rate this article</strong>
-      <span class="postkina-rating-summary">Loading rating…</span>
-      <div class="postkina-stars" role="group" aria-label="Rate this article from one to five stars">
-        ${[1, 2, 3, 4, 5].map((value) => `<button type="button" data-rating="${value}" aria-label="${value} star${value === 1 ? '' : 's'}">★</button>`).join('')}
-      </div>
-      <span class="postkina-rating-status" aria-live="polite"></span>
-    </div>`;
-
-  const related = article.querySelector('.related');
-  if (related) related.before(tools); else article.append(tools);
-
-  const style = document.createElement('style');
-  style.textContent = `.postkina-article-tools{margin-top:36px;padding:22px 0;border-top:1px solid #dfe1dc;border-bottom:1px solid #dfe1dc}.postkina-save-row{margin-bottom:20px}.postkina-save{border:1px solid #14212d;background:#fff;color:#14212d;border-radius:4px;padding:10px 14px;font:700 13px system-ui;cursor:pointer}.postkina-save:hover{background:#14212d;color:#fff}.postkina-rating{display:grid;gap:8px}.postkina-rating strong{font-size:15px}.postkina-rating-summary,.postkina-rating-status{font-size:12px;color:#66717a}.postkina-stars{display:flex;gap:3px}.postkina-stars button{border:0;background:transparent;color:#c8cbc6;font-size:30px;line-height:1;cursor:pointer;padding:2px}.postkina-stars button.selected{color:#ffb000}.postkina-stars button:disabled{cursor:default}`;
-  document.head.append(style);
+  let tools = article.querySelector('.postkina-article-tools');
+  if (!tools) {
+    tools = document.createElement('section');
+    tools.className = 'postkina-article-tools';
+    tools.innerHTML = `
+      <div class="postkina-save-row"><button type="button" class="postkina-save">Save article ♡</button></div>
+      <div class="postkina-rating">
+        <strong>Rate this article</strong>
+        <span class="postkina-rating-summary">Loading rating…</span>
+        <div class="postkina-stars" role="group" aria-label="Rate this article from one to five stars">
+          ${[1, 2, 3, 4, 5].map((value) => `<button type="button" data-rating="${value}" aria-label="${value} star${value === 1 ? '' : 's'}">★</button>`).join('')}
+        </div>
+        <span class="postkina-rating-status" aria-live="polite"></span>
+      </div>`;
+    const related = article.querySelector('.related');
+    if (related) related.before(tools); else article.append(tools);
+  }
 
   const saveButton = tools.querySelector('.postkina-save');
   const updateSaveButton = () => { saveButton.textContent = savedPosts.has(postId) ? 'Saved ✓' : 'Save article ♡'; };
@@ -48,6 +42,14 @@ if (postId && article) {
     localStorage.setItem(savedKey, JSON.stringify([...savedPosts]));
     updateSaveButton();
   });
+
+  const firebase = Promise.all([
+    import('https://www.gstatic.com/firebasejs/13.0.0/firebase-app.js'),
+    import('https://www.gstatic.com/firebasejs/13.0.0/firebase-firestore.js')
+  ]).then(([appModule, firestoreModule]) => ({
+    ...firestoreModule,
+    db: firestoreModule.getFirestore(appModule.initializeApp(firebaseConfig))
+  }));
 
   const stars = [...tools.querySelectorAll('.postkina-stars button')];
   const summary = tools.querySelector('.postkina-rating-summary');
@@ -64,7 +66,7 @@ if (postId && article) {
     if (ownRating) status.textContent = `Your rating: ${ownRating} star${ownRating === 1 ? '' : 's'}.`;
   };
 
-  getDocs(query(collection(db, 'ratings'), where('postId', '==', postId))).then((snapshot) => {
+  firebase.then(({ db, getDocs, query, collection, where }) => getDocs(query(collection(db, 'ratings'), where('postId', '==', postId)))).then((snapshot) => {
     ratingValues = snapshot.docs.map((document) => Number(document.data().rating)).filter((value) => value >= 1 && value <= 5);
     updateRating();
   }).catch(() => { summary.textContent = 'Rating is temporarily unavailable.'; });
@@ -75,6 +77,7 @@ if (postId && article) {
     stars.forEach((star) => { star.disabled = true; });
     status.textContent = 'Saving your rating…';
     try {
+      const { db, addDoc, collection, serverTimestamp } = await firebase;
       await addDoc(collection(db, 'ratings'), {
         postId,
         rating,
