@@ -1,5 +1,6 @@
 const firebaseConfig={apiKey:'AIzaSyAK1W4reUyi6kDyPetwqdqtLCnXF0469tc',authDomain:'postkina.firebaseapp.com',projectId:'postkina',storageBucket:'postkina.firebasestorage.app',messagingSenderId:'594893100682',appId:'1:594893100682:web:799226823a1fee3a447f73'};
 const canonical=document.querySelector('link[rel="canonical"]')?.href||location.href;
+const worker='https://postkina-facebook-publisher.whatthewithyking.workers.dev';
 const postId=document.querySelector('meta[name="postkina-post-id"]')?.content||canonical.match(/postkina-ai-\d+/)?.[0]||new URL(canonical).searchParams.get('post');
 const article=document.querySelector('article');
 const tools=article?.querySelector('.postkina-article-tools');
@@ -32,7 +33,7 @@ if(postId&&article&&tools){
   utility.querySelector('[data-native-share]')?.addEventListener('click',()=>navigator.share({title,text:excerpt,url:canonical}).catch(()=>{}));
 
   const firebase=Promise.all([import('https://www.gstatic.com/firebasejs/13.0.0/firebase-app.js'),import('https://www.gstatic.com/firebasejs/13.0.0/firebase-firestore.js')]).then(([appModule,firestore])=>({...firestore,db:firestore.getFirestore(appModule.initializeApp(firebaseConfig))}));
-  firebase.then(({db,doc,updateDoc,increment})=>updateDoc(doc(db,'posts',postId),{views:increment(1)})).catch(()=>{});
+  fetch(`${worker}?view=${encodeURIComponent(postId)}`,{keepalive:true}).catch(()=>{});
   const stars=[...tools.querySelectorAll('.postkina-stars button')],summary=tools.querySelector('.postkina-rating-summary'),status=tools.querySelector('.postkina-rating-status');let values=[];
   const updateRating=()=>{const average=values.length?(values.reduce((total,value)=>total+value,0)/values.length).toFixed(1):'—',own=Number(ratedPosts[postId]||0);summary.textContent=`${average} out of 5${values.length?` · ${values.length} rating${values.length===1?'':'s'}`:' · Be the first to rate'}`;stars.forEach((button)=>{button.classList.toggle('selected',Number(button.dataset.rating)<=own);button.disabled=Boolean(own);});if(own)status.textContent=`Your rating: ${own} star${own===1?'':'s'}.`;};
   firebase.then(({db,getDocs,query,collection,where})=>getDocs(query(collection(db,'ratings'),where('postId','==',postId)))).then((snapshot)=>{values=snapshot.docs.map((document)=>Number(document.data().rating)).filter((value)=>value>=1&&value<=5);updateRating();}).catch(()=>{summary.textContent='Rating is temporarily unavailable.';});
