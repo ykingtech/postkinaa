@@ -12,6 +12,12 @@
   <url><loc>https://postkina.online/privacy.html</loc><changefreq>yearly</changefreq><priority>0.4</priority></url>
   <url><loc>https://postkina.online/ai-policy.html</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
   <url><loc>https://postkina.online/authors.html</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://postkina.online/topics/europe/</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://postkina.online/topics/politics/</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://postkina.online/topics/business/</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://postkina.online/topics/technology/</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://postkina.online/topics/climate/</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://postkina.online/topics/culture/</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
   <url><loc>https://postkina.online/articles/mi5-chief-warns-of-escalating-state-and-ai-threats-to-uk-security-postkina-ai-1792070482378/</loc><lastmod>2026-10-15</lastmod></url>
   <url><loc>https://postkina.online/articles/ukraine-resumes-strikes-on-russian-energy-sites-amid-refinery-accusations-postkina-ai-1792080107965/</loc><lastmod>2026-10-15</lastmod></url>
   <url><loc>https://postkina.online/articles/azerbaijan-s-school-headscarf-ban-ignites-rare-protests-and-diplomatic-row-with--postkina-ai-1792089436362/</loc><lastmod>2026-10-15</lastmod></url>

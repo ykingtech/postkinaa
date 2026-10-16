@@ -22,6 +22,7 @@
   <meta name="keywords" content="European news, Europe trends, world news, technology, business, culture, English articles, PostKina" />
   <meta name="robots" content="index,follow,max-image-preview:large" />
   <link rel="canonical" href="https://postkina.online/" />
+  <link rel="alternate" type="application/rss+xml" title="PostKina latest stories" href="https://postkina.online/feed.xml" />
   <link rel="alternate" hreflang="en" href="https://postkina.online/" />
   <link rel="alternate" hreflang="x-default" href="https://postkina.online/" />
   <meta property="og:title" content="postkina — Stories worth sharing" />
@@ -44,7 +45,7 @@
   <div class="topline"><span>Room for ideas.</span><span class="topline-right">Real stories · New voices · One open platform</span></div>
   <header class="site-header">
     <a class="brand" href="#top" aria-label="PostKina home"><img src="./assets/postkina-logo.png" alt="postkina — Stories worth sharing" /></a>
-    <nav class="main-nav" aria-label="Main navigation"><a href="#latest">Latest</a><a href="#trending">Trending</a><a href="#writers">Writers</a><a href="#about">About</a><button class="nav-link" id="savedSeriesBtn">Saved series</button></nav>
+    <nav class="main-nav" aria-label="Main navigation"><a href="#latest">Latest</a><a href="#briefing">Daily Briefing</a><a href="#trending">Trending</a><a href="#writers">Writers</a><a href="#about">About</a><button class="nav-link" id="savedSeriesBtn">Saved series</button></nav>
     <div class="header-actions"><button class="icon-btn" id="searchFocus" aria-label="Search">⌕</button><button class="saved-top-btn" id="savedItemsBtn">Saved <span>♡</span></button><button class="button button-dark" id="dashboardBtn" hidden>My dashboard ↗</button><button class="button button-dark" id="writerLogin">Become a writer <span>↗</span></button><button class="menu-btn" id="menuBtn" aria-label="Open menu">☰</button></div>
   </header>
   <div class="mobile-menu" id="mobileMenu" hidden><div class="mobile-menu-head"><span class="eyebrow">POSTKINA MENU</span><button class="modal-close" id="mobileMenuClose" aria-label="Close menu">×</button></div><nav><a href="#latest">Latest</a><a href="#trending">Trending</a><a href="#writers">Writers</a><button id="mobileSavedBtn">Saved posts ♡</button><a href="#about">About</a></nav><button class="button button-dark mobile-menu-writer" id="mobileWriterBtn">Become a writer ↗</button></div>
@@ -55,7 +56,17 @@
       <div class="hero-note brand-panel"><img class="hero-logo" src="./assets/postkina-logo.png" alt="postkina — Stories worth sharing" /></div>
     </section>
 
-    <section class="topic-strip shell"><span class="eyebrow">EXPLORE BY TOPIC</span><div class="topic-pills"><button class="topic active">All</button><button class="topic">Life</button><button class="topic">Society</button><button class="topic">Culture</button><button class="topic">Technology</button><button class="topic">Entertainment</button></div></section>
+    <section class="topic-strip shell"><span class="eyebrow">EXPLORE BY TOPIC</span><div class="topic-pills"><button class="topic active" data-topic="All">All</button><a class="topic" href="./topics/europe/">Europe</a><a class="topic" href="./topics/politics/">Politics</a><a class="topic" href="./topics/business/">Business</a><a class="topic" href="./topics/technology/">Technology</a><a class="topic" href="./topics/climate/">Climate</a><a class="topic" href="./topics/culture/">Culture</a></div></section>
+
+    <section class="growth-hub shell" aria-label="Reader highlights">
+      <article class="briefing-feature" id="briefing"><div><span class="eyebrow">EVERY MORNING · EUROPE/PARIS</span><h2>Daily Europe Briefing</h2><p>A concise, source-led guide to the developments shaping Europe today.</p></div><div class="briefing-list" id="briefingList"><span class="mini-loader">Preparing today’s briefing…</span></div></article>
+      <div class="discovery-column">
+        <section class="discovery-card" id="forYou"><div class="section-mini-head"><span class="eyebrow">PERSONALISED</span><button class="quiet-button" id="manageFollowsBtn">Manage follows</button></div><h3>For you</h3><div class="compact-story-list" id="forYouList"><span class="mini-loader">Follow topics to personalise this section.</span></div></section>
+        <section class="discovery-card" id="continueReading"><span class="eyebrow">PICK UP WHERE YOU LEFT OFF</span><h3>Continue reading</h3><div class="compact-story-list" id="recentlyViewedList"><span class="mini-loader">Stories you open will appear here.</span></div></section>
+      </div>
+    </section>
+
+    <section class="popular-strip shell" id="trending"><div class="popular-column"><span class="eyebrow">REAL READER ACTIVITY</span><h2>Most read now</h2><div class="ranked-stories" id="mostReadList"><span class="mini-loader">Loading readership…</span></div></div><div class="popular-column"><span class="eyebrow">POSTKINA RECOMMENDS</span><h2>Editor’s picks</h2><div class="ranked-stories" id="editorsPicksList"><span class="mini-loader">Loading selected stories…</span></div></div></section>
 
     <section class="feed shell" id="latest">
       <div class="section-heading"><div><span class="eyebrow">THE DAILY FEED</span><h2>Read something new <span>✳</span></h2></div><div class="feed-controls"><label class="search-box"><span>⌕</span><input id="searchInput" type="search" placeholder="Search stories..." /></label><div class="sort-toggle"><button class="sort active" data-sort="latest">Latest</button><button class="sort" data-sort="trending">Trending</button></div></div></div>
@@ -64,7 +75,7 @@
 
     <section class="join-banner shell" id="about"><div><span class="eyebrow">YOUR VOICE MATTERS</span><h2>Have a story?<br /><em>Make it travel.</em></h2></div><div><p>Join PostKina as a writer and share your ideas, experiences and point of view with readers everywhere.</p><button class="button button-accent" id="joinWriter">Create a writer account <span>↗</span></button></div></section>
   </main>
-  <footer class="site-footer"><div class="footer-brand"><img src="./assets/postkina-logo.png" alt="postkina" /><p>Stories worth sharing.</p></div><div class="footer-links"><a href="./about.html">About</a><a href="./contact.html">Contact</a><a href="./editorial-policy.html">Editorial</a><a href="./corrections-policy.html">Corrections</a><a href="./privacy.html">Privacy</a><a href="./ai-policy.html">AI Policy</a><a href="./authors.html">Authors</a></div><div class="footer-end">© 2026 postkina · Made for curious minds</div></footer>
+  <footer class="site-footer"><div class="footer-brand"><img src="./assets/postkina-logo.png" alt="postkina" /><p>Stories worth sharing.</p></div><div class="footer-links"><a href="./about.html">About</a><a href="./contact.html">Contact</a><a href="./editorial-policy.html">Editorial</a><a href="./corrections-policy.html">Corrections</a><a href="./privacy.html">Privacy</a><a href="./ai-policy.html">AI Policy</a><a href="./authors.html">Authors</a><a href="./feed.xml">RSS</a></div><div class="footer-end">© 2026 postkina · Made for curious minds</div></footer>
 
   <div class="modal-backdrop" id="modalBackdrop" hidden><div class="modal" role="dialog" aria-modal="true"><button class="modal-close" id="modalClose">×</button><div id="modalContent"></div></div></div>
   <script type="module" src="./app.js"></script>

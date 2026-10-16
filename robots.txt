@@ -3,3 +3,4 @@ Allow: /
 Disallow: /admin.html
 
 Sitemap: https://postkina.online/sitemap.xml
+Sitemap: https://postkina.online/news-sitemap.xml
